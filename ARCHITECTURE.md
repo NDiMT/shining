@@ -308,3 +308,59 @@ prologue's needs, including its dynamic objectives), and GDExtension.
    is generated, rather than discovering it at character twenty.
 5. **Confirm the prologue doubles as the schedule measurement**, and that the act
    structure may shrink based on what it measures.
+
+---
+
+## Addendum, 2026-08-13: what building the battle scene changed
+
+Milestone 3's scene exists (`docs/GODOT_SCENE.md`, which also records what is
+verified and what still needs an editor). Three things about the architecture
+above turned out to need stating rather than assuming.
+
+### `Game.Rules` now owns the grid's metre scale
+
+`Game.Rules/Tactical/GridLayout.cs` converts a `Coord` into a world-space point.
+That looks like presentation in the rules layer and is not, for two reasons.
+ANIME_DIRECTION.md rule 4 already fixes the coupling in the other direction —
+"heights do not change, a hero is still 1.7m, because the tactical grid, the
+movement costs and the camera all depend on it" — so a tile's size in metres is a
+rule about the game. And it is the one part of the scene-building path that can be
+tested without an engine, while being the part most likely to be silently wrong:
+a mirrored battlefield still looks like a plausible battlefield.
+
+It returns a plain `WorldPoint(float, float, float)` with no arithmetic on it.
+The engine's vector type stays on the engine's side of the boundary.
+
+The general rule this is an instance of: **when the presentation layer needs an
+answer that can be expressed as a number or a set of coordinates, the answer
+belongs in `Game.Rules`, because that is the half that has tests.** Movement range
+was already there; attack range, threat range and prop placement joined it rather
+than being written against the scene tree.
+
+### Content outside `res://` has a cost, and it is paid at load
+
+`Content/Data` being outside the Godot project was a deliberate choice above, and
+it stands. What was not written down is that it applies to `Content/Models` too,
+and Godot cannot reference a path above `res://` — so GLBs are parsed at runtime
+with `GltfDocument` instead of going through the editor importer.
+
+That means no import-time compression, no LOD generation, and parse cost on the
+loading screen. It is the right trade today, because it keeps the content contract
+as one tree that the Python tooling and the engine both read. If load time becomes
+a problem, the fix is a build step that copies `Content/Models` into `res://` at
+export — not moving the content back inside the project.
+
+### The presentation layer is where the asset pipeline's failures surface
+
+`docs/ASSET_PIPELINE.md` measured that generated assets arrive with scenery
+attached, and that avoid tokens do not stop it. The engine is the last place that
+can notice: it measures every model before adding it to the tree, removes mesh
+nodes that measure like a ground slab, and reports the ones it cannot fix rather
+than mangling them.
+
+This is a general obligation of the presentation layer that the split above did
+not anticipate. The rules layer is protected from asset problems by construction —
+a battle plays identically whether nine props load or none, because what blocks a
+unit is the terrain symbol and never the model. That protection is exactly why the
+engine has to be loud: an asset defect can no longer break the game, so nothing
+else will notice it.

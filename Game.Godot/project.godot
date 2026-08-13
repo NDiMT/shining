@@ -7,7 +7,7 @@
 ; Godot minor releases has broken projects before.
 ;
 ; Everything that can be verified without the engine already is: Game.Rules
-; builds and its 100 tests pass, and the CI job fails if this project's logic
+; builds and its 101 tests pass, and the CI job fails if this project's logic
 ; leaks into it. docs/GODOT_SCENE.md draws that line explicitly and lists what
 ; still needs the editor opened once.
 

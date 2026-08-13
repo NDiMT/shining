@@ -320,6 +320,37 @@ public sealed class PropPlacementTests
     }
 
     [Fact]
+    public void APropOffTheEdgeIsRejectedWithItsNameAndTile()
+    {
+        // Props are parsed in the rules layer rather than in the scene builder so
+        // that this fails at load, next to the same check on units, rather than
+        // producing a tree hanging in space that nobody notices in a screenshot.
+        // A prop off the grid almost always means the file was edited against the
+        // wrong axis.
+        string path = Path.Combine(Path.GetTempPath(), $"prop_offgrid_{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, """
+        {
+          "id": "test_offgrid",
+          "size": { "width": 2, "height": 2 },
+          "terrain": ["gg", "gg"],
+          "props": [{ "asset": "veg_tree_oak_a", "position": [0, 9] }]
+        }
+        """);
+
+        try
+        {
+            ContentException error = Assert.Throws<ContentException>(
+                () => BattleLoader.Load(path, Content));
+            Assert.Contains("veg_tree_oak_a", error.Message);
+            Assert.Contains("[0,9]", error.Message);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void EveryPropSitsOnTheField()
     {
         BattleDefinition battle = NorthMeadow();
