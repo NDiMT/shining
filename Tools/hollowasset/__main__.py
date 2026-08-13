@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from dataclasses import replace
 
 from . import budgets, content, meshy, pipeline, provenance, style, validate
 
@@ -44,6 +45,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     generate_parser.add_argument(
         "--stop-on-error", action="store_true", help="halt the batch on the first failure"
+    )
+    generate_parser.add_argument(
+        "--mesh-only",
+        action="store_true",
+        help="skip rigging and animation clips. Use this to review a character's "
+        "mesh and silhouette before committing credits to a rig and a full clip set",
     )
     generate_parser.add_argument("--poll-seconds", type=float, default=10.0)
     generate_parser.add_argument("--provenance", default=provenance.DEFAULT_PATH)
@@ -134,6 +141,11 @@ def _cmd_prompt(args: argparse.Namespace) -> int:
 
 def _cmd_generate(args: argparse.Namespace) -> int:
     jobs = _select(pipeline.load_catalog(args.catalog), args.id)
+
+    if args.mesh_only:
+        # Reviewing a blockout costs a preview and a refine; rigging plus a clip
+        # set costs several times that. Looking first is the cheaper order.
+        jobs = [replace(job, rig=False, animations=[]) for job in jobs]
 
     if args.dry_run:
         for job in jobs:

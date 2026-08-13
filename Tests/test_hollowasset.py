@@ -673,5 +673,40 @@ class TestProvenance(unittest.TestCase):
             self.assertIn(expected, text)
 
 
+class TestMeshOnly(unittest.TestCase):
+    """The --mesh-only flag, which exists so a character's silhouette can be
+    reviewed before credits are spent on a rig and a clip set."""
+
+    def setUp(self):
+        import io
+        from contextlib import redirect_stdout
+        self.io, self.redirect = io, redirect_stdout
+
+    def run_cli(self, *args) -> str:
+        from hollowasset.__main__ import main
+        buffer = self.io.StringIO()
+        with self.redirect(buffer):
+            code = main(list(args))
+        self.assertEqual(code, 0)
+        return buffer.getvalue()
+
+    def test_mesh_only_drops_the_rig_and_clip_cost(self):
+        catalog = "Tools/catalog/prologue_cast.json"
+        full = self.run_cli("generate", catalog, "--id", "hero_rowan", "--dry-run")
+        mesh = self.run_cli("generate", catalog, "--id", "hero_rowan", "--dry-run", "--mesh-only")
+
+        def credits(text: str) -> int:
+            return int(text.split("estimated credits")[0].strip().split()[-1])
+
+        self.assertLess(credits(mesh), credits(full))
+        self.assertIn("nothing generated", mesh)
+
+    def test_mesh_only_leaves_static_assets_alone(self):
+        catalog = "Tools/catalog/greenvale_props.json"
+        full = self.run_cli("generate", catalog, "--id", "prop_barrel_a", "--dry-run")
+        mesh = self.run_cli("generate", catalog, "--id", "prop_barrel_a", "--dry-run", "--mesh-only")
+        self.assertEqual(full, mesh)
+
+
 if __name__ == "__main__":
     unittest.main()
