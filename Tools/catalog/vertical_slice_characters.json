@@ -1,0 +1,152 @@
+{
+  "_comment": [
+    "Vertical slice cast (brief section 69): Rowan, Maeve, a knight-type ally,",
+    "an archer-type ally, goblin rank and file, and the goblin commander boss.",
+    "",
+    "IMPORTANT: these entries use text-to-3d, which makes them BLOCKOUTS, not",
+    "final heroes. Brief section 55 requires named characters to go through",
+    "approved front/side/back concept art. Once the director signs off on",
+    "concepts, add their URLs to the 'references' array on that entry and",
+    "regenerate: the pipeline switches to image-to-3d automatically and the mesh",
+    "follows the approved design instead of the prompt's interpretation.",
+    "",
+    "Animation names resolve through Tools/hollowasset/animations.py. The action",
+    "ids there are still provisional, so the first character generated should",
+    "bake all fourteen clips for review before the rest of the cast is run."
+  ],
+  "region": "greenvale",
+  "assets": [
+    {
+      "id": "hero_rowan",
+      "class": "hero",
+      "subject": "young human swordsman soldier in a light blue tabard over leather armour, short dark hair, a single asymmetric pauldron on the left shoulder, and a short travelling cape",
+      "extra": "cape and single pauldron carry the silhouette",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front",
+        "death"
+      ],
+      "references": [],
+      "notes": "Protagonist. Blockout only until concept art is approved."
+    },
+    {
+      "id": "hero_maeve",
+      "class": "hero",
+      "subject": "young human mage in a deep violet robe with wide sleeves, a short shoulder cloak, long light hair tied back, holding a simple wooden staff",
+      "extra": "wide sleeves and staff carry the silhouette",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": [
+        "idle",
+        "walk",
+        "cast",
+        "hit_front",
+        "death"
+      ],
+      "references": [],
+      "notes": "Party mage. Blockout only until concept art is approved."
+    },
+    {
+      "id": "hero_knight_ally",
+      "class": "hero",
+      "subject": "human knight in plate armour with a tall crested helm, a heavy rectangular shield and a broad-bladed sword, deep red surcoat",
+      "extra": "boxy heavy silhouette, widest shape in the party",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "block",
+        "hit_front",
+        "death"
+      ],
+      "references": []
+    },
+    {
+      "id": "hero_archer_ally",
+      "class": "hero",
+      "subject": "lean human archer in green and brown travelling leathers with a hooded cowl, a quiver at the hip and a tall recurve bow",
+      "extra": "narrow silhouette, bow arc is the readable shape",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front",
+        "death"
+      ],
+      "references": []
+    },
+    {
+      "id": "enemy_goblin_grunt",
+      "class": "enemy_humanoid",
+      "subject": "small hunched goblin in mismatched scrap leather with a notched cleaver, oversized pointed ears and a broad grin",
+      "extra": "sickly green skin, rust-red faction rag, low crouched profile",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front",
+        "death"
+      ]
+    },
+    {
+      "id": "enemy_goblin_archer",
+      "class": "enemy_humanoid",
+      "subject": "small goblin archer with a crude short bow, a scrap-leather chest wrap and a rust-red headband",
+      "extra": "same green and rust palette as the goblin grunt",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front",
+        "death"
+      ]
+    },
+    {
+      "id": "enemy_goblin_commander",
+      "class": "boss",
+      "subject": "large heavyset goblin warlord in scavenged plate over a rust-red cloak, a horned iron helm and a huge two-handed axe",
+      "extra": "twice the mass of the grunt, horned helm silhouette",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "heavy_attack",
+        "hit_front",
+        "death",
+        "victory"
+      ],
+      "notes": "Vertical slice boss."
+    },
+    {
+      "id": "weapon_rowan_sword",
+      "class": "weapon",
+      "subject": "straight short sword with a plain crossguard, leather-wrapped grip and a blue gem in the pommel",
+      "extra": "hero signature weapon, blade slightly oversized",
+      "rig": false
+    },
+    {
+      "id": "weapon_goblin_cleaver",
+      "class": "weapon",
+      "subject": "crude notched iron cleaver with a bound wooden handle",
+      "rig": false
+    }
+  ]
+}

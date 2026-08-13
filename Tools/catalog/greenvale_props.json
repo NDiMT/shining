@@ -1,0 +1,73 @@
+{
+  "_comment": [
+    "Greenvale village prop kit for the vertical slice (brief sections 69 and 90).",
+    "Subjects only. Art direction lives in Tools/hollowasset/style.py so the whole",
+    "kit can be restyled from one place. Region sets the texture palette.",
+    "Regenerate a single entry with: generate <this file> --id <asset id>"
+  ],
+  "region": "greenvale",
+  "assets": [
+    {
+      "id": "prop_barrel_a",
+      "class": "prop",
+      "subject": "wooden barrel with three iron bands, slightly tapered staves"
+    },
+    {
+      "id": "prop_crate_a",
+      "class": "prop",
+      "subject": "square wooden shipping crate with plank seams and corner braces"
+    },
+    {
+      "id": "prop_table_long",
+      "class": "prop",
+      "subject": "long rough-hewn wooden trestle table"
+    },
+    {
+      "id": "prop_chair_simple",
+      "class": "prop",
+      "subject": "simple wooden village chair with a woven rush seat"
+    },
+    {
+      "id": "prop_pottery_urn",
+      "class": "prop",
+      "subject": "round clay storage urn with a painted band around the shoulder"
+    },
+    {
+      "id": "prop_sign_inn",
+      "class": "prop",
+      "subject": "hanging wooden inn sign on an iron bracket, blank painted board"
+    },
+    {
+      "id": "prop_fence_section",
+      "class": "prop",
+      "subject": "three-rail wooden fence section, one module wide, flush ends for tiling",
+      "extra": "modular kit piece, ends flat and aligned to a one metre grid"
+    },
+    {
+      "id": "prop_well_stone",
+      "class": "prop",
+      "subject": "round stone village well with a wooden winch frame and bucket",
+      "extra": "reads clearly from directly above"
+    },
+    {
+      "id": "prop_market_stall",
+      "class": "prop",
+      "subject": "market stall with a striped cloth awning and a plank counter"
+    },
+    {
+      "id": "veg_tree_oak_a",
+      "class": "vegetation",
+      "subject": "broad oak tree with a rounded canopy in three angular masses"
+    },
+    {
+      "id": "veg_tree_oak_b",
+      "class": "vegetation",
+      "subject": "narrower younger oak tree, leaning slightly, two canopy masses"
+    },
+    {
+      "id": "veg_rock_a",
+      "class": "vegetation",
+      "subject": "weathered granite boulder with flat angular faces and moss on top"
+    }
+  ]
+}

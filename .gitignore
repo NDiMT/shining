@@ -1,0 +1,51 @@
+# Build output
+/Build/
+/build/
+/out/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.exe
+
+# Compiled shaders are build artifacts; HLSL source in /Shaders is not
+/Shaders/**/*.dxil
+/Shaders/**/*.spv
+/Shaders/**/*.cso
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake.stamp
+
+# Python tooling
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Asset pipeline scratch. Generated GLBs under Content/Models ARE committed:
+# they are production assets with provenance records, not build output.
+*.part
+*.blend1
+*.blend2
+/Content/**/_scratch/
+
+# Secrets. The tooling reads MESHY_API_KEY from the environment and never
+# writes it anywhere, but these patterns catch the usual accidents.
+.env
+.env.*
+*.key
+*secret*
+*credentials*
+
+# Editor and OS
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store
+Thumbs.db

@@ -1,0 +1,291 @@
+"""The Hollow Crown prompt grammar.
+
+Brief section 6 asks for "simple geometry, rich atmosphere" and section 89 asks
+for shapes that stay readable at tactical-camera distance. Shining Force II is
+the agreed touchstone for that look, so this module encodes what that game
+actually *does* visually and feeds it to the generator as concrete art
+direction.
+
+Two rules govern this file, and both matter for a commercial Steam release:
+
+1. No prompt ever names Shining Force, Sega, or any character from it. We
+   describe the visual language in our own terms. See docs/STYLE_GUIDE.md for
+   why this distinction is not cosmetic.
+2. Style lives here, not in the catalog. Catalog entries describe *subjects*;
+   this module decides how they look. Changing the game's art direction should
+   be one edit here, not a sweep through every asset definition.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from . import budgets
+
+# ---------------------------------------------------------------------------
+# The house style
+# ---------------------------------------------------------------------------
+
+#: Non-negotiable. These two tokens are the entire art direction in miniature,
+#: so they are never dropped to make room for a long subject: an asset generated
+#: without them is off-style by definition and has to be regenerated anyway.
+CORE_STYLE_TOKENS = [
+    "stylized low-poly 3D game asset",
+    "bold readable silhouette",
+]
+
+#: Applied to every asset when there is room, most important token first.
+#:
+#: Held as a list rather than one string because prompts are capped at 600
+#: characters by the API. When a detailed subject uses most of that budget,
+#: whole tokens are dropped from the end of this list instead of the string
+#: being cut mid-clause, so the surviving prompt is always well formed.
+BASE_STYLE_TOKENS = [
+    "clean flat-shaded surfaces",
+    "saturated storybook fantasy palette",
+    "large simple forms, very few small details",
+    "even neutral lighting",
+]
+
+#: Tokens that keep the generator away from the failure modes in section 6,
+#: most important first, for the same reason.
+BASE_AVOID_TOKENS = [
+    "photorealistic",
+    "hyperdetailed",
+    "grimdark",
+    "muddy colours",
+    "baked shadows",
+    "dense engraved ornament",
+    "many tiny straps and buckles",
+    "base plinth",
+    "ground plane",
+    "text",
+    "logos",
+]
+
+#: Per-class art direction. These are the deltas that give a class its identity
+#: at 30 metres on a tactical camera, which is the only distance that matters.
+CLASS_STYLE: dict[str, str] = {
+    "hero": (
+        "heroic proportions with broad shoulders and a slightly oversized head, "
+        "one dominant costume hue plus one bright accent and clean metal, "
+        "distinctive hairstyle, strong cape or shoulder shape, iconic weapon"
+    ),
+    "npc": (
+        "ordinary villager build, muted earthy costume with a single "
+        "brighter accent colour, simple cloth shapes"
+    ),
+    "enemy_humanoid": (
+        "menacing but readable build, cohesive faction colour, "
+        "crude asymmetric armour plates, exaggerated weapon"
+    ),
+    "monster_large": (
+        "heavy imposing mass, exaggerated dominant feature such as jaws claws or horns, "
+        "two-colour creature palette, readable animal silhouette"
+    ),
+    "boss": (
+        "commanding scale and theatrical silhouette, ornate but large-form armour, "
+        "single dramatic accent colour against dark values, unmistakable profile"
+    ),
+    "weapon": (
+        "oversized game-readable proportions, thick blade or shaft, "
+        "clear metal and wood separation, simple pommel and guard"
+    ),
+    "prop": (
+        "chunky hand-made village craft object, visible plank and band shapes, "
+        "warm painted wood tones"
+    ),
+    "vegetation": (
+        "clustered angular canopy masses rather than individual leaves, "
+        "two-tone foliage with clear light and shadow greens, sturdy simple trunk"
+    ),
+    "building_module": (
+        "modular kit piece with flush edges for tiling, "
+        "timber-frame and plaster fantasy village construction, "
+        "clean straight roof and wall planes"
+    ),
+}
+
+#: Extra avoid-tokens per class, layered on top of BASE_AVOID.
+CLASS_AVOID: dict[str, str] = {
+    "hero": "generic knight, faceless armour, modern clothing",
+    "npc": "armour, weapons, heroic pose",
+    "prop": "modern materials, plastic, metal shipping container",
+    "vegetation": "individual leaf geometry, thin twigs, transparent planes",
+    "building_module": "interior furniture, terrain, surrounding ground",
+}
+
+# ---------------------------------------------------------------------------
+# Regional palettes, from brief section 59
+# ---------------------------------------------------------------------------
+
+#: Colour temperature and value range per region. Applied as texture guidance so
+#: a Greenvale barrel and a Vaelor barrel read as different places from the same
+#: mesh.
+#:
+#: These describe *light and value only*, never scene content: a region string
+#: that mentioned foliage would tint every barrel in the region green.
+REGIONS: dict[str, str] = {
+    "greenvale": "warm afternoon colour temperature, bright mid values, gentle contrast",
+    "ruins": "cool desaturated colour temperature, low mid values, sparse warm highlights",
+    "vaelor": "cold desaturated colour temperature, dark values, one warm orange accent",
+    "outer_world": "dusty ochre and teal colour temperature, weathered mid values",
+    "neutral": "",
+}
+
+
+#: The API rejects prompts over this length outright.
+PROMPT_LIMIT = 600
+
+#: Characters held back from the geometry prompt for the avoid clause. Without a
+#: reservation the avoid tokens sit last and get dropped first, which is exactly
+#: backwards: they are what keeps a detailed subject from drifting realistic.
+AVOID_RESERVE = 170
+
+
+@dataclass(frozen=True)
+class Prompt:
+    """A resolved prompt pair, ready for the Meshy client."""
+
+    geometry: str
+    texture: str
+    #: Style tokens that did not fit. Surfaced by the `prompt` command so an
+    #: over-long subject is a visible decision rather than a silent loss.
+    dropped: tuple[str, ...] = ()
+
+    def __str__(self) -> str:  # pragma: no cover - debug helper
+        return f"geometry: {self.geometry}\ntexture:  {self.texture}"
+
+
+def _tokens(*parts: str) -> list[str]:
+    """Split comma-separated fragments into individual style tokens."""
+    out: list[str] = []
+    for part in parts:
+        for token in str(part).split(","):
+            token = token.strip()
+            if token:
+                out.append(token)
+    return out
+
+
+def _truncate(text: str, limit: int) -> str:
+    """Cut on a word boundary, marking the cut."""
+    if len(text) <= limit:
+        return text
+    if limit <= 1:
+        return "…"
+    return text[: limit - 1].rsplit(" ", 1)[0].rstrip(",") + "…"
+
+
+def _pack(required: list[str], optional: list[str], limit: int) -> tuple[str, list[str]]:
+    """Join required tokens plus as many optional ones as fit.
+
+    Returns the joined text and the optional tokens that were dropped. Required
+    tokens are never dropped; callers must size them to fit before calling.
+    """
+    text = ", ".join(required)
+    if len(text) > limit:
+        return _truncate(text, limit), list(optional)
+
+    dropped: list[str] = []
+    for token in optional:
+        candidate = f"{text}, {token}" if text else token
+        if len(candidate) <= limit:
+            text = candidate
+        else:
+            dropped.append(token)
+    return text, dropped
+
+
+def build(
+    subject: str,
+    class_key: str,
+    *,
+    region: str = "neutral",
+    extra: str = "",
+    avoid: str = "",
+) -> Prompt:
+    """Resolve a catalog entry into geometry and texture prompts.
+
+    ``subject`` is the plain description from the catalog, e.g. "wooden barrel
+    with iron bands". Everything else is style, and comes from this module.
+
+    Meshy takes the geometry prompt at preview time and the texture prompt at
+    refine time, so silhouette language goes in the former and colour language
+    in the latter. Both are packed to fit ``PROMPT_LIMIT`` by dropping whole
+    low-priority style tokens, in this order of precedence:
+
+        subject, per-asset extras, core style  (never dropped)
+        avoid clause                           (gets all remaining space)
+        class art direction                    (dropped before the subject)
+        remaining house style tokens           (dropped first)
+    """
+    budget = budgets.get(class_key)
+
+    # 1. What can never be dropped: the subject, the catalog's own extra
+    #    direction, and the core style tokens. If a subject is long enough to
+    #    crowd out the core tokens, the *subject* is what gets trimmed — an asset
+    #    generated without the house style is off-style by definition, so keeping
+    #    every word of an over-long description would be the wrong trade.
+    core_text = ", ".join(CORE_STYLE_TOKENS)
+    subject_text = ", ".join(_tokens(subject, extra))
+    room_for_subject = PROMPT_LIMIT - AVOID_RESERVE - len(core_text) - 2
+    subject_text = _truncate(subject_text, room_for_subject)
+    required_text = f"{subject_text}, {core_text}" if subject_text else core_text
+
+    # 2. The avoid clause gets whatever space is left rather than a fixed slice:
+    #    a short subject should get the full avoid list, not an arbitrarily
+    #    truncated one. AVOID_RESERVE is only the floor guaranteed above.
+    #
+    #    Universal tokens first, then class-specific and per-asset ones, then the
+    #    rest of the generic list — "generic knight" does more work than "logos",
+    #    so it must not be the first thing squeezed out.
+    #
+    #    Meshy has no negative-prompt field, so these ride along as an explicit
+    #    clause. Weaker than a real negative prompt, measurably better than
+    #    omitting them.
+    avoid_tokens = (
+        BASE_AVOID_TOKENS[:3]
+        + _tokens(CLASS_AVOID.get(class_key, ""), avoid)
+        + BASE_AVOID_TOKENS[3:]
+    )
+    avoid_text, avoid_dropped = _pack(
+        ["avoid: " + avoid_tokens[0]],
+        avoid_tokens[1:],
+        PROMPT_LIMIT - len(required_text) - 2,
+    )
+
+    # 3. Remaining house style fills whatever is still free. The triangle hint
+    #    sits last on purpose: target_polycount is passed to the API as a real
+    #    parameter, so losing the prompt version costs nothing.
+    optional = _tokens(CLASS_STYLE.get(class_key, "")) + BASE_STYLE_TOKENS + [
+        f"clean topology around {budget.tri_target} triangles"
+    ]
+    geometry, style_dropped = _pack(
+        [required_text], optional, PROMPT_LIMIT - len(avoid_text) - 2
+    )
+    geometry = f"{geometry}, {avoid_text}"
+
+    # Texture. The subject anchors it; region palette outranks the generic
+    # painting notes because it is what makes regions read differently.
+    texture, texture_dropped = _pack(
+        _tokens(subject, "hand-painted stylized game texture"),
+        _tokens(
+            REGIONS.get(region, ""),
+            "flat colour blocks with soft gradients",
+            "no baked shadows",
+            "high value contrast between neighbouring materials",
+            extra,
+        ),
+        PROMPT_LIMIT,
+    )
+
+    return Prompt(
+        geometry=geometry,
+        texture=texture,
+        dropped=tuple(style_dropped + avoid_dropped + texture_dropped),
+    )
+
+
+def region_keys() -> list[str]:
+    return sorted(REGIONS)

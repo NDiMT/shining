@@ -1,0 +1,62 @@
+name: Asset tooling
+
+# Brief sections 73 and 79: generated content is validated automatically, and
+# AI-written code is not assumed correct. Both checks run without network access
+# and without spending Meshy credits, so this stays cheap enough to run on
+# every push.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run the tool test suite
+        # No dependencies installed on purpose. The suite must pass on a bare
+        # interpreter, which is what keeps the validator usable anywhere.
+        run: python -m unittest discover -s Tests -v
+
+      - name: Check catalogs parse and resolve
+        env:
+          PYTHONPATH: Tools
+        run: |
+          for catalog in Tools/catalog/*.json; do
+            echo "::group::$catalog"
+            python -m hollowasset prompt "$catalog"
+            echo "::endgroup::"
+          done
+
+      - name: Validate committed assets against their budgets
+        env:
+          PYTHONPATH: Tools
+        run: |
+          pip install --quiet Pillow
+          status=0
+          for catalog in Tools/catalog/*.json; do
+            python -m hollowasset validate --catalog "$catalog" || status=1
+          done
+          exit $status
+
+      - name: Check the provenance database is well formed
+        env:
+          PYTHONPATH: Tools
+        run: python -m hollowasset provenance
+
+      - name: Check no API key was committed
+        # The tooling never writes the key anywhere, but a paste into a catalog,
+        # a doc or a log would be caught here rather than after publication.
+        run: |
+          if git grep -nE 'msy_[A-Za-z0-9]{20,}' -- . ; then
+            echo "::error::a Meshy API key appears to be committed; rotate it and remove it"
+            exit 1
+          fi
+          echo "no key patterns found"
