@@ -13,6 +13,10 @@ public sealed record BattleDefinition
     public required BattleGrid Grid { get; init; }
     public required IReadOnlyList<Unit> Units { get; init; }
     public required IReadOnlyList<ObjectiveDefinition> Objectives { get; init; }
+    public IReadOnlyList<ObjectiveDefinition> DefeatConditions { get; init; } =
+        Array.Empty<ObjectiveDefinition>();
+    public IReadOnlyList<Battle.ScriptedEvent> Events { get; init; } =
+        Array.Empty<Battle.ScriptedEvent>();
     public IReadOnlyList<string> NonLethalSides { get; init; } = Array.Empty<string>();
     public string? Scene { get; init; }
     public string? Music { get; init; }
@@ -109,6 +113,15 @@ public static class BattleLoader
             Grid = grid,
             Units = units,
             Objectives = objectives,
+            DefeatConditions = (json.DefeatConditions ?? new List<ObjectiveJson>())
+                .Select(c => new ObjectiveDefinition
+                {
+                    Type = c.Type ?? "unit_defeated",
+                    Description = c.Description,
+                    UnitId = c.Unit,
+                })
+                .ToList(),
+            Events = ParseEvents(json.Events, path),
             NonLethalSides = (IReadOnlyList<string>?)json.Rules?.NonLethalSides
                              ?? Array.Empty<string>(),
             Scene = json.Scene,
@@ -118,6 +131,107 @@ public static class BattleLoader
             Gold = json.Rewards?.Gold ?? 0,
         };
     }
+
+    /// <summary>
+    /// Turn the JSON event list into typed scripted events.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately permissive about *fields* and strict about *shape*: an action
+    /// keeps whatever the JSON gave it, and whether the type is one the engine
+    /// implements is decided when it runs, so the error names the action rather
+    /// than a parse position.
+    /// </remarks>
+    private static IReadOnlyList<Battle.ScriptedEvent> ParseEvents(
+        List<EventJson>? source, string path)
+    {
+        var result = new List<Battle.ScriptedEvent>();
+        foreach (EventJson json in source ?? new List<EventJson>())
+        {
+            if (json.Trigger?.Type is null)
+            {
+                throw new ContentException(
+                    $"{path}: event '{json.Id}' has no trigger type");
+            }
+
+            var actions = new List<Battle.EventAction>();
+            foreach (ActionJson action in json.Actions ?? new List<ActionJson>())
+            {
+                if (action.Type is null)
+                {
+                    throw new ContentException($"{path}: event '{json.Id}' has a typeless action");
+                }
+
+                actions.Add(new Battle.EventAction
+                {
+                    Type = action.Type,
+                    Scene = action.Scene,
+                    Flag = action.Flag,
+                    Value = action.Value is { } value ? CanonicalValue(value) : null,
+                    Terrain = action.Terrain,
+                    Tiles = (action.Tiles ?? new List<List<int>>())
+                        .Where(t => t.Count == 2)
+                        .Select(t => (t[0], t[1]))
+                        .ToList(),
+                    UnitId = action.Unit,
+                    SpawnId = action.Id,
+                    DefinitionId = action.Enemy ?? action.Character ?? action.Npc,
+                    Position = action.Position is { Count: 2 }
+                        ? (action.Position[0], action.Position[1])
+                        : null,
+                    SideName = action.Side ?? action.To,
+                    UnitIds = (IReadOnlyList<string>?)action.Units ?? Array.Empty<string>(),
+                    Ai = action.Ai,
+                    Rule = action.Rule,
+                    Sound = action.Id,
+                    Intensity = action.Intensity,
+                    Objective = action.Objective is null ? null : new Battle.ObjectiveSpec
+                    {
+                        Type = action.Objective.Type
+                               ?? throw new ContentException(
+                                   $"{path}: event '{json.Id}' sets an objective with no type"),
+                        Description = action.Objective.Description,
+                        UnitId = action.Objective.Unit,
+                        Turns = action.Objective.Turns,
+                    },
+                });
+            }
+
+            result.Add(new Battle.ScriptedEvent
+            {
+                Id = json.Id ?? "unnamed",
+                Once = json.Once,
+                Trigger = new Battle.EventTrigger
+                {
+                    Type = json.Trigger.Type,
+                    Turn = json.Trigger.Turn,
+                    Side = json.Trigger.Side,
+                    Count = json.Trigger.Count,
+                    Comparison = json.Trigger.Comparison ?? "eq",
+                    UnitId = json.Trigger.Unit,
+                },
+                Actions = actions,
+            });
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Render a JSON value the way the rest of the project writes it.
+    /// </summary>
+    /// <remarks>
+    /// <c>JsonElement.ToString()</c> renders a boolean as "True", which does not
+    /// match the lowercase literals in flags.json's <c>allowed</c> lists and would
+    /// have written "True" into save files. Worth a helper rather than a cast.
+    /// </remarks>
+    private static string CanonicalValue(System.Text.Json.JsonElement value) => value.ValueKind switch
+    {
+        System.Text.Json.JsonValueKind.True => "true",
+        System.Text.Json.JsonValueKind.False => "false",
+        System.Text.Json.JsonValueKind.Null => string.Empty,
+        System.Text.Json.JsonValueKind.String => value.GetString() ?? string.Empty,
+        _ => value.GetRawText(),
+    };
 
     private static void AddUnits(
         List<Unit> into,
@@ -188,6 +302,49 @@ internal sealed class BattleJson
     public RulesJson? Rules { get; set; }
     public RewardsJson? Rewards { get; set; }
     [JsonPropertyName("on_victory")] public OnVictoryJson? OnVictory { get; set; }
+    [JsonPropertyName("defeat_conditions")] public List<ObjectiveJson>? DefeatConditions { get; set; }
+    public List<EventJson>? Events { get; set; }
+}
+
+internal sealed class EventJson
+{
+    public string? Id { get; set; }
+    public bool Once { get; set; }
+    public TriggerJson? Trigger { get; set; }
+    public List<ActionJson>? Actions { get; set; }
+}
+
+internal sealed class TriggerJson
+{
+    public string? Type { get; set; }
+    public int Turn { get; set; }
+    public string? Side { get; set; }
+    public int Count { get; set; }
+    public string? Comparison { get; set; }
+    public string? Unit { get; set; }
+}
+
+internal sealed class ActionJson
+{
+    public string? Type { get; set; }
+    public string? Scene { get; set; }
+    public string? Flag { get; set; }
+    public System.Text.Json.JsonElement? Value { get; set; }
+    public string? Terrain { get; set; }
+    public List<List<int>>? Tiles { get; set; }
+    public string? Unit { get; set; }
+    public List<string>? Units { get; set; }
+    public string? Id { get; set; }
+    public string? Enemy { get; set; }
+    public string? Character { get; set; }
+    public string? Npc { get; set; }
+    public List<int>? Position { get; set; }
+    public string? Side { get; set; }
+    public string? To { get; set; }
+    public string? Ai { get; set; }
+    public string? Rule { get; set; }
+    public double Intensity { get; set; }
+    public ObjectiveJson? Objective { get; set; }
 }
 
 internal sealed class SizeJson
