@@ -1,0 +1,115 @@
+{
+  "_comment": [
+    "Terrain types, per brief section 24. Terrain must meaningfully affect",
+    "battles and must be data-driven, so every rule lives here rather than in",
+    "code.",
+    "",
+    "'symbol' is the character used in a battle's terrain grid, which keeps",
+    "battle files readable and diffable at a glance.",
+    "",
+    "move_cost is in movement points. 'blocked' means impassable except for the",
+    "movement types listed in passable_by."
+  ],
+  "terrain": [
+    {
+      "id": "grass",
+      "symbol": "g",
+      "name": "Grass",
+      "move_cost": 1,
+      "defense_bonus": 0,
+      "evasion_bonus": 0,
+      "notes": "The baseline. Everything else is measured against this."
+    },
+    {
+      "id": "path",
+      "symbol": "p",
+      "name": "Road",
+      "move_cost": 1,
+      "defense_bonus": 0,
+      "evasion_bonus": 0,
+      "move_cost_mounted": 1,
+      "notes": "Cheap movement. Distinct from grass so mounted and wheeled units can be discounted later without touching every map."
+    },
+    {
+      "id": "forest",
+      "symbol": "t",
+      "name": "Forest",
+      "move_cost": 2,
+      "defense_bonus": 2,
+      "evasion_bonus": 10,
+      "blocks_line_of_sight": true,
+      "notes": "Brief section 24: higher cost for some units, defence bonus."
+    },
+    {
+      "id": "rock",
+      "symbol": "r",
+      "name": "Rocks",
+      "move_cost": 2,
+      "defense_bonus": 1,
+      "evasion_bonus": 0,
+      "notes": "Scatter cover on the North Meadow field."
+    },
+    {
+      "id": "hill",
+      "symbol": "h",
+      "name": "Hill",
+      "move_cost": 2,
+      "defense_bonus": 1,
+      "evasion_bonus": 0,
+      "height": 1,
+      "notes": "Height 1. The goblin archer takes this in battle 01 to teach ranged positioning."
+    },
+    {
+      "id": "fence",
+      "symbol": "f",
+      "name": "Fence",
+      "move_cost": 0,
+      "walkable": false,
+      "blocked": true,
+      "passable_by": ["flying"],
+      "defense_bonus": 0,
+      "notes": "Blocks ground movement, not sight. Shapes the approach in battle 01."
+    },
+    {
+      "id": "rubble",
+      "symbol": "u",
+      "name": "Rubble",
+      "move_cost": 2,
+      "defense_bonus": 1,
+      "evasion_bonus": 0,
+      "notes": "Created when the Crownwall collapses in battle 02."
+    },
+    {
+      "id": "wall",
+      "symbol": "W",
+      "name": "Crownwall",
+      "move_cost": 0,
+      "walkable": false,
+      "blocked": true,
+      "passable_by": [],
+      "blocks_line_of_sight": true,
+      "notes": "Absolutely impassable, including for flying units. Turn-3 events convert specific wall tiles to rubble."
+    },
+    {
+      "id": "obstacle",
+      "symbol": "o",
+      "name": "Obstacle",
+      "move_cost": 0,
+      "walkable": false,
+      "blocked": true,
+      "passable_by": ["flying"],
+      "blocks_line_of_sight": true,
+      "notes": "Generic solid prop: the overturned cart, the guard post, a building corner."
+    },
+    {
+      "id": "exit",
+      "symbol": "x",
+      "name": "Escape tile",
+      "move_cost": 1,
+      "defense_bonus": 0,
+      "evasion_bonus": 0,
+      "is_exit": true,
+      "notes": "Used by escape objectives and by the fleeing goblin spearman in battle 01."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "Skills, using the schema from brief section 37. The prologue needs exactly",
+    "one, and that is on purpose: Spark alone teaches ranged magic, MP cost and",
+    "elemental identity without a menu the player has to read."
+  ],
+  "skills": [
+    {
+      "id": "spark",
+      "name": "Spark",
+      "cost": 3,
+      "range": 3,
+      "area": { "shape": "single" },
+      "power": 6,
+      "element": "lightning",
+      "targets": "enemy",
+      "animation": "cast",
+      "effect": "fx_spark",
+      "icon": "Content/UI/Icons/skill_spark.png",
+      "description": "A short, loud bolt. Maeve is proud of it.",
+      "notes": "Power 6 plus Maeve's magic 9 minus a Goblin Raider's resistance 1 kills a 12 HP raider in exactly two casts. Brief section 60 wants the VFX simple but punchy; the script says the same."
+    }
+  ]
+}

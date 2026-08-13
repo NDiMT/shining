@@ -63,47 +63,66 @@ BASE_AVOID_TOKENS = [
     "logos",
 ]
 
-#: Per-class art direction. These are the deltas that give a class its identity
-#: at 30 metres on a tactical camera, which is the only distance that matters.
+#: Per-class **shape** direction. These are the deltas that give a class its
+#: identity at 30 metres on a tactical camera, which is the only distance that
+#: matters.
+#:
+#: Colour deliberately does not live here. It goes in CLASS_PALETTE and rides the
+#: texture prompt, which is both the correct place for it and the one with room
+#: to spare — a detailed hero subject fills the geometry prompt's 600 characters
+#: and would otherwise push the palette rule out entirely.
 CLASS_STYLE: dict[str, str] = {
     "hero": (
         "heroic proportions with broad shoulders and a slightly oversized head, "
-        "one dominant costume hue plus one bright accent and clean metal, "
         "distinctive hairstyle, strong cape or shoulder shape, iconic weapon"
     ),
-    "npc": (
-        "ordinary villager build, muted earthy costume with a single "
-        "brighter accent colour, simple cloth shapes"
-    ),
+    "npc": "ordinary villager build, simple cloth shapes",
     "enemy_humanoid": (
-        "menacing but readable build, cohesive faction colour, "
-        "crude asymmetric armour plates, exaggerated weapon"
+        "menacing but readable build, crude asymmetric armour plates, exaggerated weapon"
     ),
     "monster_large": (
         "heavy imposing mass, exaggerated dominant feature such as jaws claws or horns, "
-        "two-colour creature palette, readable animal silhouette"
+        "readable animal silhouette"
     ),
     "boss": (
         "commanding scale and theatrical silhouette, ornate but large-form armour, "
-        "single dramatic accent colour against dark values, unmistakable profile"
+        "unmistakable profile"
     ),
     "weapon": (
         "oversized game-readable proportions, thick blade or shaft, "
-        "clear metal and wood separation, simple pommel and guard"
+        "simple pommel and guard"
     ),
-    "prop": (
-        "chunky hand-made village craft object, visible plank and band shapes, "
-        "warm painted wood tones"
-    ),
+    "prop": "chunky hand-made village craft object, visible plank and band shapes",
     "vegetation": (
         "clustered angular canopy masses rather than individual leaves, "
-        "two-tone foliage with clear light and shadow greens, sturdy simple trunk"
+        "sturdy simple trunk"
     ),
     "building_module": (
         "modular kit piece with flush edges for tiling, "
         "timber-frame and plaster fantasy village construction, "
         "clean straight roof and wall planes"
     ),
+    "set_piece": (
+        "monumental scale with large unbroken planes, "
+        "no human-scale detail anywhere, silhouette read from far away"
+    ),
+}
+
+#: Per-class **colour** direction, applied to the texture prompt.
+#:
+#: Rule one of docs/STYLE_GUIDE.md is one dominant hue per character, and this is
+#: where that rule is actually enforced on the generator.
+CLASS_PALETTE: dict[str, str] = {
+    "hero": "one dominant costume hue plus one bright accent and clean metal",
+    "npc": "muted earthy costume with a single brighter accent colour",
+    "enemy_humanoid": "cohesive faction colour across every unit of the type",
+    "monster_large": "two-colour creature palette",
+    "boss": "single dramatic accent colour against dark values",
+    "weapon": "clear metal and wood separation",
+    "prop": "warm painted wood tones",
+    "vegetation": "two-tone foliage with clear light and shadow greens",
+    "building_module": "plaster, timber and thatch reading as three distinct values",
+    "set_piece": "narrow value range so it recedes behind foreground units",
 }
 
 #: Extra avoid-tokens per class, layered on top of BASE_AVOID.
@@ -266,10 +285,13 @@ def build(
     )
     geometry = f"{geometry}, {avoid_text}"
 
-    # Texture. The subject anchors it; region palette outranks the generic
-    # painting notes because it is what makes regions read differently.
+    # Texture. The subject anchors it, then the class palette rule, which is
+    # required rather than optional: it is rule one of the style guide and the
+    # single strongest lever on whether a cast reads as one art direction.
+    # Region light outranks the generic painting notes, because it is what makes
+    # the same mesh read as a different place.
     texture, texture_dropped = _pack(
-        _tokens(subject, "hand-painted stylized game texture"),
+        _tokens(subject, "hand-painted stylized game texture", CLASS_PALETTE.get(class_key, "")),
         _tokens(
             REGIONS.get(region, ""),
             "flat colour blocks with soft gradients",

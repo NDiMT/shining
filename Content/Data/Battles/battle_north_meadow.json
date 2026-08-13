@@ -1,0 +1,117 @@
+{
+  "_comment": [
+    "BATTLE 01 - North Meadow Ambush. The player's first battle.",
+    "",
+    "GRID CONVENTION, which applies to every battle file:",
+    "  x runs 0..width-1 west to east.",
+    "  y runs 0..height-1 SOUTH to north.",
+    "  The `terrain` array is written NORTH FIRST, so row 0 of the array is",
+    "  y = height-1. The file therefore reads like a map seen from above with",
+    "  north at the top, which is how it gets edited.",
+    "  Symbols are defined in Content/Data/terrain.json.",
+    "",
+    "Teaching load, in the order the script introduces it: grid, movement range,",
+    "attack, magic and MP, weapon range, height. Nothing else. Terrain defence",
+    "and evasion are active but not explained - the player meets those properly",
+    "in Chapter One."
+  ],
+  "id": "battle_north_meadow",
+  "name": "North Meadow Ambush",
+  "scene": "greenvale_outskirts",
+  "music": "battle_greenvale",
+  "size": { "width": 12, "height": 14 },
+  "terrain": [
+    "xxxxxxxxxxxx",
+    "ggggtggggggg",
+    "gggghhhggggg",
+    "gggghhhgggrg",
+    "ggrggggggggg",
+    "gggggoogggtg",
+    "ggffgggggggg",
+    "ggffggggrggg",
+    "gggggggggggg",
+    "ggggggggggrg",
+    "gggggggggggg",
+    "gggggpgggggg",
+    "gggggpgggggg",
+    "gggggpgggggg"
+  ],
+  "props": [
+    { "asset": "prop_merchant_cart_overturned", "position": [5, 8], "rotation": 25, "notes": "Occupies the two 'o' tiles at [5,8] and [6,8]." },
+    { "asset": "veg_tree_oak_a", "position": [4, 12] },
+    { "asset": "veg_tree_oak_b", "position": [10, 8] },
+    { "asset": "prop_fence_section", "position": [2, 7], "rotation": 0 },
+    { "asset": "prop_fence_section", "position": [3, 7], "rotation": 0 },
+    { "asset": "prop_fence_section", "position": [2, 6], "rotation": 0 },
+    { "asset": "prop_fence_section", "position": [3, 6], "rotation": 0 },
+    { "asset": "veg_rock_a", "position": [2, 9] },
+    { "asset": "veg_rock_a", "position": [10, 10], "scale": 0.8 },
+    { "asset": "veg_rock_a", "position": [8, 6], "scale": 1.2 },
+    { "asset": "veg_rock_a", "position": [10, 4], "scale": 0.9 }
+  ],
+  "objectives": [
+    {
+      "id": "primary",
+      "type": "defeat_all",
+      "description": "Defeat all enemies"
+    }
+  ],
+  "defeat_conditions": [
+    { "type": "unit_defeated", "unit": "rowan", "description": "Rowan falls" }
+  ],
+  "player_units": [
+    { "character": "rowan", "position": [5, 1] },
+    { "character": "tomas", "position": [4, 1] },
+    { "character": "maeve", "position": [5, 0] }
+  ],
+  "enemy_units": [
+    { "id": "raider_1", "enemy": "goblin_raider", "position": [4, 9] },
+    { "id": "raider_2", "enemy": "goblin_raider", "position": [7, 9] },
+    { "id": "raider_3", "enemy": "goblin_raider", "position": [3, 8] },
+    { "id": "raider_4", "enemy": "goblin_raider", "position": [8, 8] },
+    { "id": "spearman_1", "enemy": "goblin_spearman", "position": [3, 10] },
+    { "id": "spearman_2", "enemy": "goblin_spearman", "position": [8, 10] },
+    { "id": "archer_1", "enemy": "goblin_archer", "position": [6, 12] }
+  ],
+  "tutorials": [
+    { "trigger": "battle_start", "id": "tut_grid", "text": "Battles take place on a grid." },
+    { "trigger": "unit_selected", "unit": "rowan", "id": "tut_movement", "text": "Each unit has a movement range." },
+    { "trigger": "action_menu_open", "id": "tut_actions", "text": "Choose an action after moving." },
+    { "trigger": "first_attack", "id": "tut_attack", "text": "Attacks resolve immediately. Damage is previewed before you confirm." },
+    { "trigger": "unit_selected", "unit": "maeve", "id": "tut_magic", "text": "Magic can attack enemies from range, and costs MP." },
+    { "trigger": "unit_selected", "unit": "tomas", "id": "tut_weapon_range", "text": "Weapon range varies. A spear reaches two tiles." },
+    { "trigger": "flag", "flag": "archer_took_hill", "id": "tut_height", "text": "Height can improve ranged positioning." }
+  ],
+  "events": [
+    {
+      "id": "archer_takes_hill",
+      "trigger": { "type": "turn_start", "turn": 2, "side": "enemy" },
+      "actions": [
+        { "type": "force_move", "unit": "archer_1", "position": [5, 11] },
+        { "type": "set_flag", "flag": "archer_took_hill", "value": true, "scope": "battle" },
+        { "type": "focus_camera", "position": [5, 11] }
+      ],
+      "notes": "Scripted rather than left to the AI so the height tutorial is guaranteed to fire. From Chapter One onward the AI makes this decision itself."
+    },
+    {
+      "id": "spearman_flees",
+      "trigger": { "type": "enemies_remaining", "count": 3, "comparison": "lte" },
+      "once": true,
+      "actions": [
+        { "type": "dialogue", "scene": "prologue_battle_flee" },
+        { "type": "flee_to_exit", "unit": "spearman_2", "description": "Runs north off the battlefield edge." },
+        { "type": "set_flag", "flag": "goblin_spearman_fled", "value": true }
+      ],
+      "notes": "The script's mid-battle beat. Maeve's line - he is not running away from us, he is running toward the Wall - is the prologue's first real clue, and it lands during gameplay rather than in a cutscene."
+    }
+  ],
+  "rewards": {
+    "xp_per_unit": 24,
+    "gold": 20,
+    "items": [{ "id": "goblin_charm", "chance": 1.0 }]
+  },
+  "on_victory": {
+    "dialogue": "prologue_after_battle",
+    "autosave": true
+  }
+}

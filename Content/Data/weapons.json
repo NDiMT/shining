@@ -1,0 +1,141 @@
+{
+  "_comment": [
+    "Weapons, per brief section 36. range is in tiles; range 1 is adjacent.",
+    "model paths point at the asset pipeline's Weapons output."
+  ],
+  "weapons": [
+    {
+      "id": "wooden_training_sword",
+      "name": "Training Sword",
+      "type": "sword",
+      "attack": 1,
+      "range": 1,
+      "critical": 0,
+      "value": 5,
+      "model": "Content/Models/Weapons/weapon_training_sword_wood.glb",
+      "icon": "Content/UI/Icons/weapon_training_sword.png",
+      "description": "Barely a weapon. Rowan has had it since he was twelve."
+    },
+    {
+      "id": "iron_sword",
+      "name": "Iron Sword",
+      "type": "sword",
+      "attack": 3,
+      "range": 1,
+      "critical": 5,
+      "value": 120,
+      "model": "Content/Models/Weapons/weapon_iron_sword.glb",
+      "icon": "Content/UI/Icons/weapon_iron_sword.png",
+      "description": "Standard Greenvale issue. Plain, balanced, sharp."
+    },
+    {
+      "id": "apprentice_staff",
+      "name": "Apprentice Staff",
+      "type": "staff",
+      "attack": 1,
+      "magic": 2,
+      "range": 1,
+      "critical": 0,
+      "value": 90,
+      "model": "Content/Models/Weapons/weapon_apprentice_staff.glb",
+      "icon": "Content/UI/Icons/weapon_apprentice_staff.png",
+      "description": "Castle issue. The stone is not a good one."
+    },
+    {
+      "id": "soldier_spear",
+      "name": "Soldier's Spear",
+      "type": "spear",
+      "attack": 2,
+      "range": 2,
+      "critical": 3,
+      "value": 110,
+      "model": "Content/Models/Weapons/weapon_soldier_spear.glb",
+      "icon": "Content/UI/Icons/weapon_soldier_spear.png",
+      "description": "Reaches two tiles. Greenvale drills with it before anything else."
+    },
+    {
+      "id": "officer_sword",
+      "name": "Officer's Sword",
+      "type": "sword",
+      "attack": 6,
+      "range": 1,
+      "critical": 8,
+      "value": 400,
+      "model": "Content/Models/Weapons/weapon_officer_sword.glb",
+      "icon": "Content/UI/Icons/weapon_officer_sword.png",
+      "description": "Carried by those who give orders."
+    },
+    {
+      "id": "guard_shortsword",
+      "name": "Short Sword",
+      "type": "sword",
+      "attack": 2,
+      "range": 1,
+      "critical": 3,
+      "value": 80,
+      "model": "Content/Models/Weapons/weapon_guard_shortsword.glb",
+      "icon": "Content/UI/Icons/weapon_guard_shortsword.png",
+      "description": "Militia issue."
+    },
+    {
+      "id": "goblin_cleaver",
+      "name": "Notched Cleaver",
+      "type": "sword",
+      "attack": 1,
+      "range": 1,
+      "critical": 2,
+      "value": 20,
+      "model": "Content/Models/Weapons/weapon_goblin_cleaver.glb",
+      "icon": "Content/UI/Icons/weapon_goblin_cleaver.png",
+      "description": "Was a farm tool once."
+    },
+    {
+      "id": "goblin_spear",
+      "name": "Crooked Spear",
+      "type": "spear",
+      "attack": 1,
+      "range": 2,
+      "critical": 0,
+      "value": 25,
+      "model": "Content/Models/Weapons/weapon_goblin_spear.glb",
+      "icon": "Content/UI/Icons/weapon_goblin_spear.png",
+      "description": "Bone lashed to scrap iron."
+    },
+    {
+      "id": "goblin_shortbow",
+      "name": "Crude Short Bow",
+      "type": "bow",
+      "attack": 1,
+      "range": 3,
+      "critical": 2,
+      "value": 30,
+      "model": "Content/Models/Weapons/weapon_goblin_shortbow.glb",
+      "icon": "Content/UI/Icons/weapon_goblin_shortbow.png",
+      "description": "Short range, but it reaches further than you can walk."
+    }
+  ],
+  "armour": [
+    {
+      "id": "guard_mail",
+      "name": "Guard's Mail",
+      "type": "armour",
+      "defense": 2,
+      "value": 100,
+      "icon": "Content/UI/Icons/armour_guard_mail.png",
+      "description": "Greenvale issue. Heavier than it looks."
+    }
+  ],
+  "shields": [
+    {
+      "id": "round_shield",
+      "name": "Round Shield",
+      "type": "shield",
+      "defense": 1,
+      "evasion": 5,
+      "value": 70,
+      "model": "Content/Models/Weapons/weapon_guard_shield_round.glb",
+      "icon": "Content/UI/Icons/shield_round.png",
+      "description": "Painted with the green field of Greenvale."
+    }
+  ]
+}

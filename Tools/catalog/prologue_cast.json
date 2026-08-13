@@ -1,0 +1,211 @@
+{
+  "_comment": [
+    "Every character the prologue script needs, in script order of appearance.",
+    "Derived from Hollow Crown - Prologue Gameplay Script, 'Beyond the Wall'.",
+    "",
+    "This supersedes the earlier vertical_slice_characters.json, which was built",
+    "from brief section 69 before the script existed. Two differences matter:",
+    "the prologue boss is the WALLSTALKER, not a goblin commander, and the cast",
+    "includes Aldric, Varric, Tomas, Edrin and the refugees. See",
+    "docs/PROLOGUE_PRODUCTION.md for the discrepancy note.",
+    "",
+    "IMPORTANT: named characters use text-to-3d here, which makes them",
+    "BLOCKOUTS. Brief section 55 requires approved front/side/back concept art",
+    "for anything named. Add the URLs to 'references' and regenerate; the",
+    "pipeline switches to image-to-3d automatically.",
+    "",
+    "Palette assignments come from docs/STYLE_GUIDE.md. No two characters in the",
+    "same scene share an accent hue."
+  ],
+  "region": "greenvale",
+  "assets": [
+    {
+      "id": "hero_rowan",
+      "class": "hero",
+      "subject": "young human swordsman soldier in a light blue tabard over leather armour, short dark hair, a single asymmetric pauldron on the left shoulder, and a short travelling cape",
+      "extra": "cape and single pauldron carry the silhouette",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run", "attack_1", "attack_2", "block", "hit_front", "death", "victory"],
+      "references": [],
+      "notes": "Protagonist. Needs run and victory for the escape sequence and battle results. Blockout until concept art is approved."
+    },
+    {
+      "id": "hero_maeve",
+      "class": "hero",
+      "subject": "young human apprentice mage in a deep violet robe with wide sleeves, a short shoulder cloak, long light hair tied back, holding a simple wooden staff",
+      "extra": "wide sleeves and staff carry the silhouette",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run", "cast", "heal", "hit_front", "death", "victory"],
+      "references": [],
+      "notes": "Apprentice mage, not yet a full mage. Casts Spark in battle 01. Blockout until concept art is approved."
+    },
+    {
+      "id": "hero_tomas",
+      "class": "hero",
+      "subject": "young human soldier in a Greenvale guard tabard over mail, cropped sandy hair, a round shield on the back and a long spear",
+      "extra": "spear length is the readable silhouette, deliberately taller than Rowan",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run", "attack_1", "block", "hit_front", "death", "victory"],
+      "references": [],
+      "notes": "Party member in both prologue battles. Stays in Greenvale at the end and returns later, so he needs a full animation set rather than an NPC's."
+    },
+    {
+      "id": "npc_aldric",
+      "class": "npc",
+      "subject": "weathered human captain in his late forties, greying beard, a worn officer's surcoat over mail, a heavy sword at the hip, no helmet",
+      "extra": "grey beard and bare head separate him from every helmeted soldier",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "attack_1", "hit_front"],
+      "references": [],
+      "notes": "Mentor. Draws his sword on Varric in scene 09, so he needs attack_1 despite being an NPC. If he ever becomes recruitable, move him to the hero budget."
+    },
+    {
+      "id": "npc_varric",
+      "class": "npc",
+      "subject": "cold human officer in polished dark plate with a tall crested helm and a long crimson half-cloak, mounted officer's sword",
+      "extra": "polished and immaculate, deliberately the cleanest figure in a dusty scene",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "attack_1", "hit_front"],
+      "references": [],
+      "notes": "Antagonist of the prologue, not a villain. Fights alongside Rowan against the Wallstalker."
+    },
+    {
+      "id": "npc_edrin",
+      "class": "npc",
+      "subject": "young human guard recruit in a plain Greenvale tabard over padded cloth, untidy hair, holding a training sword",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk"],
+      "references": [],
+      "notes": "Training yard only. Script flags him as memorable for a possible return when Rowan comes home."
+    },
+    {
+      "id": "npc_guard_greenvale",
+      "class": "npc",
+      "subject": "human Greenvale soldier in a green tabard over mail with a conical helm, round shield and short sword",
+      "extra": "faceless by design so the mesh can be reused across the whole squad",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "attack_1", "block", "hit_front", "death"],
+      "notes": "Reused for the gate guard, the training yard guards, Captain Heron's unconscious men and Varric's squad in battle 02. One mesh, recoloured and rescaled per role."
+    },
+    {
+      "id": "npc_villager_old_woman",
+      "class": "npc",
+      "subject": "stooped elderly human woman in a long brown shawl and apron, grey hair in a bun, holding a wicker basket",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk"],
+      "notes": "The mother hint in Greenvale. Needs no combat animations."
+    },
+    {
+      "id": "npc_villager_child",
+      "class": "npc",
+      "subject": "small human village child in a simple ochre tunic and bare feet, messy hair",
+      "extra": "roughly two thirds the height of an adult villager",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run"],
+      "notes": "Runs away after Maeve's giant joke, so it needs run."
+    },
+    {
+      "id": "npc_villager_blacksmith",
+      "class": "npc",
+      "subject": "broad human blacksmith in a heavy leather apron over bare arms, cloth head wrap, holding a hammer",
+      "extra": "widest villager silhouette, bare arms read at distance",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk"]
+    },
+    {
+      "id": "npc_refugee_man",
+      "class": "npc",
+      "subject": "gaunt human man in unfamiliar layered travelling clothes of teal and dusty ochre, a wrapped headscarf and a heavy pack",
+      "extra": "clothing must read as foreign against every Greenvale palette",
+      "region": "outer_world",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run", "hit_front"],
+      "notes": "Brief section 6 and the script both hang on this: the refugees must look like they come from somewhere the player has never seen. Their palette is outer_world, not greenvale, and that contrast is the story reveal."
+    },
+    {
+      "id": "npc_refugee_woman",
+      "class": "npc",
+      "subject": "human woman in unfamiliar layered travelling clothes of teal and dusty ochre, a long shawl, carrying a bundled infant",
+      "region": "outer_world",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run"],
+      "notes": "Maeve's line 'unless monsters have started carrying babies' depends on this silhouette being readable through a crack in the wall."
+    },
+    {
+      "id": "npc_refugee_child",
+      "class": "npc",
+      "subject": "small human child in oversized unfamiliar travelling clothes of faded teal, clutching a cloth doll",
+      "region": "outer_world",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run"]
+    },
+    {
+      "id": "npc_refugee_leader",
+      "class": "npc",
+      "subject": "older human man in unfamiliar layered clothing with a weathered leather coat, close-cropped grey hair and a long scar, carrying a battered sword",
+      "extra": "the coat and scar mark him out from the other refugees",
+      "region": "outer_world",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "hit_front"],
+      "notes": "Delivers the 'you think this wall protects you' beat. Likely recurring, so treat as a named character and get concept art."
+    },
+    {
+      "id": "enemy_goblin_raider",
+      "class": "enemy_humanoid",
+      "subject": "small hunched goblin in mismatched scrap leather with a notched cleaver, oversized pointed ears and a broad grin",
+      "extra": "sickly green skin, rust-red faction rag, low crouched profile",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "attack_1", "hit_front", "death"],
+      "notes": "Four in battle 01."
+    },
+    {
+      "id": "enemy_goblin_spearman",
+      "class": "enemy_humanoid",
+      "subject": "small goblin in scrap leather with a crude long spear and a plank shield, rust-red arm wrap",
+      "extra": "same green and rust palette as the raider, spear makes the two-tile reach readable",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "run", "attack_1", "hit_front", "death"],
+      "notes": "Two in battle 01. One flees north toward the Wall in the mid-battle event, so it needs run."
+    },
+    {
+      "id": "enemy_goblin_archer",
+      "class": "enemy_humanoid",
+      "subject": "small goblin archer with a crude short bow, a scrap-leather chest wrap and a rust-red headband",
+      "extra": "same green and rust palette as the raider",
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "attack_1", "hit_front", "death"],
+      "notes": "One in battle 01. Takes the hill to demonstrate height advantage."
+    },
+    {
+      "id": "boss_wallstalker",
+      "class": "monster_large",
+      "subject": "alien armoured quadruped beast with a chitinous plated head shield, four long blade-tipped limbs and no visible eyes, void violet carapace with pale gold seams",
+      "extra": "heavily plated front, exposed soft flank and rear, silhouette unlike any known monster",
+      "enable_pbr": true,
+      "pose": "t-pose",
+      "rig": true,
+      "animations": ["idle", "walk", "attack_1", "heavy_attack", "hit_front", "death"],
+      "notes": "Prologue mini-boss, level 3. Its armoured front and weak flanks are the positioning tutorial, so the plating must be visually obvious from the tactical camera or the mechanic is unfair. Palette is the sealed-fragment faction from the style guide, not the goblin faction: this is the player's first glimpse of what the Crownwall really holds."
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "_comment": [
+    "Classes, per brief section 30. Each defines stat tendencies, equipment,",
+    "movement, abilities and promotions. Only the classes the prologue needs are",
+    "here; the full roster of brief section 30 arrives with the characters that",
+    "use them.",
+    "",
+    "growth values are percentage chances of gaining a point on level up (brief",
+    "section 32). Bounded randomness, so an unlucky run cannot make a character",
+    "unusable."
+  ],
+  "classes": [
+    {
+      "id": "swordsman",
+      "name": "Swordsman",
+      "movement": 6,
+      "movement_type": "ground",
+      "equippable": ["sword", "shield", "armour", "accessory"],
+      "growth": { "hp": 80, "mp": 20, "attack": 70, "defense": 45, "magic": 10, "resistance": 30, "agility": 55 },
+      "skills": [],
+      "promotions": ["hero", "blademaster"],
+      "notes": "Rowan. Brief section 31 lists a secret Dragon Knight path unlocked by a hidden item."
+    },
+    {
+      "id": "apprentice_mage",
+      "name": "Apprentice Mage",
+      "movement": 5,
+      "movement_type": "ground",
+      "equippable": ["staff", "robe", "accessory"],
+      "growth": { "hp": 40, "mp": 85, "attack": 20, "defense": 25, "magic": 80, "resistance": 65, "agility": 50 },
+      "skills": ["spark"],
+      "promotions": ["mage"],
+      "notes": "Maeve starts here rather than at Mage. Promoting to Mage is an early reward, and the Wizard / Sorcerer / Elementalist paths of brief section 31 branch from Mage."
+    },
+    {
+      "id": "soldier",
+      "name": "Soldier",
+      "movement": 5,
+      "movement_type": "ground",
+      "equippable": ["spear", "shield", "armour", "accessory"],
+      "growth": { "hp": 75, "mp": 10, "attack": 60, "defense": 60, "magic": 5, "resistance": 30, "agility": 40 },
+      "skills": [],
+      "promotions": ["spearmaster", "knight"],
+      "notes": "Tomas. Spear range 2 is what teaches weapon range in battle 01."
+    },
+    {
+      "id": "officer",
+      "name": "Officer",
+      "movement": 6,
+      "movement_type": "ground",
+      "equippable": ["sword", "shield", "armour", "accessory"],
+      "growth": { "hp": 70, "mp": 20, "attack": 65, "defense": 55, "magic": 10, "resistance": 40, "agility": 50 },
+      "skills": [],
+      "promotions": [],
+      "notes": "Aldric and Varric. Not player-controlled in the prologue."
+    },
+    {
+      "id": "guard",
+      "name": "Guard",
+      "movement": 5,
+      "movement_type": "ground",
+      "equippable": ["sword", "shield", "armour"],
+      "growth": { "hp": 65, "mp": 5, "attack": 50, "defense": 55, "magic": 0, "resistance": 25, "agility": 40 },
+      "skills": [],
+      "promotions": [],
+      "notes": "Greenvale rank and file. Enemies in battle 02, then allies."
+    },
+    {
+      "id": "goblin_raider",
+      "name": "Goblin Raider",
+      "movement": 5,
+      "movement_type": "ground",
+      "equippable": ["sword"],
+      "growth": { "hp": 45, "mp": 0, "attack": 45, "defense": 25, "magic": 0, "resistance": 10, "agility": 55 },
+      "skills": [],
+      "promotions": []
+    },
+    {
+      "id": "goblin_spearman",
+      "name": "Goblin Spearman",
+      "movement": 5,
+      "movement_type": "ground",
+      "equippable": ["spear"],
+      "growth": { "hp": 50, "mp": 0, "attack": 45, "defense": 30, "magic": 0, "resistance": 10, "agility": 45 },
+      "skills": [],
+      "promotions": []
+    },
+    {
+      "id": "goblin_archer",
+      "name": "Goblin Archer",
+      "movement": 5,
+      "movement_type": "ground",
+      "equippable": ["bow"],
+      "growth": { "hp": 40, "mp": 0, "attack": 40, "defense": 20, "magic": 0, "resistance": 10, "agility": 60 },
+      "skills": [],
+      "promotions": []
+    },
+    {
+      "id": "aberration",
+      "name": "Aberration",
+      "movement": 4,
+      "movement_type": "ground",
+      "equippable": [],
+      "growth": { "hp": 95, "mp": 0, "attack": 75, "defense": 70, "magic": 0, "resistance": 50, "agility": 35 },
+      "skills": [],
+      "promotions": [],
+      "directional_armour": {
+        "front": 8,
+        "flank": 2,
+        "rear": 0
+      },
+      "notes": "The Wallstalker's class. directional_armour is added to defence based on the attacker's facing relative to the unit, which is the whole positioning tutorial. It is introduced here and reused for later sealed-fragment creatures, so it belongs on the class rather than on the one unit."
+    }
+  ]
+}

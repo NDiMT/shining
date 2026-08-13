@@ -1,0 +1,145 @@
+{
+  "_comment": [
+    "BATTLE 02 - The Breach. The prologue's second battle and the demonstration",
+    "that objectives change mid-fight (brief section 41).",
+    "",
+    "Three things make this battle the one worth getting right:",
+    "",
+    "1. NON-LETHAL. Human enemies reduced to 0 HP are incapacitated, not killed.",
+    "   The script is explicit, and the reason is character: Rowan must not become",
+    "   a murderer in his first hour.",
+    "2. THE ENEMY IS NOT THE VILLAIN. Greenvale soldiers hesitate and call Rowan",
+    "   by name. Their AI is deliberately passive for the first two turns.",
+    "3. SIDES SWITCH. On turn 3 the Wall collapses, the Wallstalker emerges, and",
+    "   every human enemy becomes an ally against it.",
+    "",
+    "Grid convention as in battle_north_meadow.json: north first, y counts south",
+    "to north. The Crownwall runs along the entire north edge."
+  ],
+  "id": "battle_the_breach",
+  "name": "The Breach",
+  "scene": "old_watchtower",
+  "music": "battle_tense",
+  "size": { "width": 14, "height": 12 },
+  "terrain": [
+    "WWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWW",
+    "gguuggggggoogg",
+    "ggggggggggoggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggpppgggggg",
+    "gggggpppgggggg"
+  ],
+  "props": [
+    { "asset": "set_crownwall_breach", "position": [6, 10], "scale": 1.0, "notes": "The cracked section. Sits on the wall tiles the turn-3 event converts to rubble." },
+    { "asset": "set_crownwall_section", "position": [0, 11], "scale": 1.0, "notes": "Tiles east and west to fill the skyline behind the breach." },
+    { "asset": "set_watchtower", "position": [10, 9], "notes": "Occupies the two 'o' tiles at [10,9] and [11,9]." },
+    { "asset": "prop_guard_checkpoint", "position": [10, 8] },
+    { "asset": "prop_broken_sword", "position": [4, 7], "notes": "Decoration on a walkable tile, not an obstacle." }
+  ],
+  "rules": {
+    "non_lethal_sides": ["enemy"],
+    "non_lethal_message": "Human enemies reduced to 0 HP in this battle will be incapacitated rather than killed."
+  },
+  "objectives": [
+    {
+      "id": "primary",
+      "type": "survive_turns",
+      "turns": 3,
+      "description": "Survive"
+    }
+  ],
+  "defeat_conditions": [
+    { "type": "unit_defeated", "unit": "rowan", "description": "Rowan falls" },
+    { "type": "unit_defeated", "unit": "maeve", "description": "Maeve falls" }
+  ],
+  "player_units": [
+    { "character": "rowan", "position": [6, 8] },
+    { "character": "maeve", "position": [5, 7] },
+    { "character": "tomas", "position": [7, 8] }
+  ],
+  "ally_units": [
+    { "id": "injured_guard_1", "npc": "greenvale_soldier", "position": [9, 7], "hp_percent": 40, "ai": "defensive_guard" },
+    { "id": "injured_guard_2", "npc": "greenvale_soldier", "position": [10, 6], "hp_percent": 35, "ai": "defensive_guard" }
+  ],
+  "enemy_units": [
+    { "id": "varric", "character": "varric", "position": [6, 1], "ai": "hold_position", "is_commander": true },
+    { "id": "soldier_1", "npc": "greenvale_soldier", "position": [4, 2], "ai": "hesitant" },
+    { "id": "soldier_2", "npc": "greenvale_soldier", "position": [5, 2], "ai": "hesitant" },
+    { "id": "soldier_3", "npc": "greenvale_soldier", "position": [7, 2], "ai": "hesitant" },
+    { "id": "soldier_4", "npc": "greenvale_soldier", "position": [8, 2], "ai": "hesitant" },
+    { "id": "soldier_5", "npc": "greenvale_soldier", "position": [6, 3], "ai": "hesitant" }
+  ],
+  "tutorials": [
+    { "trigger": "battle_start", "id": "tut_non_lethal", "text": "Human enemies reduced to 0 HP in this battle will be incapacitated rather than killed." },
+    { "trigger": "flag", "flag": "wallstalker_spawned", "id": "tut_positioning", "text": "Some enemies are armoured on one side. Attack from the flank or the rear." }
+  ],
+  "events": [
+    {
+      "id": "soldiers_hesitate",
+      "trigger": { "type": "turn_start", "turn": 1, "side": "enemy" },
+      "actions": [
+        { "type": "dialogue", "scene": "prologue_soldiers_hesitate" }
+      ],
+      "notes": "The line 'Don't make us do this!' fires before the first enemy acts, so the player understands who they are fighting before any blood is spilled."
+    },
+    {
+      "id": "wall_collapses",
+      "trigger": { "type": "turn_start", "turn": 3, "side": "player" },
+      "once": true,
+      "actions": [
+        { "type": "screen_shake", "intensity": 0.8, "duration": 1.2 },
+        { "type": "sound", "id": "sfx_wall_impact_massive" },
+        { "type": "set_terrain", "tiles": [[6, 11], [7, 11], [6, 10], [7, 10]], "terrain": "rubble" },
+        { "type": "swap_prop", "from": "set_crownwall_breach", "to": "set_crownwall_breach_collapsed" },
+        { "type": "dialogue", "scene": "prologue_wall_collapses" },
+        {
+          "type": "spawn_unit",
+          "id": "wallstalker",
+          "enemy": "wallstalker",
+          "position": [6, 10],
+          "side": "hostile_to_all",
+          "_ordering_note": "Must run after set_terrain. [6,10] is a Crownwall tile until the line above converts it to rubble, and spawning onto an impassable tile is the kind of bug that only shows up once."
+        },
+        { "type": "set_flag", "flag": "wallstalker_spawned", "value": true, "scope": "battle" },
+        { "type": "change_side", "units": ["varric", "soldier_1", "soldier_2", "soldier_3", "soldier_4", "soldier_5"], "to": "ally" },
+        { "type": "set_ai", "units": ["varric", "soldier_1", "soldier_2", "soldier_3", "soldier_4", "soldier_5"], "ai": "aggressive_melee" },
+        { "type": "set_objective", "objective": { "id": "primary", "type": "defeat_unit", "unit": "wallstalker", "description": "Defeat the creature" } },
+        { "type": "clear_rule", "rule": "non_lethal_sides" },
+        { "type": "focus_camera", "position": [6, 10] },
+        { "type": "set_flag", "flag": "crownwall_breached", "value": true },
+        { "type": "set_flag", "flag": "met_wallstalker", "value": true }
+      ],
+      "notes": "The centrepiece. Everything the engine needs for a dynamic battle is exercised here: terrain mutation, prop swap, mid-battle spawn, side switching, AI reassignment, objective replacement and rule removal. If the engine can run this event, it can run brief section 42's collapsing bridge battle."
+    },
+    {
+      "id": "varric_banter",
+      "trigger": { "type": "turn_start", "turn": 4, "side": "player" },
+      "once": true,
+      "actions": [{ "type": "dialogue", "scene": "prologue_varric_banter" }]
+    },
+    {
+      "id": "refugees_pass",
+      "trigger": { "type": "unit_defeated", "unit": "wallstalker" },
+      "actions": [
+        { "type": "set_flag", "flag": "refugees_entered_greenvale", "value": true },
+        { "type": "spawn_decoration", "units": ["refugee_man", "refugee_woman", "refugee_child"], "path": "through_breach" },
+        { "type": "sound", "id": "sfx_horns_distant" }
+      ]
+    }
+  ],
+  "rewards": {
+    "xp_per_unit": 70,
+    "gold": 0,
+    "items": []
+  },
+  "on_victory": {
+    "dialogue": "prologue_wallstalker_defeated",
+    "autosave": true
+  }
+}

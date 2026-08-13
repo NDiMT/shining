@@ -17,7 +17,7 @@ import argparse
 import os
 import sys
 
-from . import budgets, meshy, pipeline, provenance, style, validate
+from . import budgets, content, meshy, pipeline, provenance, style, validate
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -54,6 +54,13 @@ def main(argv: list[str] | None = None) -> int:
     validate_parser.add_argument("--catalog", help="validate every asset in this catalog")
     validate_parser.add_argument("--verbose", action="store_true", help="show INFO findings too")
 
+    content_parser = subparsers.add_parser(
+        "validate-content", help="validate game data: characters, battles, dialogue, flags"
+    )
+    content_parser.add_argument("--data", default="Content/Data")
+    content_parser.add_argument("--catalogs", default="Tools/catalog")
+    content_parser.add_argument("--verbose", action="store_true", help="show INFO findings too")
+
     provenance_parser = subparsers.add_parser("provenance", help="inspect the asset database")
     provenance_parser.add_argument("--report", action="store_true", help="render markdown")
     provenance_parser.add_argument("--out", help="write the report here instead of stdout")
@@ -86,6 +93,9 @@ def _dispatch(args: argparse.Namespace) -> int:
 
     if args.command == "validate":
         return _cmd_validate(args)
+
+    if args.command == "validate-content":
+        return _cmd_validate_content(args)
 
     if args.command == "provenance":
         return _cmd_provenance(args)
@@ -182,6 +192,16 @@ def _cmd_validate(args: argparse.Namespace) -> int:
             failures += 1
     print(f"\n{len(targets) - failures}/{len(targets)} passed")
     return 1 if failures else 0
+
+
+def _cmd_validate_content(args: argparse.Namespace) -> int:
+    data = content.load(args.data, args.catalogs)
+    report = content.validate(data)
+    print(report.summary())
+    for finding in report.findings:
+        if args.verbose or finding.severity >= validate.Severity.WARN:
+            print(f"  {finding}")
+    return 0 if report.ok else 1
 
 
 def _cmd_provenance(args: argparse.Namespace) -> int:

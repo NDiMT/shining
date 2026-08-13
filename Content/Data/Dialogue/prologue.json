@@ -1,0 +1,504 @@
+{
+  "_comment": [
+    "Every dialogue scene in the prologue, transcribed from the gameplay script.",
+    "",
+    "Brief section 43: dialogue content must live outside executable code. It also",
+    "has to be localisable, so no line is assembled from fragments at runtime -",
+    "each `text` is one complete translatable string.",
+    "",
+    "`portrait` names an expression, not a file. The portrait system resolves",
+    "speaker plus expression to an image, so adding an expression does not mean",
+    "editing dialogue.",
+    "",
+    "`speaker: null` is narration or on-screen text with no portrait."
+  ],
+  "expressions": ["neutral", "smile", "smirk", "worried", "angry", "shocked", "sad", "cold", "serious", "tired"],
+  "scenes": [
+    {
+      "id": "prologue_opening",
+      "type": "title_sequence",
+      "music": null,
+      "ambience": "wind_faint",
+      "lines": [
+        { "speaker": null, "sfx": "sfx_metal_groan_distant", "wait": 2.0 },
+        { "speaker": null, "sfx": "sfx_impact_massive", "screen_shake": 0.4, "wait": 1.5 },
+        { "speaker": null, "sfx": "sfx_impact_massive", "screen_shake": 0.4, "wait": 1.5 },
+        { "speaker": null, "style": "title_card", "text": "FOR SEVEN HUNDRED YEARS, THE CROWNWALL HAS KEPT US SAFE." },
+        { "speaker": null, "style": "title_card", "text": "BEYOND IT LIES NOTHING." },
+        { "speaker": null, "style": "title_card", "text": "AT LEAST, THAT IS WHAT WE WERE TAUGHT." }
+      ]
+    },
+    {
+      "id": "greenvale_intro",
+      "music": "greenvale_theme",
+      "lines": [
+        { "speaker": "rowan", "portrait": "tired", "text": "Ow." },
+        { "speaker": "maeve", "portrait": "smile", "text": "Good. You're alive." },
+        { "speaker": "rowan", "portrait": "tired", "text": "Barely." },
+        { "speaker": "maeve", "portrait": "neutral", "text": "Captain Aldric has been looking for you." },
+        { "speaker": "rowan", "portrait": "worried", "text": "How angry?" },
+        { "speaker": "maeve", "portrait": "smirk", "text": "He used your full name." },
+        { "speaker": "rowan", "portrait": "shocked", "text": "Oh." },
+        { "speaker": "maeve", "portrait": "smirk", "text": "Exactly." }
+      ],
+      "on_complete": { "grant_control": true, "objective": "report_to_aldric" }
+    },
+    {
+      "id": "greenvale_old_woman",
+      "optional": true,
+      "lines": [
+        { "speaker": "villager_old_woman", "portrait": "smile", "text": "Late again, Rowan?" },
+        { "speaker": "rowan", "portrait": "smirk", "text": "Technically I'm exactly on time for being late." },
+        { "speaker": "villager_old_woman", "portrait": "neutral", "text": "Your mother used to say the same thing." },
+        { "speaker": null, "direction": "Maeve looks at Rowan. Rowan says nothing." }
+      ],
+      "notes": "The script is explicit: do not explain the mother yet. The silence is the content."
+    },
+    {
+      "id": "greenvale_child",
+      "optional": true,
+      "lines": [
+        { "speaker": "villager_child", "portrait": "smile", "text": "Rowan! Rowan!" },
+        { "speaker": "rowan", "portrait": "neutral", "text": "What?" },
+        { "speaker": "villager_child", "portrait": "smile", "text": "Is it true there are giants beyond the Wall?" },
+        { "speaker": "maeve", "portrait": "serious", "text": "Yes." },
+        { "speaker": "villager_child", "portrait": "shocked", "text": "Really?!" },
+        { "speaker": "maeve", "portrait": "serious", "text": "Huge ones." },
+        { "speaker": "maeve", "portrait": "smirk", "text": "They eat children who ask too many questions." },
+        { "speaker": null, "direction": "The child runs away." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "You're terrible." },
+        { "speaker": "maeve", "portrait": "smile", "text": "Effective, though." }
+      ]
+    },
+    {
+      "id": "greenvale_barrel_first",
+      "optional": true,
+      "lines": [
+        { "speaker": null, "style": "system", "text": "You found a MEDICINAL HERB." },
+        { "speaker": null, "style": "tutorial", "text": "Items can be found by exploring the world." },
+        { "speaker": "maeve", "portrait": "smirk", "text": "Are you stealing vegetables again?" },
+        { "speaker": "rowan", "portrait": "neutral", "text": "It's called resource management." }
+      ],
+      "on_complete": { "give_item": "medicinal_herb", "count": 1 }
+    },
+    {
+      "id": "greenvale_well",
+      "optional": true,
+      "lines": [
+        { "speaker": null, "style": "inspect", "text": "The well water is unusually cold today." },
+        { "speaker": "maeve", "portrait": "worried", "text": "That's strange." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Why?" },
+        { "speaker": "maeve", "portrait": "worried", "text": "It wasn't yesterday." }
+      ],
+      "on_complete": { "set_flag": { "found_well_cold": true } },
+      "notes": "Foreshadowing with no explanation, per the script. Rewards curiosity without gating anything."
+    },
+    {
+      "id": "training_yard_aldric",
+      "lines": [
+        { "speaker": "aldric", "portrait": "serious", "text": "Good of you to join us." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Morning, Captain." },
+        { "speaker": "aldric", "portrait": "serious", "text": "It's nearly noon." },
+        { "speaker": null, "direction": "Rowan looks at the sky." },
+        { "speaker": "rowan", "portrait": "smirk", "text": "Still feels like morning." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Twenty laps around the courtyard." },
+        { "speaker": "rowan", "portrait": "worried", "text": "Captain—" },
+        { "speaker": "aldric", "portrait": "serious", "text": "Thirty." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Twenty sounds good." },
+        { "speaker": null, "direction": "Maeve laughs. Aldric notices her." },
+        { "speaker": "aldric", "portrait": "neutral", "text": "And why exactly is the castle apprentice mage here?" },
+        { "speaker": "maeve", "portrait": "smile", "text": "Moral support." },
+        { "speaker": "aldric", "portrait": "neutral", "text": "For whom?" },
+        { "speaker": "maeve", "portrait": "smile", "text": "Me." },
+        { "speaker": null, "direction": "Aldric sighs." }
+      ]
+    },
+    {
+      "id": "training_yard_sword",
+      "lines": [
+        { "speaker": null, "style": "system", "text": "Rowan received the IRON SWORD." },
+        { "speaker": null, "style": "tutorial", "text": "Equipment changes a character's combat stats." }
+      ],
+      "on_complete": { "give_item": "iron_sword", "equip": { "character": "rowan", "slot": "weapon", "item": "iron_sword" } }
+    },
+    {
+      "id": "prologue_first_assignment",
+      "lines": [
+        { "speaker": "aldric", "portrait": "serious", "text": "Shepherd came down from North Meadow this morning." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Wolves?" },
+        { "speaker": "aldric", "portrait": "serious", "text": "Goblins." },
+        { "speaker": null, "direction": "Maeve's smile disappears." },
+        { "speaker": "rowan", "portrait": "worried", "text": "This close to Greenvale?" },
+        { "speaker": "aldric", "portrait": "serious", "text": "Three sightings in two days." },
+        { "speaker": "tomas", "portrait": "neutral", "text": "Probably stragglers." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Probably." },
+        { "speaker": null, "direction": "Small pause." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Which is why you are going to find out." },
+        { "speaker": "rowan", "portrait": "shocked", "text": "Me?" },
+        { "speaker": "aldric", "portrait": "neutral", "text": "You wanted field duty." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "I wanted interesting field duty." },
+        { "speaker": "aldric", "portrait": "smirk", "text": "Goblins trying to stab you generally qualifies." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Tomas goes with you." },
+        { "speaker": "tomas", "portrait": "serious", "text": "Yes, sir." },
+        { "speaker": null, "direction": "Maeve immediately walks toward Rowan." },
+        { "speaker": "aldric", "portrait": "serious", "text": "No." },
+        { "speaker": "maeve", "portrait": "neutral", "text": "I haven't said anything." },
+        { "speaker": "aldric", "portrait": "serious", "text": "You were about to." },
+        { "speaker": "maeve", "portrait": "neutral", "text": "I should go with them." },
+        { "speaker": "aldric", "portrait": "serious", "text": "You're an apprentice." },
+        { "speaker": "maeve", "portrait": "smile", "text": "An extremely talented apprentice." },
+        { "speaker": null, "direction": "A beat. Somewhere in the castle, something EXPLODES. Smoke rises. Maeve ignores it.", "sfx": "sfx_distant_explosion" },
+        { "speaker": "maeve", "portrait": "neutral", "text": "Mostly." },
+        { "speaker": "aldric", "portrait": "tired", "text": "Fine." },
+        { "speaker": "maeve", "portrait": "shocked", "text": "Really?" },
+        { "speaker": "aldric", "portrait": "serious", "text": "You'll stay behind Rowan." },
+        { "speaker": null, "direction": "Maeve smiles." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Far behind Rowan." },
+        { "speaker": "rowan", "portrait": "tired", "text": "Wonderful." }
+      ],
+      "on_complete": {
+        "add_party_member": ["tomas", "maeve"],
+        "objective": "investigate_north_meadow"
+      }
+    },
+    {
+      "id": "greenvale_gate_guard",
+      "lines": [
+        { "speaker": "gate_guard", "portrait": "neutral", "text": "You three heading north?" },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Apparently." },
+        { "speaker": "gate_guard", "portrait": "worried", "text": "Keep away from the old watchtower." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Why?" },
+        { "speaker": "gate_guard", "portrait": "worried", "text": "Ground's been shaking up there since last night." },
+        { "speaker": "maeve", "portrait": "neutral", "text": "Earthquake?" },
+        { "speaker": "gate_guard", "portrait": "worried", "text": "Maybe." },
+        { "speaker": null, "direction": "He glances toward the Crownwall." },
+        { "speaker": "gate_guard", "portrait": "worried", "text": "Didn't feel natural." }
+      ],
+      "on_complete": { "set_flag": { "heard_watchtower_warning": true } }
+    },
+    {
+      "id": "prologue_ambush_spotted",
+      "lines": [
+        { "speaker": null, "direction": "Maeve crouches." },
+        { "speaker": "maeve", "portrait": "serious", "text": "There." },
+        { "speaker": null, "direction": "Three goblins are visible near overturned carts. Tomas draws his spear." },
+        { "speaker": "tomas", "portrait": "serious", "text": "Only three." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "That's never a reassuring sentence." },
+        { "speaker": null, "direction": "Additional goblins emerge from the grass." },
+        { "speaker": "tomas", "portrait": "worried", "text": "Seven." },
+        { "speaker": "rowan", "portrait": "smirk", "text": "Much better." }
+      ],
+      "on_complete": { "start_battle": "battle_north_meadow" }
+    },
+    {
+      "id": "prologue_battle_flee",
+      "lines": [
+        { "speaker": "rowan", "portrait": "neutral", "text": "Hey!" },
+        { "speaker": "maeve", "portrait": "neutral", "text": "He's running." },
+        { "speaker": "tomas", "portrait": "neutral", "text": "Let him." },
+        { "speaker": null, "direction": "Maeve looks toward the Crownwall." },
+        { "speaker": "maeve", "portrait": "serious", "text": "He's not running away from us." },
+        { "speaker": null, "direction": "Beat." },
+        { "speaker": "maeve", "portrait": "worried", "text": "He's running toward the Wall." }
+      ]
+    },
+    {
+      "id": "prologue_after_battle",
+      "lines": [
+        { "speaker": "rowan", "portrait": "neutral", "text": "Where's the merchant?" },
+        { "speaker": null, "direction": "Tomas looks around." },
+        { "speaker": "tomas", "portrait": "worried", "text": "Gone." },
+        { "speaker": null, "direction": "Maeve kneels near the ground. There are footprints." },
+        { "speaker": "maeve", "portrait": "serious", "text": "Look." },
+        { "speaker": null, "direction": "Multiple sets of tracks. They lead north, toward the Crownwall." },
+        { "speaker": "rowan", "portrait": "worried", "text": "Goblins took him?" },
+        { "speaker": "maeve", "portrait": "serious", "text": "These aren't goblin prints." },
+        { "speaker": null, "direction": "She places her hand beside one. A human footprint." },
+        { "speaker": "tomas", "portrait": "worried", "text": "Bandits?" },
+        { "speaker": "maeve", "portrait": "worried", "text": "Maybe." },
+        { "speaker": null, "sfx": "sfx_impact_massive", "screen_shake": 0.6, "direction": "The ground shakes. Birds fly from nearby trees." },
+        { "speaker": null, "sfx": "sfx_impact_massive", "screen_shake": 0.6, "direction": "Dust falls from the Crownwall's enormous surface." },
+        { "speaker": "tomas", "portrait": "shocked", "text": "What in the gods..." }
+      ],
+      "on_complete": {
+        "set_flag": { "merchant_missing": true },
+        "objective": "investigate_watchtower"
+      }
+    },
+    {
+      "id": "prologue_new_objective",
+      "lines": [
+        { "speaker": "tomas", "portrait": "worried", "text": "Captain told us North Meadow." },
+        { "speaker": "rowan", "portrait": "serious", "text": "And someone is hitting the Crownwall." },
+        { "speaker": "tomas", "portrait": "worried", "text": "Which is precisely why we should go back." },
+        { "speaker": null, "direction": "Maeve begins walking north." },
+        { "speaker": "maeve", "portrait": "neutral", "text": "You can." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Maeve." },
+        { "speaker": "maeve", "portrait": "neutral", "text": "What?" },
+        { "speaker": "rowan", "portrait": "smirk", "text": "Aldric said stay behind me." },
+        { "speaker": null, "direction": "She stops. Lets Rowan pass. Then follows." },
+        { "speaker": "maeve", "portrait": "smirk", "text": "Happy?" },
+        { "speaker": "rowan", "portrait": "smile", "text": "Immensely." },
+        { "speaker": null, "direction": "Tomas sighs and joins them." }
+      ]
+    },
+    {
+      "id": "prologue_checkpoint",
+      "lines": [
+        { "speaker": null, "style": "inspect", "text": "The blade is still warm." },
+        { "speaker": null, "direction": "Nearby: blood. But no body." },
+        { "speaker": "maeve", "portrait": "worried", "text": "Rowan..." }
+      ]
+    },
+    {
+      "id": "prologue_watchtower",
+      "music": null,
+      "lines": [
+        { "speaker": null, "direction": "Greenvale soldiers are lying unconscious or dead nearby. Tomas checks one." },
+        { "speaker": "tomas", "portrait": "shocked", "text": "Captain Heron?" },
+        { "speaker": null, "direction": "No response. Rowan approaches the Wall. A massive iron section has been damaged. Not broken completely. But cracked." },
+        { "speaker": "rowan", "portrait": "shocked", "text": "That's impossible." },
+        { "speaker": null, "direction": "Maeve touches the crack." },
+        { "speaker": "maeve", "portrait": "serious", "text": "Something did this from the other side." },
+        { "speaker": "tomas", "portrait": "neutral", "text": "Nothing is on the other side." },
+        { "speaker": null, "direction": "Maeve looks at him." },
+        { "speaker": "maeve", "portrait": "serious", "text": "Then what made the hole?" },
+        { "speaker": null, "direction": "Silence." }
+      ]
+    },
+    {
+      "id": "prologue_voices",
+      "lines": [
+        { "speaker": null, "sfx": "sfx_wall_knock", "direction": "Three knocks. From inside the Wall." },
+        { "speaker": null, "sfx": "sfx_wall_knock" },
+        { "speaker": null, "sfx": "sfx_wall_knock", "direction": "Everyone freezes." },
+        { "speaker": null, "style": "muffled", "text": "Hello?!" },
+        { "speaker": null, "direction": "Tomas backs away." },
+        { "speaker": null, "style": "muffled", "text": "Can anyone hear me?!" },
+        { "speaker": null, "style": "muffled", "text": "Please!" },
+        { "speaker": null, "direction": "Rowan approaches." },
+        { "speaker": "tomas", "portrait": "worried", "text": "Rowan." },
+        { "speaker": "rowan", "portrait": "serious", "text": "They're people." },
+        { "speaker": "tomas", "portrait": "worried", "text": "We don't know what they are." },
+        { "speaker": null, "style": "muffled", "text": "Please! Open it!" },
+        { "speaker": null, "direction": "Maeve finds a narrow crack. Looks through. Her face changes." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "What?" },
+        { "speaker": "maeve", "portrait": "shocked", "text": "People." },
+        { "speaker": "rowan", "portrait": "shocked", "text": "You're sure?" },
+        { "speaker": "maeve", "portrait": "serious", "text": "Unless monsters have started carrying babies." }
+      ]
+    },
+    {
+      "id": "prologue_story_reveal",
+      "lines": [
+        { "speaker": null, "direction": "Through the damaged section: frightened men, women, children, carts, refugees in strange clothing, wounded soldiers." },
+        { "speaker": "refugee_man", "portrait": "shocked", "text": "Please!" },
+        { "speaker": "refugee_man", "portrait": "shocked", "text": "They're coming!" },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Who?" },
+        { "speaker": null, "direction": "The man looks behind him." },
+        { "speaker": "refugee_man", "portrait": "shocked", "text": "Open the gate!" },
+        { "speaker": null, "sfx": "sfx_horns_distant", "direction": "Horns. From far beyond the Wall. Deep. Unknown. The refugees panic." }
+      ]
+    },
+    {
+      "id": "prologue_varric_arrives",
+      "music": "tension_low",
+      "lines": [
+        { "speaker": null, "direction": "Horses. A squad of Greenvale soldiers approaches, commanded by Lord Varric." },
+        { "speaker": "varric", "portrait": "cold", "text": "Step away from the breach." },
+        { "speaker": "rowan", "portrait": "serious", "text": "There are people out there." },
+        { "speaker": "varric", "portrait": "cold", "text": "I can see that." },
+        { "speaker": "rowan", "portrait": "serious", "text": "We have to open it." },
+        { "speaker": "varric", "portrait": "cold", "text": "No." },
+        { "speaker": "maeve", "portrait": "angry", "text": "They'll die." },
+        { "speaker": "varric", "portrait": "cold", "text": "That is not our concern." },
+        { "speaker": "rowan", "portrait": "angry", "text": "They're civilians." },
+        { "speaker": "varric", "portrait": "cold", "text": "Beyond the Crownwall there are no civilians." },
+        { "speaker": null, "direction": "Varric looks at his soldiers." },
+        { "speaker": "varric", "portrait": "cold", "text": "Seal the breach." },
+        { "speaker": null, "direction": "Workers prepare sealing charges. The refugees understand. They begin shouting." },
+        { "speaker": "refugee_woman", "portrait": "shocked", "text": "NO!" },
+        { "speaker": "refugee_man", "portrait": "shocked", "text": "PLEASE!" },
+        { "speaker": null, "direction": "A child is crying. Rowan steps between the soldiers and the wall." },
+        { "speaker": "rowan", "portrait": "angry", "text": "Stop." },
+        { "speaker": "varric", "portrait": "cold", "text": "Move." },
+        { "speaker": "rowan", "portrait": "serious", "text": "Captain Aldric should decide this." },
+        { "speaker": "varric", "portrait": "cold", "text": "The order came from the castle." },
+        { "speaker": null, "direction": "Pause." },
+        { "speaker": "varric", "portrait": "cold", "text": "From the king." },
+        { "speaker": null, "direction": "Tomas looks uncomfortable. Maeve looks at Rowan." },
+        { "speaker": "varric", "portrait": "cold", "text": "Seal it." },
+        { "speaker": null, "direction": "Soldiers advance. Rowan draws his sword. Everyone freezes." },
+        { "speaker": "varric", "portrait": "cold", "text": "Think very carefully about what you are doing." },
+        { "speaker": "rowan", "portrait": "serious", "text": "I am." },
+        { "speaker": "varric", "portrait": "cold", "text": "Lower your weapon." },
+        { "speaker": "rowan", "portrait": "serious", "text": "No." }
+      ]
+    },
+    {
+      "id": "prologue_the_choice",
+      "choice": {
+        "prompt": null,
+        "options": [
+          {
+            "id": "they_are_people",
+            "label": "They're people.",
+            "lines": [{ "speaker": "rowan", "portrait": "serious", "text": "They're people. That's enough for me." }],
+            "set_flag": { "prologue_tone_choice": "they_are_people" }
+          },
+          {
+            "id": "this_is_wrong",
+            "label": "This is wrong.",
+            "lines": [{ "speaker": "rowan", "portrait": "serious", "text": "Whatever the king was told, this is wrong." }],
+            "set_flag": { "prologue_tone_choice": "this_is_wrong" }
+          },
+          {
+            "id": "make_me_move",
+            "label": "Make me move.",
+            "lines": [{ "speaker": "rowan", "portrait": "angry", "text": "You want the breach? Make me move." }],
+            "set_flag": { "prologue_tone_choice": "make_me_move" }
+          }
+        ]
+      },
+      "lines": [
+        { "speaker": null, "direction": "Varric draws his sword." },
+        { "speaker": "varric", "portrait": "cold", "text": "Arrest him." }
+      ],
+      "on_complete": { "start_battle": "battle_the_breach" },
+      "notes": "The script is explicit that this choice does not change Rowan's action, only his voice. It is the player's first characterisation of him, and later companion dialogue can echo it."
+    },
+    {
+      "id": "prologue_soldiers_hesitate",
+      "lines": [
+        { "speaker": "greenvale_soldier", "portrait": "worried", "text": "Don't make us do this!" }
+      ]
+    },
+    {
+      "id": "prologue_wall_collapses",
+      "lines": [
+        { "speaker": null, "direction": "Part of the Wall collapses inward. Dust fills the battlefield. Everyone stops. A gap opens. The refugees can now pass. But something else can pass too." },
+        { "speaker": null, "direction": "A monstrous claw reaches through the opening. Then a creature emerges. Not enormous. A strange armoured beast, alien compared with known monsters." },
+        { "speaker": null, "direction": "Greenvale soldiers panic." },
+        { "speaker": "varric", "portrait": "shocked", "text": "Formation!" }
+      ]
+    },
+    {
+      "id": "prologue_varric_banter",
+      "lines": [
+        { "speaker": "varric", "portrait": "serious", "text": "Left side!" },
+        { "speaker": "rowan", "portrait": "smirk", "text": "I thought I was under arrest." },
+        { "speaker": "varric", "portrait": "angry", "text": "You still are!" },
+        { "speaker": "maeve", "portrait": "smirk", "text": "Lovely teamwork." }
+      ]
+    },
+    {
+      "id": "prologue_wallstalker_defeated",
+      "lines": [
+        { "speaker": null, "direction": "Silence. The refugees begin moving through the breach. Then distant horns sound again. This time closer." },
+        { "speaker": "refugee_leader", "portrait": "serious", "text": "We have to move." },
+        { "speaker": "rowan", "portrait": "shocked", "text": "What was that thing?" },
+        { "speaker": null, "direction": "The leader looks at him strangely." },
+        { "speaker": "refugee_leader", "portrait": "shocked", "text": "You've never seen one?" },
+        { "speaker": "rowan", "portrait": "neutral", "text": "No." },
+        { "speaker": "refugee_leader", "portrait": "serious", "text": "Then you truly don't know." },
+        { "speaker": "rowan", "portrait": "worried", "text": "Know what?" },
+        { "speaker": null, "direction": "The man looks beyond Rowan. At Greenvale. At the kingdom. At the enormous Wall." },
+        { "speaker": "refugee_leader", "portrait": "sad", "text": "You think this wall protects you." },
+        { "speaker": null, "direction": "Pause." },
+        { "speaker": "refugee_leader", "portrait": "sad", "text": "Gods help you." }
+      ]
+    },
+    {
+      "id": "prologue_aldric_arrives",
+      "lines": [
+        { "speaker": null, "direction": "Captain Aldric arrives with additional troops. He sees the damaged Wall, the refugees, the defeated beast, Rowan standing with his weapon, and Varric furious." },
+        { "speaker": "aldric", "portrait": "shocked", "text": "What happened?" },
+        { "speaker": "varric", "portrait": "angry", "text": "Your soldier committed treason." },
+        { "speaker": null, "direction": "Aldric looks at Rowan." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Did you?" },
+        { "speaker": "rowan", "portrait": "smirk", "text": "Depends who's asking." },
+        { "speaker": null, "direction": "Aldric almost smiles despite himself." },
+        { "speaker": "varric", "portrait": "angry", "text": "This isn't a joke." },
+        { "speaker": "aldric", "portrait": "serious", "text": "No." },
+        { "speaker": null, "direction": "He looks through the breach. For the first time, Aldric sees the outside. He is visibly shaken." },
+        { "speaker": "aldric", "portrait": "shocked", "text": "Gods above..." },
+        { "speaker": "varric", "portrait": "cold", "text": "Captain." },
+        { "speaker": null, "direction": "Aldric turns." },
+        { "speaker": "varric", "portrait": "cold", "text": "Arrest him." },
+        { "speaker": null, "direction": "Long pause. Aldric looks at Rowan. Then Maeve. Then Tomas." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Rowan." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "Captain." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Take Maeve." },
+        { "speaker": null, "direction": "Maeve looks confused." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Go through the eastern woods." },
+        { "speaker": "rowan", "portrait": "shocked", "text": "What?" },
+        { "speaker": "aldric", "portrait": "serious", "text": "Do not use the road." },
+        { "speaker": "varric", "portrait": "shocked", "text": "Captain—" },
+        { "speaker": null, "direction": "Aldric draws his sword and points it toward Varric." },
+        { "speaker": "aldric", "portrait": "angry", "text": "You said arrest him." },
+        { "speaker": "aldric", "portrait": "angry", "text": "You didn't say who had to do it." },
+        { "speaker": "varric", "portrait": "angry", "text": "Aldric." },
+        { "speaker": "aldric", "portrait": "serious", "text": "Run, boy." }
+      ],
+      "on_complete": {
+        "set_flag": { "rowan_traitor": true, "aldric_helped_escape": true },
+        "objective": "escape_eastern_woods"
+      }
+    },
+    {
+      "id": "prologue_escape",
+      "music": "greenvale_theme_urgent",
+      "lines": [
+        { "speaker": "rowan", "portrait": "shocked", "text": "Tomas!" },
+        { "speaker": "tomas", "portrait": "serious", "text": "Go!" },
+        { "speaker": "rowan", "portrait": "angry", "text": "Come with us!" },
+        { "speaker": null, "direction": "Tomas looks toward Aldric. Then the town." },
+        { "speaker": "tomas", "portrait": "serious", "text": "Someone has to tell them what really happened." },
+        { "speaker": null, "direction": "Small emotional beat." },
+        { "speaker": "tomas", "portrait": "smile", "text": "I'll find you." },
+        { "speaker": null, "direction": "He stays." }
+      ],
+      "on_complete": {
+        "set_flag": { "tomas_remained_greenvale": true },
+        "remove_party_member": ["tomas"]
+      }
+    },
+    {
+      "id": "prologue_forest_overlook",
+      "music": null,
+      "lines": [
+        { "speaker": null, "direction": "A cliff overlooking Greenvale. Sunset. The Crownwall towers behind the village. Smoke rises from the damaged section. Maeve sits on a rock." },
+        { "speaker": "maeve", "portrait": "tired", "text": "So." },
+        { "speaker": null, "direction": "Pause." },
+        { "speaker": "maeve", "portrait": "tired", "text": "That could have gone better." },
+        { "speaker": "rowan", "portrait": "tired", "text": "You think?" },
+        { "speaker": "maeve", "portrait": "smirk", "text": "Slightly." },
+        { "speaker": null, "direction": "Rowan looks at Greenvale." },
+        { "speaker": "rowan", "portrait": "sad", "text": "Aldric..." },
+        { "speaker": "maeve", "portrait": "serious", "text": "He knew what he was doing." },
+        { "speaker": "rowan", "portrait": "worried", "text": "That's what worries me." },
+        { "speaker": null, "direction": "Maeve looks back toward the Wall." },
+        { "speaker": "maeve", "portrait": "serious", "text": "Rowan." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "What?" },
+        { "speaker": "maeve", "portrait": "serious", "text": "Those people." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "What about them?" },
+        { "speaker": "maeve", "portrait": "serious", "text": "They weren't trying to get into Greenvale." },
+        { "speaker": "rowan", "portrait": "neutral", "text": "They were running." },
+        { "speaker": "maeve", "portrait": "worried", "text": "Exactly." },
+        { "speaker": null, "direction": "Pause." },
+        { "speaker": "maeve", "portrait": "worried", "text": "What were they running from?" },
+        { "speaker": null, "direction": "Camera slowly rises. Beyond the trees the Crownwall stretches endlessly. Then, from the OTHER SIDE, hundreds of tiny lights appear in the darkness. Like torches. An army. Or something much larger.", "sfx": "sfx_horns_distant" }
+      ]
+    },
+    {
+      "id": "prologue_title_card",
+      "type": "title_sequence",
+      "music": "main_theme_quiet",
+      "lines": [
+        { "speaker": null, "style": "title_card", "text": "HOLLOW CROWN" },
+        { "speaker": null, "style": "title_subtitle", "text": "Beyond the Wall" }
+      ],
+      "on_complete": { "autosave": true, "next_chapter": "chapter_one_exiles" }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "_comment": [
+    "The world-state flag registry, per brief section 45.",
+    "",
+    "Declaring flags here rather than letting them spring into existence on first",
+    "write is the point. Brief section 45 lists flags driving dialogue, NPC",
+    "placement, quests, recruitments, map state, shops and endings, and a typo in",
+    "any of those is a silently dead branch. `hollowasset validate-content`",
+    "checks that every flag written by a battle or a dialogue scene is declared",
+    "here, and reports declared flags nobody reads.",
+    "",
+    "`readBy` is documentation of intent for flags whose consumer does not exist",
+    "yet, so a flag set in the prologue for an Act IV payoff is not mistaken for",
+    "dead weight."
+  ],
+  "flags": [
+    {
+      "id": "crownwall_breached",
+      "type": "bool",
+      "default": false,
+      "setBy": ["battle_the_breach"],
+      "description": "The Crownwall has a passable gap near the old watchtower.",
+      "readBy": ["chapter_one_intro", "greenvale_return"]
+    },
+    {
+      "id": "rowan_traitor",
+      "type": "bool",
+      "default": false,
+      "setBy": ["dialogue:prologue_aldric_arrives"],
+      "description": "Rowan is officially declared a traitor by the crown.",
+      "readBy": ["chapter_one_intro", "greenvale_return", "act_four_return_home"]
+    },
+    {
+      "id": "refugees_entered_greenvale",
+      "type": "bool",
+      "default": false,
+      "setBy": ["battle_the_breach"],
+      "description": "Refugees from beyond the Wall passed through the breach.",
+      "readBy": ["greenvale_return", "chapter_one_intro"]
+    },
+    {
+      "id": "met_wallstalker",
+      "type": "bool",
+      "default": false,
+      "setBy": ["battle_the_breach"],
+      "description": "The party has seen an aberration and knows what comes through the Wall.",
+      "readBy": ["chapter_one_intro", "bestiary"]
+    },
+    {
+      "id": "aldric_helped_escape",
+      "type": "bool",
+      "default": false,
+      "setBy": ["dialogue:prologue_aldric_arrives"],
+      "description": "Aldric turned his sword on Varric and let Rowan go.",
+      "readBy": ["act_four_return_home", "aldric_fate"]
+    },
+    {
+      "id": "tomas_remained_greenvale",
+      "type": "bool",
+      "default": false,
+      "setBy": ["dialogue:prologue_escape"],
+      "description": "Tomas stayed behind to tell Greenvale what really happened.",
+      "readBy": ["act_four_return_home", "tomas_rejoin"]
+    },
+    {
+      "id": "prologue_tone_choice",
+      "type": "string",
+      "default": "",
+      "allowed": ["they_are_people", "this_is_wrong", "make_me_move"],
+      "setBy": ["dialogue:prologue_the_choice"],
+      "description": "Which line Rowan used to refuse Varric. Changes tone only, never outcome.",
+      "readBy": ["chapter_one_intro", "companion_reactions"],
+      "notes": "The script is explicit that this choice does not alter Rowan's action. It exists so the player's Rowan has a voice, and later companion dialogue can echo it."
+    },
+    {
+      "id": "found_well_cold",
+      "type": "bool",
+      "default": false,
+      "setBy": ["dialogue:greenvale_well"],
+      "description": "The player inspected the unusually cold well.",
+      "readBy": ["crownwall_lore"],
+      "notes": "Optional foreshadowing. Rewards curiosity per brief section 97 without gating anything."
+    },
+    {
+      "id": "heard_watchtower_warning",
+      "type": "bool",
+      "default": false,
+      "setBy": ["dialogue:greenvale_gate_guard"],
+      "description": "The gate guard warned about the shaking ground at the watchtower.",
+      "readBy": ["prologue_watchtower_approach"]
+    },
+    {
+      "id": "goblin_spearman_fled",
+      "type": "bool",
+      "default": false,
+      "setBy": ["battle_north_meadow"],
+      "description": "A goblin spearman escaped north toward the Wall rather than fighting.",
+      "readBy": ["chapter_one_intro"],
+      "notes": "Set by the mid-battle event. The goblins running toward the Wall, not away from the party, is the first sign the goblins are fleeing something too."
+    },
+    {
+      "id": "goblin_charm_identified",
+      "type": "bool",
+      "default": false,
+      "setBy": [],
+      "description": "The Goblin Charm's true nature has been revealed.",
+      "readBy": ["items.json:goblin_charm"],
+      "notes": "Deliberately has no setter yet. The reveal belongs to a later chapter, and declaring it now keeps the item's revealFlag reference valid."
+    },
+    {
+      "id": "merchant_missing",
+      "type": "bool",
+      "default": false,
+      "setBy": ["dialogue:prologue_after_battle"],
+      "description": "The party found the overturned cart with no merchant and human footprints leading north.",
+      "readBy": ["chapter_one_intro"]
+    }
+  ]
+}

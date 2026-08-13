@@ -1,0 +1,85 @@
+{
+  "_comment": [
+    "Weapons the prologue script names or implies.",
+    "Kept in their own catalog because weapons are attached to character hands",
+    "at runtime rather than being part of the character mesh, which is what makes",
+    "the promotion visuals in brief section 31 possible later."
+  ],
+  "region": "greenvale",
+  "assets": [
+    {
+      "id": "weapon_training_sword_wood",
+      "class": "weapon",
+      "subject": "wooden practice sword with a plain rounded tip and a bound grip",
+      "extra": "obviously wood, no metal anywhere",
+      "rig": false,
+      "notes": "Scene 02: lies beside the sleeping Rowan. The visual contrast with the Iron Sword he collects later is the point."
+    },
+    {
+      "id": "weapon_iron_sword",
+      "class": "weapon",
+      "subject": "straight iron short sword with a plain crossguard and a leather-wrapped grip",
+      "extra": "blade slightly oversized for tactical-camera readability",
+      "rig": false,
+      "notes": "Rowan's starting weapon, Attack +3. Collected in the equipment tutorial."
+    },
+    {
+      "id": "weapon_apprentice_staff",
+      "class": "weapon",
+      "subject": "simple wooden mage staff with a forked head and a small unpolished violet stone",
+      "extra": "unpolished stone marks her as an apprentice, not a mage",
+      "rig": false,
+      "notes": "Maeve's starting weapon. The stone should look cheap; her later staffs escalate from it."
+    },
+    {
+      "id": "weapon_soldier_spear",
+      "class": "weapon",
+      "subject": "long infantry spear with a leaf-shaped iron head and a bound ash shaft",
+      "extra": "long enough that the two-tile reach is legible on the grid",
+      "rig": false,
+      "notes": "Tomas. Range 2 in battle 01's weapon-range tutorial, so the length has to sell it."
+    },
+    {
+      "id": "weapon_officer_sword",
+      "class": "weapon",
+      "subject": "long straight officer's sword with a swept guard, wire-wrapped grip and a plain pommel",
+      "extra": "cleaner and longer than the iron sword",
+      "rig": false,
+      "notes": "Shared by Aldric and Varric, recoloured per character."
+    },
+    {
+      "id": "weapon_goblin_cleaver",
+      "class": "weapon",
+      "subject": "crude notched iron cleaver with a bound wooden handle",
+      "rig": false
+    },
+    {
+      "id": "weapon_goblin_spear",
+      "class": "weapon",
+      "subject": "crude goblin spear of lashed bone and scrap iron on a crooked shaft",
+      "extra": "visibly improvised next to the soldier spear",
+      "rig": false
+    },
+    {
+      "id": "weapon_goblin_shortbow",
+      "class": "weapon",
+      "subject": "crude short bow of bent wood and sinew with a scrap-leather grip wrap",
+      "rig": false
+    },
+    {
+      "id": "weapon_guard_shortsword",
+      "class": "weapon",
+      "subject": "plain military short sword with a straight guard and a wooden grip",
+      "rig": false,
+      "notes": "Greenvale rank and file."
+    },
+    {
+      "id": "weapon_guard_shield_round",
+      "class": "weapon",
+      "subject": "round wooden shield with an iron boss and a painted green field",
+      "extra": "the green field is the Greenvale faction read",
+      "rig": false,
+      "notes": "Carried by guards and Tomas. Classed as a weapon so it shares the attachment pipeline."
+    }
+  ]
+}

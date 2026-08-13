@@ -143,6 +143,25 @@ BUDGETS: dict[str, Budget] = {
             subdir="Buildings",
             notes="Brief section 7: prefer modular construction over monolithic meshes.",
         ),
+        Budget(
+            key="set_piece",
+            label="Large set piece or horizon element",
+            tri_soft=(1_000, 8_000),
+            tri_hard=12_000,
+            texture_max=2048,
+            # Height is scene-specific for these — a Crownwall section and a
+            # distant castle share nothing but their role — so scale is checked
+            # per asset in the map data rather than against a class default.
+            height_m=None,
+            subdir="Buildings",
+            notes=(
+                "Structures the player sees but never walks on: the Crownwall, "
+                "the distant castle, the watchtower silhouette. Budgeted low "
+                "because they are always far away and read as silhouette plus "
+                "value, not detail. A Crownwall that costs more than a hero is "
+                "the wrong trade."
+            ),
+        ),
     ]
 }
 

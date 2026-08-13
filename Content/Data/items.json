@@ -1,0 +1,52 @@
+{
+  "_comment": [
+    "Items, per brief section 35. Only what the prologue actually hands out.",
+    "",
+    "The Goblin Charm is the prologue's one deliberately mysterious item: the",
+    "script marks it 'Unknown Item', so identified is false and its real",
+    "description is withheld until a later flag reveals it. This is the pattern",
+    "every secret promotion item in brief section 31 will reuse, which is why it",
+    "is worth establishing in the first hour."
+  ],
+  "items": [
+    {
+      "id": "medicinal_herb",
+      "name": "Medicinal Herb",
+      "category": "consumable",
+      "effect": { "type": "heal", "amount": 10 },
+      "usableIn": ["battle", "field"],
+      "value": 20,
+      "icon": "Content/UI/Icons/item_medicinal_herb.png",
+      "description": "Bitter. Works anyway."
+    },
+    {
+      "id": "antidote",
+      "name": "Antidote",
+      "category": "consumable",
+      "effect": { "type": "cure_status", "status": "poison" },
+      "usableIn": ["battle", "field"],
+      "value": 30,
+      "icon": "Content/UI/Icons/item_antidote.png",
+      "description": "Clears poison. Tastes worse than the poison."
+    },
+    {
+      "id": "goblin_charm",
+      "name": "Goblin Charm",
+      "category": "quest",
+      "identified": false,
+      "unidentifiedName": "Unknown Item",
+      "revealFlag": "goblin_charm_identified",
+      "value": 0,
+      "sellable": false,
+      "icon": "Content/UI/Icons/item_goblin_charm.png",
+      "description": "A crude bone charm on a leather thong. The carving is not goblin work.",
+      "unidentifiedDescription": "You have no idea what this is.",
+      "notes": "Dropped by the battle 01 goblins. The carving being non-goblin is the first hint that something beyond the Wall is directing them."
+    }
+  ],
+  "currency": {
+    "id": "gold",
+    "name": "Gold",
+    "icon": "Content/UI/Icons/gold.png"
+  }
+}

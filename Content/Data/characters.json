@@ -1,0 +1,162 @@
+{
+  "_comment": [
+    "Characters, using the schema from brief section 14. Model paths point at the",
+    "output of the asset pipeline, so `hollowasset validate-content` can prove",
+    "every reference resolves to a real catalog entry.",
+    "",
+    "Base stats are tuned so the prologue's scripted numbers hold: Rowan's first",
+    "attack on a Goblin Raider must deal exactly 8 damage per the script.",
+    "Attack 8 plus Iron Sword +3 minus Raider defence 3 = 8."
+  ],
+  "characters": [
+    {
+      "id": "rowan",
+      "displayName": "Rowan",
+      "class": "swordsman",
+      "level": 1,
+      "recruitable": false,
+      "baseStats": { "hp": 22, "mp": 4, "attack": 8, "defense": 6, "magic": 2, "resistance": 4, "agility": 7, "movement": 6 },
+      "model": "Content/Models/Characters/hero_rowan.glb",
+      "portrait": "Content/UI/Portraits/rowan.png",
+      "weaponType": "sword",
+      "startingEquipment": { "weapon": "iron_sword" },
+      "promotionPaths": ["hero", "blademaster"],
+      "notes": "Protagonist. Starts with the wooden training sword in scene 02 and receives the Iron Sword in the training yard."
+    },
+    {
+      "id": "maeve",
+      "displayName": "Maeve",
+      "class": "apprentice_mage",
+      "level": 1,
+      "recruitable": false,
+      "baseStats": { "hp": 14, "mp": 12, "attack": 3, "defense": 3, "magic": 9, "resistance": 7, "agility": 6, "movement": 5 },
+      "model": "Content/Models/Characters/hero_maeve.glb",
+      "portrait": "Content/UI/Portraits/maeve.png",
+      "weaponType": "staff",
+      "startingEquipment": { "weapon": "apprentice_staff" },
+      "skills": ["spark"],
+      "promotionPaths": ["mage"],
+      "notes": "12 MP against Spark's 3 cost gives four casts in battle 01, which is enough to matter without trivialising it."
+    },
+    {
+      "id": "tomas",
+      "displayName": "Tomas",
+      "class": "soldier",
+      "level": 1,
+      "recruitable": true,
+      "baseStats": { "hp": 24, "mp": 2, "attack": 7, "defense": 8, "magic": 1, "resistance": 4, "agility": 5, "movement": 5 },
+      "model": "Content/Models/Characters/hero_tomas.glb",
+      "portrait": "Content/UI/Portraits/tomas.png",
+      "weaponType": "spear",
+      "startingEquipment": { "weapon": "soldier_spear", "armour": "guard_mail" },
+      "promotionPaths": ["spearmaster", "knight"],
+      "notes": "Leaves the party at the end of the prologue. recruitable is true because tomas_remained_greenvale gates his return."
+    },
+    {
+      "id": "aldric",
+      "displayName": "Captain Aldric",
+      "class": "officer",
+      "level": 8,
+      "recruitable": false,
+      "baseStats": { "hp": 48, "mp": 8, "attack": 18, "defense": 16, "magic": 3, "resistance": 10, "agility": 12, "movement": 6 },
+      "model": "Content/Models/Characters/npc_aldric.glb",
+      "portrait": "Content/UI/Portraits/aldric.png",
+      "weaponType": "sword",
+      "notes": "Mentor. Never player-controlled in the prologue. Stats exist so scene 09 can be resolved by the combat system if it is ever played rather than scripted."
+    },
+    {
+      "id": "varric",
+      "displayName": "Lord Varric",
+      "class": "officer",
+      "level": 9,
+      "recruitable": false,
+      "baseStats": { "hp": 52, "mp": 8, "attack": 19, "defense": 18, "magic": 3, "resistance": 12, "agility": 11, "movement": 6 },
+      "model": "Content/Models/Characters/npc_varric.glb",
+      "portrait": "Content/UI/Portraits/varric.png",
+      "weaponType": "sword",
+      "notes": "Enemy commander in battle 02, then a temporary ally against the Wallstalker."
+    },
+    {
+      "id": "edrin",
+      "displayName": "Edrin",
+      "class": "guard",
+      "level": 1,
+      "recruitable": false,
+      "baseStats": { "hp": 18, "mp": 2, "attack": 6, "defense": 6, "magic": 0, "resistance": 3, "agility": 5, "movement": 5 },
+      "model": "Content/Models/Characters/npc_edrin.glb",
+      "portrait": "Content/UI/Portraits/edrin.png",
+      "weaponType": "sword",
+      "notes": "Training yard only. Flagged in the script as a candidate to reappear when Rowan returns home."
+    },
+    {
+      "id": "refugee_leader",
+      "displayName": "Refugee Leader",
+      "class": "guard",
+      "level": 6,
+      "recruitable": false,
+      "baseStats": { "hp": 34, "mp": 4, "attack": 13, "defense": 11, "magic": 2, "resistance": 8, "agility": 9, "movement": 5 },
+      "model": "Content/Models/Characters/npc_refugee_leader.glb",
+      "portrait": "Content/UI/Portraits/refugee_leader.png",
+      "weaponType": "sword",
+      "notes": "Delivers the closing reveal. Likely recurring."
+    }
+  ],
+  "npcs": [
+    { "id": "villager_old_woman", "displayName": "Old Woman", "model": "Content/Models/Characters/npc_villager_old_woman.glb", "portrait": "Content/UI/Portraits/villager_old_woman.png" },
+    { "id": "villager_child", "displayName": "Child", "model": "Content/Models/Characters/npc_villager_child.glb", "portrait": "Content/UI/Portraits/villager_child.png" },
+    { "id": "villager_blacksmith", "displayName": "Blacksmith", "model": "Content/Models/Characters/npc_villager_blacksmith.glb", "portrait": "Content/UI/Portraits/villager_blacksmith.png" },
+    { "id": "gate_guard", "displayName": "Guard", "model": "Content/Models/Characters/npc_guard_greenvale.glb", "portrait": "Content/UI/Portraits/guard.png" },
+    { "id": "refugee_man", "displayName": "Refugee", "model": "Content/Models/Characters/npc_refugee_man.glb", "portrait": "Content/UI/Portraits/refugee_man.png" },
+    { "id": "refugee_woman", "displayName": "Refugee Woman", "model": "Content/Models/Characters/npc_refugee_woman.glb", "portrait": "Content/UI/Portraits/refugee_woman.png" },
+    { "id": "refugee_child", "displayName": "Refugee Child", "model": "Content/Models/Characters/npc_refugee_child.glb", "portrait": "Content/UI/Portraits/refugee_child.png" },
+    { "id": "greenvale_soldier", "displayName": "Greenvale Soldier", "model": "Content/Models/Characters/npc_guard_greenvale.glb", "portrait": "Content/UI/Portraits/guard.png" }
+  ],
+  "enemies": [
+    {
+      "id": "goblin_raider",
+      "displayName": "Goblin Raider",
+      "class": "goblin_raider",
+      "level": 1,
+      "baseStats": { "hp": 12, "mp": 0, "attack": 6, "defense": 3, "magic": 0, "resistance": 1, "agility": 7, "movement": 5 },
+      "model": "Content/Models/Enemies/enemy_goblin_raider.glb",
+      "startingEquipment": { "weapon": "goblin_cleaver" },
+      "ai": "aggressive_melee",
+      "xp": 6,
+      "notes": "Defence 3 makes Rowan's scripted opening hit land for exactly 8."
+    },
+    {
+      "id": "goblin_spearman",
+      "displayName": "Goblin Spearman",
+      "class": "goblin_spearman",
+      "level": 2,
+      "baseStats": { "hp": 15, "mp": 0, "attack": 6, "defense": 4, "magic": 0, "resistance": 1, "agility": 6, "movement": 5 },
+      "model": "Content/Models/Enemies/enemy_goblin_spearman.glb",
+      "startingEquipment": { "weapon": "goblin_spear" },
+      "ai": "aggressive_melee",
+      "xp": 8
+    },
+    {
+      "id": "goblin_archer",
+      "displayName": "Goblin Archer",
+      "class": "goblin_archer",
+      "level": 2,
+      "baseStats": { "hp": 11, "mp": 0, "attack": 5, "defense": 2, "magic": 0, "resistance": 1, "agility": 8, "movement": 5 },
+      "model": "Content/Models/Enemies/enemy_goblin_archer.glb",
+      "startingEquipment": { "weapon": "goblin_shortbow" },
+      "ai": "ranged_kiting",
+      "xp": 9
+    },
+    {
+      "id": "wallstalker",
+      "displayName": "Wallstalker",
+      "class": "aberration",
+      "level": 3,
+      "isBoss": true,
+      "baseStats": { "hp": 60, "mp": 0, "attack": 12, "defense": 6, "magic": 0, "resistance": 6, "agility": 5, "movement": 4 },
+      "model": "Content/Models/Enemies/boss_wallstalker.glb",
+      "ai": "boss",
+      "xp": 60,
+      "notes": "Prologue mini-boss. Effective defence is 6 plus the class directional_armour: 14 from the front, 8 from a flank, 6 from the rear. Rowan hits for 11 minus that, so a frontal attack does 1 damage and a rear attack does 5. The lesson is unmissable without a single line of tutorial text."
+    }
+  ]
+}

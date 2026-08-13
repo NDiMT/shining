@@ -13,40 +13,46 @@ what it deliberately does not mean.
 
 ## Current state
 
-The engine is **not started**. Brief section 110 asks for an approved
-architecture before any engine code, and that recommendation is in
-[ARCHITECTURE.md](ARCHITECTURE.md) awaiting a decision.
+Built on **Godot 4** with gameplay rules in a pure C# library. See
+[ARCHITECTURE.md](ARCHITECTURE.md) for that decision and what it cost.
 
-What exists and works today:
+The engine is **not started**. The first hour of the game is fully specified as
+data and assets, which is what milestone 1 will be built against.
 
 | Area | State |
 | --- | --- |
 | [Asset pipeline](docs/ASSET_PIPELINE.md) | **Working.** Meshy generation, budget enforcement, GLB validation, provenance |
-| [Style guide](docs/STYLE_GUIDE.md) | Written. Palette, silhouette families, readability test, IP boundary |
-| [Architecture](ARCHITECTURE.md) | Recommendation written, **needs approval** |
-| Hollow Engine | Not started. Blocked on the above |
-| Game content | Two asset catalogs; a validated prop kit in progress |
+| [Style guide](docs/STYLE_GUIDE.md) | Palette, silhouette families, readability test, IP boundary |
+| [Prologue plan](docs/PROLOGUE_PRODUCTION.md) | Beat map, 60 assets catalogued, production order |
+| Prologue data | **Complete and validated.** 2 battles, 28 dialogue scenes, 12 world flags |
+| Prologue assets | 60 defined, 1 generated and validated |
+| [Architecture](ARCHITECTURE.md) | Godot 4 + C#. Five open decisions listed |
+| Game code | Not started — milestone 1 |
 
 ---
 
 ## Repository layout
 
 ```
-ARCHITECTURE.md      Technology recommendation (brief section 110)
+ARCHITECTURE.md        Technology recommendation (brief section 110)
 docs/
-  STYLE_GUIDE.md     Art direction, palette, IP boundary
-  ASSET_PIPELINE.md  How assets are made and validated
-  ASSET_PROVENANCE.md  Generated. Do not edit by hand
-Tools/
-  hollowasset/       Asset generation, validation, provenance (Python, no deps)
-  catalog/           Asset definitions. Add assets by editing these
+  PROLOGUE_PRODUCTION.md  The first hour: beats, assets, data, open questions
+  STYLE_GUIDE.md          Art direction, palette, IP boundary
+  ASSET_PIPELINE.md       How assets are made and validated
+  ASSET_PROVENANCE.md     Generated. Do not edit by hand
 Content/
-  Models/            Generated GLBs, by asset type
-  References/        Approved concept art for named characters
-  Provenance/        assets.jsonl — the asset database
+  Data/                classes, characters, items, weapons, skills, terrain,
+                       flags, Battles/, Dialogue/  <- the game, as data
+  Models/              Generated GLBs, by asset type
+  References/          Approved concept art for named characters
+  Provenance/          assets.jsonl — the asset database
+Tools/
+  hollowasset/         Asset generation and validation (Python, no deps)
+  catalog/             Asset definitions. Add assets by editing these
+Tests/                 Tool and content tests
 ```
 
-Engine and game directories arrive with Milestone 1. The planned layout is in
+`Game.Rules/` and `Game.Godot/` arrive with milestone 1. The planned layout is in
 [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
@@ -63,10 +69,11 @@ export PYTHONPATH=Tools
 pip install Pillow              # optional; enables texture downscaling
 
 python -m hollowasset budgets                                     # the rules
-python -m hollowasset prompt Tools/catalog/greenvale_props.json    # spends nothing
-python -m hollowasset generate Tools/catalog/greenvale_props.json --dry-run
+python -m hollowasset prompt Tools/catalog/prologue_cast.json      # spends nothing
+python -m hollowasset generate Tools/catalog/prologue_cast.json --dry-run
 python -m hollowasset generate Tools/catalog/greenvale_props.json --id prop_barrel_a
 python -m hollowasset validate --catalog Tools/catalog/greenvale_props.json
+python -m hollowasset validate-content                             # game data
 ```
 
 Adding an asset means editing a JSON file in `Tools/catalog/`, never writing
@@ -75,6 +82,28 @@ be restyled from one place.
 
 Full workflow, including how named characters go through approved concept art:
 [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md).
+
+---
+
+## Working on game content
+
+The prologue is data. Battles, dialogue, characters, items and world flags all
+live in `Content/Data`, and every reference between them is checked:
+
+```sh
+python -m hollowasset validate-content --verbose
+python -m unittest discover -s Tests          # 91 tests, no network, no credits
+```
+
+The validator catches broken asset paths, duplicate ids, unknown classes and
+skills, units standing on impassable tiles, dialogue speakers who do not exist,
+undeclared flags, and scripted battle events that would silently do nothing.
+Adding a new event action or AI behaviour means registering it in
+`Tools/hollowasset/content.py` first — that is deliberate, so a typo cannot pass
+for a feature.
+
+What the first hour needs and in what order:
+[docs/PROLOGUE_PRODUCTION.md](docs/PROLOGUE_PRODUCTION.md).
 
 ---
 

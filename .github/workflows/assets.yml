@@ -46,6 +46,14 @@ jobs:
           done
           exit $status
 
+      - name: Validate game data
+        # Brief section 79. Cross-checks characters, classes, skills, items,
+        # battles, dialogue and flags against each other and against the asset
+        # catalogs. Non-zero exit on any broken reference.
+        env:
+          PYTHONPATH: Tools
+        run: python -m hollowasset validate-content
+
       - name: Check the provenance database is well formed
         env:
           PYTHONPATH: Tools

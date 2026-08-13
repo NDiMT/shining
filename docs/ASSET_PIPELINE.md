@@ -220,8 +220,15 @@ spent on the rig.
 
 Animations come back **one GLB per clip**, saved beside the model as
 `hero_rowan__idle.glb`, `hero_rowan__walk.glb` and so on, named with the brief's
-animation names rather than provider action ids. Merging them into a single GLB
-with one shared skeleton is a Blender step and not yet scripted.
+animation names rather than provider action ids.
+
+Consolidating them onto one shared skeleton is Godot's job, not this pipeline's:
+Godot 4's `BoneMap` and `SkeletonProfileHumanoid` retarget each imported rig onto
+a canonical profile, which is what makes brief section 56's animation reuse
+affordable across 25–35 characters. The canonical bone list and alias table in
+`validate.py` are the groundwork for that mapping. It still needs proving on two
+different characters before the full cast is generated — see
+[PROLOGUE_PRODUCTION.md](PROLOGUE_PRODUCTION.md).
 
 `Tools/hollowasset/animations.py` maps the brief's fourteen-clip core set to
 Meshy action ids. **Those ids are provisional.** They were picked from the

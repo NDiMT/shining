@@ -1,8 +1,8 @@
 """Hollow Crown asset tooling.
 
 Offline Python utilities that generate, validate and account for the game's 3D
-assets. Runtime code is C++ (brief section 11); this package is strictly a
-pipeline tool and never ships in the game build.
+assets. Runtime code is C# and GDScript under Godot (see ARCHITECTURE.md); this
+package is strictly an offline pipeline tool and never ships in the game build.
 
 Standard library only, with one optional exception: ``postprocess`` uses Pillow
 for texture downscaling if it is installed, and reports the skip if it is not.
