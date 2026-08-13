@@ -386,3 +386,60 @@ this package ever writes the key anywhere.
 If a key is ever pasted into a chat, an issue, a commit or a log, treat it as
 compromised and rotate it in the Meshy dashboard. Meshy supports multiple keys
 per account, so rotating one does not interrupt work.
+
+---
+
+## Seeing a whole battle
+
+`preview` answers "is this asset any good". It cannot answer "does the game look
+like anything", and while Godot cannot be installed here that question has no
+other answer at all. `scene` composes one:
+
+```sh
+python -m hollowasset scene Content/Data/Battles/battle_north_meadow.json --out shot.png
+python -m hollowasset scene Content/Data/Battles/battle_the_breach.json --out breach.png --size 1600
+python -m hollowasset scene Content/Data/Battles/battle_north_meadow.json --out smooth.png --smooth --no-outline
+```
+
+It reads the battle file, terrain.json, characters.json and classes.json, builds
+the grid, colours every tile by terrain type, respects tile elevation, places
+whatever props and character models have actually been generated, highlights the
+active unit's movement range, and shoots it from the tactical camera. Useful
+flags: `--size`, `--yaw`, `--pitch`, `--active`, `--flat`, `--no-labels`, and
+`--smooth` / `--no-outline` to turn off rules 1 and 2 of
+`docs/ANIME_DIRECTION.md` for comparison.
+
+Nothing missing is fatal. Ungenerated props are reported and skipped; units with
+no model are drawn as a coloured stand-in figure, because an empty field is not
+a picture of a battle. The warning list on a run is a to-generate list.
+
+**Rules 1 and 2 live in `preview.py`, not here.** `TOON_RAMP` and `TOON_RIM` are
+the quantised lighting; `_edge_pass` is the screen-space outline, taken from the
+depth and normal buffers rather than faked by darkening back faces. Both are on
+by default for `preview` as well, so single-asset contact sheets and the composed
+scene are lit the same way.
+
+### What the composed scene showed that single-asset previews did not
+
+- **The camera pitch was inverted.** Every contact sheet and line-up produced
+  before 2026-08-13 was shot from *below* the asset. It survived that long
+  because a barrel looks much the same either way; it was obvious the moment a
+  house was rendered and the roof never appeared. Positive pitch now looks down.
+- **The tree's baked grass disc is worse in a scene than in a preview.** At 3.03 m
+  across it covers nine tiles of a 1 m grid, and its green is not the terrain's
+  green, so it reads as a dark stain around the trunk rather than as ground. The
+  single oak battle 01 places at [4,12] already spills onto the hill at [3..5,11]
+  that the archer climbs on turn 2; the battle asks for a second one.
+- **`building_house_small_a`'s 7.79 m slab is unusable in a battle.** It is
+  nearly eight tiles square and would sit on top of the grid it is meant to
+  stand on.
+- **The one generated character loses to its own placeholder at tactical
+  distance.** On a 14-tile board at 1200 px `npc_guard_greenvale` is about 40 px
+  tall, and at that size its dark, low-contrast texture reads as a green smudge
+  while the flat saturated stand-in three tiles away reads as a unit
+  immediately. At 1600 px it recovers. That is rules 3 and 5 failing in a
+  generated texture, and it is the argument for judging characters at camera
+  distance rather than in close-up — which is what `scene` is for.
+- **Bind pose is not a battle pose.** The guards stand arms-out across the
+  board. Nothing is wrong with the asset; it is a reminder that a scene shot is
+  worth much less until the idle clip can be sampled.

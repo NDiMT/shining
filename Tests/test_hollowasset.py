@@ -13,6 +13,7 @@ no fixture files, no network and no Meshy credits involved. Run with:
 from __future__ import annotations
 
 import json
+import math
 import os
 import struct
 import sys
@@ -27,7 +28,9 @@ from hollowasset import (  # noqa: E402
     budgets,
     glb,
     postprocess,
+    preview,
     provenance,
+    scene,
     style,
     validate,
 )
@@ -265,6 +268,45 @@ class TestBudgets(unittest.TestCase):
 
 
 class TestStyle(unittest.TestCase):
+    #: Anime rules 1 and 2 are the engine's job, never the generator's. A texture
+    #: that arrives with the bands and the ink line already painted into it gets
+    #: banded a second time by the real toon shader, which is the mud
+    #: docs/ANIME_DIRECTION.md calls the one failure that makes cel shading look
+    #: cheap. "shaded" is deliberately absent from this list: "flat unshaded
+    #: colour" is the direction we *do* want, and contains it.
+    BANNED_LIGHTING_TERMS = [
+        "cel shad", "cel-shad", "celshad", "toon", "cartoon shad",
+        "outline", "rim light", "rim-light", "ink line", "shading gradient",
+    ]
+
+    def resolved_prompts(self):
+        """Every prompt this repository can actually send, and a synthetic grid.
+
+        The catalogs are included because a constants-only check would miss the
+        half of the problem that keeps happening: both failures recorded under
+        "prompts leak their own failure modes" in docs/ASSET_PIPELINE.md were
+        catalog fields, not style tokens.
+
+        Yields ``(label, class_key, Prompt)``.
+        """
+        import glob
+
+        from hollowasset import pipeline
+
+        catalog_dir = os.path.join(os.path.dirname(__file__), "..", "Tools", "catalog")
+        catalogs = sorted(glob.glob(os.path.join(catalog_dir, "*.json")))
+        self.assertTrue(catalogs, "no catalog files found to check")
+        for path in catalogs:
+            for job in pipeline.load_catalog(path):
+                yield job.asset_id, job.asset_class, job.prompt
+        for class_key in budgets.BUDGETS:
+            for region in style.region_keys():
+                yield (
+                    f"{class_key}/{region}",
+                    class_key,
+                    style.build("a test subject", class_key, region=region),
+                )
+
     def test_prompts_never_exceed_the_api_limit(self):
         for class_key in budgets.BUDGETS:
             prompt = style.build("a " + "very long subject clause " * 40, class_key)
@@ -338,6 +380,20 @@ class TestStyle(unittest.TestCase):
             tokens = [t.strip().lower() for t in text.split(",") if t.strip()]
             self.assertCountEqual(tokens, set(tokens), f"repeated token in: {text}")
 
+    def test_no_catalog_entry_pays_for_the_same_token_twice(self):
+        """The same invariant over every asset we actually ship.
+
+        The synthetic case above cannot see the failure that happened: a catalog
+        'subject' repeating a word from its own class direction. The subject
+        reaches the packer as one pre-joined string, so its tokens were invisible
+        to the dedupe, and building_house_small_a asked for "simple boxy massing"
+        twice.
+        """
+        for label, _class_key, prompt in self.resolved_prompts():
+            for kind, text in (("geometry", prompt.geometry), ("texture", prompt.texture)):
+                tokens = [t.strip().lower() for t in text.split(",") if t.strip()]
+                self.assertCountEqual(tokens, set(tokens), f"{label} {kind}: {text}")
+
     def test_the_most_important_class_style_token_survives(self):
         """A regression guard. The avoid clause once ran to eighteen tokens and
         380 characters, which pushed vegetation's canopy direction out of the
@@ -349,18 +405,65 @@ class TestStyle(unittest.TestCase):
         )
         self.assertIn("clustered angular canopy masses", prompt.geometry)
 
+    def test_no_prompt_ever_asks_the_generator_for_the_lighting(self):
+        """docs/ANIME_DIRECTION.md rules 1 and 2, and the reason this test exists
+        at all: the two-band ramp and the outline belong to the renderer and the
+        Godot shaders. A generator asked for them paints them into the texture,
+        and a texture with light already in it double-shades under the real toon
+        shader. We ask for flat colour and anime form; the engine lights it.
+
+        Checked on resolved prompts rather than on the constants, because the
+        offending word could equally arrive from a catalog 'surface' field.
+        """
+        for label, _class_key, prompt in self.resolved_prompts():
+            for kind, text in (("geometry", prompt.geometry), ("texture", prompt.texture)):
+                for term in self.BANNED_LIGHTING_TERMS:
+                    self.assertNotIn(
+                        term, text.lower(),
+                        f"{label} {kind} prompt asks the generator for the lighting: {term!r}")
+
+    def test_every_texture_prompt_asks_for_flat_unshaded_colour(self):
+        """Anime rule 3, stated positively. Banning the wrong thing is not the
+        same as asking for the right one, and docs/ASSET_PIPELINE.md measured the
+        difference: the avoid tokens were a coin flip, the positive direction
+        landed in every sample."""
+        for label, _class_key, prompt in self.resolved_prompts():
+            self.assertIn("flat unshaded colour blocks", prompt.texture, label)
+
+    def test_anime_proportion_reaches_every_character_prompt(self):
+        """Anime rule 4, which only exists if it survives the packer.
+
+        Measured before this was guarded: every character in prologue_cast.json
+        lost its proportion clause, because _pack fills greedily and a 69-char
+        clause loses its place to three shorter tail tokens. The geometry prompt
+        is the one that decides the mesh, so rule 4 was a no-op in the only place
+        it could have taken effect.
+        """
+        humanoid = {"hero", "npc", "enemy_humanoid"}
+        for label, class_key, prompt in self.resolved_prompts():
+            if class_key in humanoid:
+                self.assertIn("anime proportions", prompt.geometry, label)
+
+        long_subject = style.build("young human swordsman in a blue tabard " * 8, "hero")
+        self.assertIn("anime proportions", long_subject.geometry)
+
     def test_no_third_party_ip_appears_in_any_prompt(self):
         """Brief-adjacent but commercially important: see docs/STYLE_GUIDE.md.
 
-        Nothing in the style module may leak a third-party name into a request
-        sent to a generative service.
+        Nothing in the style module *or the catalogs* may leak a third-party name
+        into a request sent to a generative service. Every prompt is recorded in
+        the provenance database, so this is auditable rather than a promise.
         """
         forbidden = ["shining force", "shining", "sega", "genesis", "megadrive", "mega drive"]
-        haystacks = [style.BASE_STYLE_TOKENS, style.CORE_STYLE_TOKENS, style.BASE_AVOID_TOKENS]
+        haystacks = [style.BASE_STYLE_TOKENS, style.CORE_STYLE_TOKENS,
+                     style.BASE_AVOID_TOKENS, style.TEXTURE_AVOID_TOKENS]
         text = " ".join(" ".join(h) for h in haystacks).lower()
         text += " " + " ".join(style.CLASS_STYLE.values()).lower()
+        text += " " + " ".join(style.CLASS_PALETTE.values()).lower()
         text += " " + " ".join(style.CLASS_AVOID.values()).lower()
         text += " " + " ".join(style.REGIONS.values()).lower()
+        for label, _class_key, prompt in self.resolved_prompts():
+            text += f" {prompt.geometry.lower()} {prompt.texture.lower()}"
         for term in forbidden:
             self.assertNotIn(term, text, f"{term!r} must not appear in any prompt token")
 
@@ -740,6 +843,362 @@ class TestMeshOnly(unittest.TestCase):
         full = self.run_cli("generate", catalog, "--id", "prop_barrel_a", "--dry-run")
         mesh = self.run_cli("generate", catalog, "--id", "prop_barrel_a", "--dry-run", "--mesh-only")
         self.assertEqual(full, mesh)
+
+
+# ---------------------------------------------------------------------------
+# Scene composition
+# ---------------------------------------------------------------------------
+
+
+NORTH_MEADOW = "Content/Data/Battles/battle_north_meadow.json"
+THE_BREACH = "Content/Data/Battles/battle_the_breach.json"
+
+
+class TestScene(unittest.TestCase):
+    """The offline battle renderer.
+
+    Most of this is about the grid convention. x runs west to east, y runs SOUTH
+    to north, and the battle JSON writes its rows north first — get that backwards
+    and the map is merely mirrored, which looks entirely plausible on screen and
+    is wrong in every tactical detail. Nothing else in the renderer will complain,
+    so these tests are the only thing holding it.
+    """
+
+    def setUp(self):
+        self.terrain = scene.load_terrain()
+
+    # -- the flip ----------------------------------------------------------
+
+    def test_row_zero_of_the_file_is_the_northernmost_row(self):
+        grid = scene.Grid.parse(["xxx", "ggg", "ppp"], self.terrain)
+        self.assertEqual(grid.height, 3)
+        self.assertEqual(grid.terrain_id(0, 2), "exit")   # file row 0 -> y = 2
+        self.assertEqual(grid.terrain_id(0, 1), "grass")
+        self.assertEqual(grid.terrain_id(0, 0), "path")   # file row 2 -> y = 0
+
+    def test_x_is_not_flipped_with_y(self):
+        # A grid that is asymmetric in both axes at once. Flipping x as well as y
+        # would leave the previous test passing and this one failing.
+        grid = scene.Grid.parse(["rgg", "ggg", "ggt"], self.terrain)
+        self.assertEqual(grid.terrain_id(0, 2), "rock")    # north-west corner
+        self.assertEqual(grid.terrain_id(2, 0), "forest")  # south-east corner
+
+    def test_north_meadow_lands_the_way_the_file_reads(self):
+        battle = scene.load_battle(NORTH_MEADOW)
+        grid = battle.grid
+        self.assertEqual((grid.width, grid.height), (12, 14))
+        # The escape row the fleeing spearman leaves by is the north edge.
+        self.assertTrue(all(grid.terrain_id(x, 13) == "exit" for x in range(12)))
+        # The road runs into the southern deployment area, where the party starts.
+        self.assertEqual([grid.terrain_id(5, y) for y in (0, 1, 2)], ["path"] * 3)
+        # The hill the archer takes on turn 2 is at [5,11]; the event moves it there.
+        self.assertEqual(grid.terrain_id(5, 11), "hill")
+        self.assertEqual(grid.level(5, 11), 1)
+        self.assertEqual(grid.terrain_id(5, 9), "grass")
+
+    def test_north_is_the_far_edge_of_the_picture(self):
+        # The convention only pays off if the camera agrees with it: north must
+        # end up further from the camera and higher up the frame, or the picture
+        # is upside down while every index is right.
+        camera = preview.Camera(0.0, math.radians(scene.DEFAULT_PITCH), 60.0, 0.0, 500.0, 800, 800)
+        south = scene.cell_centre(3, 0)
+        north = scene.cell_centre(3, 11)
+        points = [[south[0], 0.0, south[1]], [north[0], 0.0, north[1]]]
+        (_, south_y, south_depth), (_, north_y, north_depth) = camera.project(points)
+        self.assertGreater(north_depth, south_depth)
+        self.assertLess(north_y, south_y)
+
+    def test_the_breach_puts_the_crownwall_on_the_north_edge(self):
+        battle = scene.load_battle(THE_BREACH)
+        self.assertTrue(all(battle.grid.terrain_id(x, 11) == "wall" for x in range(14)))
+        self.assertTrue(all(battle.grid.terrain_id(x, 0) != "wall" for x in range(14)))
+
+    def test_a_ragged_grid_is_rejected_rather_than_drawn(self):
+        with self.assertRaises(ValueError):
+            scene.Grid.parse(["ggg", "gg"], self.terrain)
+
+    def test_an_undefined_symbol_names_itself(self):
+        with self.assertRaises(ValueError) as caught:
+            scene.Grid.parse(["gZg"], self.terrain)
+        self.assertIn("Z", str(caught.exception))
+
+    # -- terrain data ------------------------------------------------------
+
+    def test_every_terrain_type_has_a_colour(self):
+        # A terrain type added to terrain.json without a colour here renders
+        # magenta rather than crashing, which is deliberate; this test is what
+        # makes sure nobody ships the magenta.
+        for symbol, entry in self.terrain.items():
+            with self.subTest(symbol=symbol):
+                self.assertIn(entry["id"], scene.TERRAIN_COLOURS)
+
+    def test_elevation_comes_from_the_terrain_data(self):
+        grid = scene.Grid.parse(["hg"], self.terrain)
+        self.assertEqual(grid.elevation(0, 0), scene.ELEVATION_STEP)
+        self.assertEqual(grid.elevation(1, 0), 0.0)
+
+    # -- movement range ----------------------------------------------------
+
+    def test_movement_prefers_the_cheap_route_over_the_short_one(self):
+        # Straight through the forest is two tiles at cost 2; around it is three
+        # tiles at cost 1. Dijkstra has to find the cheaper one, which is the
+        # reason Movement.cs is not a breadth-first flood.
+        grid = scene.Grid.parse(["ggg", "gtg", "ggg"], self.terrain)
+        reached = scene.reachable(grid, (1, 0), 3)
+        self.assertEqual(reached[(1, 2)], 3)
+
+    def test_blocked_terrain_stops_ground_movement(self):
+        grid = scene.Grid.parse(["ggg", "fff", "ggg"], self.terrain)
+        reached = scene.reachable(grid, (1, 0), 6)
+        self.assertNotIn((1, 1), reached)
+        self.assertNotIn((1, 2), reached)
+
+    def test_flying_movement_crosses_a_fence(self):
+        grid = scene.Grid.parse(["ggg", "fff", "ggg"], self.terrain)
+        self.assertIn((1, 2), scene.reachable(grid, (1, 0), 6, "flying"))
+
+    def test_a_unit_cannot_stop_on_an_occupied_tile(self):
+        grid = scene.Grid.parse(["ggg", "ggg", "ggg"], self.terrain)
+        reached = scene.reachable(grid, (1, 0), 4, occupied=frozenset({(1, 1)}))
+        self.assertNotIn((1, 1), reached)
+        # ...and cannot walk through it either, so the far side costs 4 the long
+        # way round rather than 2 straight up.
+        self.assertEqual(reached[(1, 2)], 4)
+
+    def test_the_origin_is_not_in_its_own_range(self):
+        grid = scene.Grid.parse(["gg"], self.terrain)
+        self.assertNotIn((0, 0), scene.reachable(grid, (0, 0), 4))
+
+    def test_rowan_gets_a_movement_range_on_the_real_battle(self):
+        battle = scene.load_battle(NORTH_MEADOW)
+        self.assertIsNotNone(battle.active)
+        self.assertEqual(battle.active.id, "rowan")
+        self.assertEqual(battle.active.movement, 6)      # characters.json baseStats
+        self.assertTrue(battle.range_tiles)
+        for tile in battle.range_tiles:
+            self.assertTrue(battle.grid.passable(*tile))
+        # The fence pen shapes the approach, so it must not be walkable.
+        self.assertNotIn((2, 6), battle.range_tiles)
+
+    # -- units and props ---------------------------------------------------
+
+    def test_every_unit_in_both_battles_is_placed(self):
+        for path, expected in ((NORTH_MEADOW, 3 + 0 + 7), (THE_BREACH, 3 + 2 + 6)):
+            with self.subTest(battle=path):
+                battle = scene.load_battle(path)
+                self.assertEqual(len(battle.units), expected)
+                for unit in battle.units:
+                    self.assertTrue(battle.grid.inside(unit.x, unit.y))
+
+    def test_sides_are_read_from_the_right_lists(self):
+        battle = scene.load_battle(THE_BREACH)
+        sides = {unit.id: unit.side for unit in battle.units}
+        self.assertEqual(sides["rowan"], "player")
+        self.assertEqual(sides["injured_guard_1"], "ally")
+        self.assertEqual(sides["varric"], "enemy")
+
+    def test_a_borrowed_npc_resolves_against_the_enemy_table(self):
+        # battle 02 spawns greenvale_soldier under an `npc` key while
+        # characters.json declares it under `enemies`. It has to resolve anyway.
+        battle = scene.load_battle(THE_BREACH)
+        soldier = next(unit for unit in battle.units if unit.id == "soldier_1")
+        self.assertEqual(soldier.name, "Greenvale Soldier")
+        self.assertEqual(soldier.movement, 5)
+
+    def test_an_explicit_active_unit_can_be_chosen(self):
+        battle = scene.load_battle(NORTH_MEADOW, active="archer_1")
+        self.assertEqual(battle.active.id, "archer_1")
+
+    def test_an_unknown_active_unit_warns_and_falls_back(self):
+        battle = scene.load_battle(NORTH_MEADOW, active="nobody")
+        self.assertEqual(battle.active.id, "rowan")
+        self.assertTrue(any("nobody" in warning for warning in battle.warnings))
+
+    def test_a_missing_prop_asset_warns_rather_than_raising(self):
+        battle = scene.load_battle(NORTH_MEADOW)
+        _, _ = scene.build(battle)
+        missing = [w for w in battle.warnings if "prop_fence_section" in w]
+        self.assertTrue(missing)
+        self.assertIn("not drawn", missing[0])
+
+    def test_a_generated_prop_is_actually_placed(self):
+        # The oak is one of the few assets that exists, and it is the difference
+        # between a scene and a set of coloured squares.
+        battle = scene.load_battle(NORTH_MEADOW)
+        bare = scene.Battle(id="bare", name="", grid=battle.grid, units=[], props=[], active=None)
+        with_tree = scene.Battle(
+            id="tree", name="", grid=battle.grid, units=[],
+            props=[p for p in battle.props if p.asset == "veg_tree_oak_a"], active=None)
+        self.assertEqual(len(with_tree.props), 1)
+        empty, _ = scene.build(bare)
+        planted, _ = scene.build(with_tree)
+        self.assertGreater(len(planted.triangles), len(empty.triangles) + 20_000)
+
+    def test_units_with_no_model_are_drawn_as_placeholders(self):
+        battle = scene.load_battle(NORTH_MEADOW)
+        geometry, placeholders = scene.build(battle)
+        # Only npc_guard_greenvale.glb has been generated, and battle 01 uses
+        # none of it, so every unit is a placeholder -- and none is skipped.
+        self.assertEqual(placeholders, len(battle.units))
+        self.assertTrue(any("placeholder" in warning for warning in battle.warnings))
+        self.assertGreater(len(geometry.triangles), 0)
+
+    def test_a_generated_character_model_is_used_when_it_exists(self):
+        battle = scene.load_battle(THE_BREACH)
+        _, placeholders = scene.build(battle)
+        # The five hesitant soldiers and two injured guards all share
+        # npc_guard_greenvale.glb, which exists; the three heroes and Varric
+        # do not have models yet.
+        self.assertEqual(placeholders, 4)
+
+    def test_a_unit_stands_on_its_own_tile(self):
+        grid = scene.Grid.parse(["gg", "gg"], self.terrain)
+        unit = scene.Unit(id="u", name="U", side="player", x=1, y=0, model=None,
+                          height=1.7, movement=4, movement_type="ground", hp=10)
+        battle = scene.Battle(id="b", name="", grid=grid, units=[unit], props=[], active=None)
+        geometry, _ = scene.build(battle)
+        centre_x, centre_z = scene.cell_centre(1, 0)
+        points = geometry.triangles.reshape(-1, 3)
+        marker = points[points[:, 1] > 0.5]          # above the ground, so unit only
+        self.assertLess(abs(marker[:, 0].mean() - centre_x), 0.1)
+        self.assertLess(abs(marker[:, 2].mean() - centre_z), 0.1)
+
+    def test_a_declared_size_that_disagrees_with_the_grid_is_reported(self):
+        battle = scene.load_battle(NORTH_MEADOW)
+        self.assertFalse([w for w in battle.warnings if "declared size" in w])
+
+    # -- geometry ----------------------------------------------------------
+
+    def test_tile_tops_face_upward(self):
+        # The rasteriser culls back faces, so a floor wound the wrong way is
+        # invisible and the board renders as a hole in the sky.
+        import numpy
+
+        builder = scene.Builder()
+        builder.top(0.0, 1.0, 0.0, 1.0, 0.0, (1, 2, 3))
+        triangles = numpy.array(builder.triangles)
+        for triangle in triangles:
+            normal = numpy.cross(triangle[1] - triangle[0], triangle[2] - triangle[0])
+            self.assertGreater(normal[1], 0)
+
+    def test_box_faces_all_point_outward(self):
+        import numpy
+
+        builder = scene.Builder()
+        builder.box(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0, (1, 2, 3))
+        for triangle in numpy.array(builder.triangles):
+            normal = numpy.cross(triangle[1] - triangle[0], triangle[2] - triangle[0])
+            centre = triangle.mean(axis=0)          # the box is centred on the origin
+            self.assertGreater(float(normal @ centre), 0)
+
+
+class TestSceneRendering(unittest.TestCase):
+    """The anime look, per docs/ANIME_DIRECTION.md rules 1 and 2."""
+
+    def setUp(self):
+        if not preview.available():
+            self.skipTest("preview needs Pillow and numpy")
+        import numpy
+
+        self.numpy = numpy
+
+    def _quad(self, z: float):
+        """A camera-facing quad, wound so the rasteriser keeps it."""
+        corners = [(-1.0, 0.0, z), (1.0, 0.0, z), (1.0, 2.0, z), (-1.0, 2.0, z)]
+        return [(corners[0], corners[2], corners[1]), (corners[0], corners[3], corners[2])]
+
+    def test_the_toon_ramp_only_ever_produces_its_own_bands(self):
+        normals = self.numpy.array([[0.0, 1.0, -0.9], [0.0, -1.0, -0.9], [0.7, 0.7, -0.9]])
+        shades = preview._shade(normals, self.numpy, toon=True)
+        allowed = {value for _, value in preview.TOON_RAMP} | {preview.TOON_RIM[1]}
+        for shade in shades:
+            self.assertIn(float(shade), allowed)
+
+    def test_the_smooth_mode_is_a_gradient_and_the_toon_mode_is_not(self):
+        angles = self.numpy.linspace(0.0, 1.0, 40)
+        normals = self.numpy.stack(
+            [angles, self.numpy.sqrt(1 - angles ** 2), self.numpy.full(40, -0.9)], axis=1)
+        normals /= self.numpy.linalg.norm(normals, axis=1)[:, None]
+        toon = preview._shade(normals, self.numpy, toon=True)
+        smooth = preview._shade(normals, self.numpy, toon=False)
+        self.assertLessEqual(len(set(toon.tolist())), 3)
+        self.assertGreater(len(set(smooth.tolist())), 20)
+
+    def test_the_rim_band_is_the_only_third_tone(self):
+        # Rule 1 allows one narrow rim band and nothing else, so a face facing
+        # straight at the camera must never pick it up.
+        facing = self.numpy.array([[0.0, 0.0, -1.0]])
+        shade = preview._shade(facing, self.numpy, toon=True)[0]
+        self.assertNotEqual(float(shade), preview.TOON_RIM[1])
+
+    def test_the_edge_pass_inks_a_silhouette(self):
+        geometry = preview.Geometry(
+            self.numpy.array(self._quad(0.0)), self.numpy.zeros((2, 3, 2)), None)
+        inked = self.numpy.asarray(preview.render(geometry, 120, 0, 0, textured=False))
+        plain = self.numpy.asarray(
+            preview.render(geometry, 120, 0, 0, textured=False, outline=False))
+        ink = self.numpy.array(preview.OUTLINE_COLOUR)
+        self.assertGreater(int((inked == ink).all(axis=2).sum()), 100)
+        self.assertEqual(int((plain == ink).all(axis=2).sum()), 0)
+
+    def test_the_edge_pass_stays_off_the_background(self):
+        geometry = preview.Geometry(
+            self.numpy.array(self._quad(0.0)), self.numpy.zeros((2, 3, 2)), None)
+        image = self.numpy.asarray(preview.render(geometry, 120, 0, 0, textured=False))
+        # Corner pixels are outside the quad at any fit, so an outline reaching
+        # them would mean the line is haloing the shape instead of sitting on it.
+        for pixel in (image[0, 0], image[0, -1], image[-1, 0], image[-1, -1]):
+            self.assertEqual(tuple(pixel), preview.BACKGROUND)
+
+    def test_positive_pitch_looks_down_on_the_scene(self):
+        # The sign this module used until 2026-08-13 rendered every contact sheet
+        # from underneath. A point above the ground has to come out nearer the
+        # camera than the ground it stands on.
+        camera = preview.Camera(0.0, math.radians(40.0), 50.0, 0.0, 0.0, 100, 100)
+        ground, above = camera.project([[0.0, 0.0, 0.0], [0.0, 2.0, 0.0]])
+        self.assertLess(above[2], ground[2])
+
+    def test_per_triangle_materials_survive_a_render(self):
+        # Terrain is flat colour and assets are textured in the same buffer, so
+        # a triangle's own colour has to reach the framebuffer.
+        geometry = preview.Geometry(
+            triangles=self.numpy.array(self._quad(0.0)),
+            uvs=self.numpy.zeros((2, 3, 2)),
+            texture=None,
+            colours=self.numpy.array([[255.0, 0.0, 0.0], [255.0, 0.0, 0.0]]),
+            texture_index=self.numpy.array([-1, -1]),
+            textures=[],
+        )
+        image = self.numpy.asarray(preview.render(geometry, 120, 0, 0, outline=False))
+        red = image[(image[:, :, 0] > 100) & (image[:, :, 1] < 60)]
+        self.assertGreater(len(red), 500)
+
+    def test_both_battles_render_end_to_end(self):
+        for path in (NORTH_MEADOW, THE_BREACH):
+            with self.subTest(battle=path):
+                with tempfile.TemporaryDirectory() as folder:
+                    out = os.path.join(folder, "shot.png")
+                    scene.render_scene(path, out, size=320, log=lambda *_: None)
+                    from PIL import Image
+                    with Image.open(out) as image:
+                        self.assertEqual(image.width, 320)
+                        self.assertGreater(image.height, 320)
+
+    def test_the_cli_renders_a_scene(self):
+        import io
+        from contextlib import redirect_stdout
+
+        from hollowasset.__main__ import main
+
+        with tempfile.TemporaryDirectory() as folder:
+            out = os.path.join(folder, "shot.png")
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                code = main(["scene", NORTH_MEADOW, "--out", out, "--size", "300",
+                             "--smooth", "--no-outline", "--flat"])
+            self.assertEqual(code, 0)
+            self.assertTrue(os.path.exists(out))
+            self.assertIn("smooth", buffer.getvalue())
 
 
 if __name__ == "__main__":

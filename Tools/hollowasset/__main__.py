@@ -7,6 +7,7 @@
     python -m hollowasset validate Content/Models/Props/prop_barrel_a.glb --class prop
     python -m hollowasset validate --catalog Tools/catalog/greenvale_props.json
     python -m hollowasset provenance --report --out docs/ASSET_PROVENANCE.md
+    python -m hollowasset scene Content/Data/Battles/battle_north_meadow.json --out shot.png
 
 Run from the repository root, or set PYTHONPATH=Tools.
 """
@@ -18,7 +19,7 @@ import os
 import sys
 from dataclasses import replace
 
-from . import budgets, content, meshy, pipeline, preview, provenance, style, validate
+from . import budgets, content, meshy, pipeline, preview, provenance, scene, style, validate
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -85,6 +86,35 @@ def main(argv: list[str] | None = None) -> int:
     preview_parser.add_argument("--title", default="")
     preview_parser.add_argument("--size", type=int, default=0)
 
+    scene_parser = subparsers.add_parser(
+        "scene", help="compose a whole battle from the game data and render it"
+    )
+    scene_parser.add_argument("battle", help="a battle JSON under Content/Data/Battles")
+    scene_parser.add_argument("--out", required=True, help="output PNG")
+    scene_parser.add_argument("--size", type=int, default=1200, help="image width in pixels")
+    scene_parser.add_argument("--yaw", type=float, default=scene.DEFAULT_YAW)
+    scene_parser.add_argument(
+        "--pitch", type=float, default=scene.DEFAULT_PITCH,
+        help="camera pitch in degrees, looking down. 35-45 is the tactical band")
+    scene_parser.add_argument(
+        "--smooth", action="store_true",
+        help="the old smooth lambert gradient instead of the toon ramp. For "
+        "comparing against docs/ANIME_DIRECTION.md rule 1, not for shipping")
+    scene_parser.add_argument(
+        "--no-outline", dest="outline", action="store_false",
+        help="skip the screen-space edge pass of rule 2")
+    scene_parser.add_argument(
+        "--flat", action="store_true",
+        help="drop asset textures. Terrain is flat colour either way, so this "
+        "shows whether the placed assets read on silhouette alone")
+    scene_parser.add_argument(
+        "--no-labels", dest="labels", action="store_false", help="no unit name tags")
+    scene_parser.add_argument(
+        "--active", help="unit id to highlight the movement range for; "
+        "defaults to the first player unit")
+    scene_parser.add_argument("--data", default=scene.DATA_ROOT)
+    scene_parser.add_argument("--models", default=scene.MODEL_ROOT)
+
     provenance_parser = subparsers.add_parser("provenance", help="inspect the asset database")
     provenance_parser.add_argument("--report", action="store_true", help="render markdown")
     provenance_parser.add_argument("--out", help="write the report here instead of stdout")
@@ -123,6 +153,9 @@ def _dispatch(args: argparse.Namespace) -> int:
 
     if args.command == "preview":
         return _cmd_preview(args)
+
+    if args.command == "scene":
+        return _cmd_scene(args)
 
     if args.command == "provenance":
         return _cmd_provenance(args)
@@ -263,6 +296,31 @@ def _cmd_preview(args: argparse.Namespace) -> int:
         out = preview.contact_sheet(assets[0][0], args.out, size=size, textured=textured)
 
     print(f"wrote {out}  ({len(assets)} asset(s), {'textured' if textured else 'flat'})")
+    return 0
+
+
+def _cmd_scene(args: argparse.Namespace) -> int:
+    if not preview.available():
+        raise ValueError(
+            "scene needs Pillow and numpy: pip install Pillow numpy. "
+            "Everything else in hollowasset works without them")
+
+    out = scene.render_scene(
+        args.battle,
+        args.out,
+        size=args.size,
+        yaw=args.yaw,
+        pitch=args.pitch,
+        textured=not args.flat,
+        toon=not args.smooth,
+        outline=args.outline,
+        labels=args.labels,
+        active=args.active,
+        data_root=args.data,
+        model_root=args.models,
+    )
+    print(f"wrote {out}  ({'smooth' if args.smooth else 'toon'}, "
+          f"{'no outline' if not args.outline else 'outlined'})")
     return 0
 
 
