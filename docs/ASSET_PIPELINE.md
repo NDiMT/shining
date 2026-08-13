@@ -211,6 +211,27 @@ in Blender.
 
 ---
 
+## Look before you rig
+
+A character's mesh costs a preview and a refine. Rigging it and baking a clip set
+costs several times that, and the thing most likely to be wrong is the
+silhouette — which you can see from the mesh alone.
+
+```sh
+python -m hollowasset generate Tools/catalog/prologue_cast.json \
+    --id npc_guard_greenvale --mesh-only
+```
+
+Review it, apply the readability test from `docs/STYLE_GUIDE.md` (render it small,
+cover the face, can you still name the class), and only then run the same entry
+without the flag to rig it and bake its clips.
+
+The same order applies to a batch: generate the cheapest, most reused asset
+first, look at it, and let what you learn correct the prompts before the
+expensive ones run.
+
+---
+
 ## Rigging and animation
 
 `rig` uses the Meshy rigging API, which needs a **textured humanoid facing +Z**
