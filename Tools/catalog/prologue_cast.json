@@ -27,7 +27,17 @@
       "enable_pbr": true,
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run", "attack_1", "attack_2", "block", "hit_front", "death", "victory"],
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "attack_1",
+        "attack_2",
+        "block",
+        "hit_front",
+        "death",
+        "victory"
+      ],
       "references": [],
       "notes": "Protagonist. Needs run and victory for the escape sequence and battle results. Blockout until concept art is approved."
     },
@@ -39,7 +49,16 @@
       "enable_pbr": true,
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run", "cast", "heal", "hit_front", "death", "victory"],
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "cast",
+        "heal",
+        "hit_front",
+        "death",
+        "victory"
+      ],
       "references": [],
       "notes": "Apprentice mage, not yet a full mage. Casts Spark in battle 01. Blockout until concept art is approved."
     },
@@ -50,7 +69,16 @@
       "extra": "spear length is the readable silhouette, deliberately taller than Rowan",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run", "attack_1", "block", "hit_front", "death", "victory"],
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "attack_1",
+        "block",
+        "hit_front",
+        "death",
+        "victory"
+      ],
       "references": [],
       "notes": "Party member in both prologue battles. Stays in Greenvale at the end and returns later, so he needs a full animation set rather than an NPC's."
     },
@@ -61,7 +89,12 @@
       "extra": "grey beard and bare head separate him from every helmeted soldier",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "attack_1", "hit_front"],
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front"
+      ],
       "references": [],
       "notes": "Mentor. Draws his sword on Varric in scene 09, so he needs attack_1 despite being an NPC. If he ever becomes recruitable, move him to the hero budget."
     },
@@ -73,7 +106,12 @@
       "enable_pbr": true,
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "attack_1", "hit_front"],
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front"
+      ],
       "references": [],
       "notes": "Antagonist of the prologue, not a villain. Fights alongside Rowan against the Wallstalker."
     },
@@ -83,7 +121,10 @@
       "subject": "young human guard recruit in a plain Greenvale tabard over padded cloth, untidy hair, holding a training sword",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk"],
+      "animations": [
+        "idle",
+        "walk"
+      ],
       "references": [],
       "notes": "Training yard only. Script flags him as memorable for a possible return when Rowan comes home."
     },
@@ -94,7 +135,14 @@
       "extra": "faceless by design so the mesh can be reused across the whole squad",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "attack_1", "block", "hit_front", "death"],
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "block",
+        "hit_front",
+        "death"
+      ],
       "notes": "Reused for the gate guard, the training yard guards, Captain Heron's unconscious men and Varric's squad in battle 02. One mesh, recoloured and rescaled per role."
     },
     {
@@ -103,7 +151,10 @@
       "subject": "stooped elderly human woman in a long brown shawl and apron, grey hair in a bun, holding a wicker basket",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk"],
+      "animations": [
+        "idle",
+        "walk"
+      ],
       "notes": "The mother hint in Greenvale. Needs no combat animations."
     },
     {
@@ -113,7 +164,11 @@
       "extra": "roughly two thirds the height of an adult villager",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run"],
+      "animations": [
+        "idle",
+        "walk",
+        "run"
+      ],
       "notes": "Runs away after Maeve's giant joke, so it needs run."
     },
     {
@@ -123,7 +178,10 @@
       "extra": "widest villager silhouette, bare arms read at distance",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk"]
+      "animations": [
+        "idle",
+        "walk"
+      ]
     },
     {
       "id": "npc_refugee_man",
@@ -133,7 +191,12 @@
       "region": "outer_world",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run", "hit_front"],
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "hit_front"
+      ],
       "notes": "Brief section 6 and the script both hang on this: the refugees must look like they come from somewhere the player has never seen. Their palette is outer_world, not greenvale, and that contrast is the story reveal."
     },
     {
@@ -143,7 +206,11 @@
       "region": "outer_world",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run"],
+      "animations": [
+        "idle",
+        "walk",
+        "run"
+      ],
       "notes": "Maeve's line 'unless monsters have started carrying babies' depends on this silhouette being readable through a crack in the wall."
     },
     {
@@ -153,7 +220,11 @@
       "region": "outer_world",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run"]
+      "animations": [
+        "idle",
+        "walk",
+        "run"
+      ]
     },
     {
       "id": "npc_refugee_leader",
@@ -163,7 +234,11 @@
       "region": "outer_world",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "hit_front"],
+      "animations": [
+        "idle",
+        "walk",
+        "hit_front"
+      ],
       "notes": "Delivers the 'you think this wall protects you' beat. Likely recurring, so treat as a named character and get concept art."
     },
     {
@@ -173,7 +248,13 @@
       "extra": "sickly green skin, rust-red faction rag, low crouched profile",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "attack_1", "hit_front", "death"],
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front",
+        "death"
+      ],
       "notes": "Four in battle 01."
     },
     {
@@ -183,7 +264,14 @@
       "extra": "same green and rust palette as the raider, spear makes the two-tile reach readable",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "run", "attack_1", "hit_front", "death"],
+      "animations": [
+        "idle",
+        "walk",
+        "run",
+        "attack_1",
+        "hit_front",
+        "death"
+      ],
       "notes": "Two in battle 01. One flees north toward the Wall in the mid-battle event, so it needs run."
     },
     {
@@ -193,7 +281,13 @@
       "extra": "same green and rust palette as the raider",
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "attack_1", "hit_front", "death"],
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "hit_front",
+        "death"
+      ],
       "notes": "One in battle 01. Takes the hill to demonstrate height advantage."
     },
     {
@@ -204,7 +298,14 @@
       "enable_pbr": true,
       "pose": "t-pose",
       "rig": true,
-      "animations": ["idle", "walk", "attack_1", "heavy_attack", "hit_front", "death"],
+      "animations": [
+        "idle",
+        "walk",
+        "attack_1",
+        "heavy_attack",
+        "hit_front",
+        "death"
+      ],
       "notes": "Prologue mini-boss, level 3. Its armoured front and weak flanks are the positioning tutorial, so the plating must be visually obvious from the tactical camera or the mechanic is unfair. Palette is the sealed-fragment faction from the style guide, not the goblin faction: this is the player's first glimpse of what the Crownwall really holds."
     }
   ]

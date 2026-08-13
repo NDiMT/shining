@@ -52,6 +52,9 @@ class Job:
     pose_mode: str = ""
     rig: bool = False
     animations: list[int] = field(default_factory=list)
+    #: Opt in to API decimation. Off by default; see _enforce_triangle_budget
+    #: for the measurements behind that default.
+    remesh: bool = False
     notes: str = ""
 
     @property
@@ -67,9 +70,9 @@ class Job:
         return "2k"
 
     def estimate_credits(self) -> int:
-        # The remesh is included because generation reliably overshoots
-        # target_polycount, so in practice it almost always runs.
-        total = CREDIT_ESTIMATE["preview"] + CREDIT_ESTIMATE["refine"] + CREDIT_ESTIMATE["remesh"]
+        total = CREDIT_ESTIMATE["preview"] + CREDIT_ESTIMATE["refine"]
+        if self.remesh:
+            total += CREDIT_ESTIMATE["remesh"]
         if self.rig:
             total += CREDIT_ESTIMATE["rig"]
         total += CREDIT_ESTIMATE["animation"] * len(self.animations)
@@ -151,6 +154,7 @@ def load_catalog(path: str, *, content_root: str = "Content/Models") -> list[Job
                     region=region,
                     extra=str(entry.get("extra", "")),
                     avoid=str(entry.get("avoid", "")),
+                    surface=str(entry.get("surface", "")),
                 ),
                 budget=budget,
                 output_path=os.path.join(content_root, budget.subdir, f"{asset_id}.glb"),
@@ -160,6 +164,7 @@ def load_catalog(path: str, *, content_root: str = "Content/Models") -> list[Job
                 pose_mode=str(entry.get("pose", "t-pose" if budget.needs_skeleton else "")),
                 rig=rig,
                 animations=anim.resolve_all(entry.get("animations", [])),
+                remesh=bool(entry.get("remesh", False)),
                 notes=str(entry.get("notes", "")),
             )
         )
@@ -320,21 +325,32 @@ def _enforce_triangle_budget(
     poll_seconds: float,
     result: Result,
 ) -> str:
-    """Remesh through the API if the download came back over budget.
+    """Optionally remesh an over-budget asset. OFF BY DEFAULT — see below.
 
-    Returns the task id that now holds the current mesh — the remesh task if one
-    ran, otherwise the input task. Callers must use the returned id for any
-    downstream stage, because rigging has to operate on the decimated mesh.
+    Returns the task id holding the current mesh: the remesh task if one ran,
+    otherwise the input task. Callers must use the returned id downstream,
+    because rigging has to operate on whichever mesh actually survives.
 
-    ``target_polycount`` on the generation call is a request, not a guarantee:
-    measured against a real run, a 550-triangle barrel came back at 6,392. So the
-    budget is enforced after the fact, by measuring the actual file and spending a
-    remesh only when one is genuinely needed.
+    WHY THIS IS OPT-IN
+    ------------------
+    ``target_polycount`` at generation time is a request, not a guarantee: a
+    barrel asked for at 550 triangles came back at 11,733. The obvious response
+    is to decimate afterwards. Measured on that barrel, remeshed to four
+    different densities and rendered:
 
-    Failure here is a warning rather than an error. An over-budget asset is still
-    useful for blockout work, the validator will fail it before it reaches the
-    engine, and losing the whole generation over a failed decimation would waste
-    the credits already spent.
+        561 triangles    formless lump, no staves, no iron bands
+        1,030            still a lump, bands barely hinted, geometry torn
+        2,061            bands visible but ragged and full of holes, legs gone
+        6,392 (native)   clean staves, four intact bands, legs present
+
+    The API's decimation tears geometry at every level tested, and quality does
+    not recover by giving it more triangles. The native mesh is clean because it
+    was *generated* at that density rather than reduced to it.
+
+    So the pipeline no longer silently decimates. An over-budget asset stays
+    over budget, the validator flags it, and a human decides between accepting
+    the native density, reducing it properly in Blender with quadric decimation,
+    or regenerating. Silently shipping a lump was the worse failure.
     """
     try:
         measured = glb.read(job.output_path)
@@ -346,19 +362,19 @@ def _enforce_triangle_budget(
     if measured.triangles <= soft_high:
         return input_task_id
 
-    # Remesh to the TOP of the soft range, not the midpoint. Measured on a real
-    # barrel: the generator produced a clean 6,392-triangle mesh with defined
-    # staves and iron bands, and decimating it to the 550 midpoint destroyed both.
-    # Every triangle inside the budget is a triangle worth keeping.
+    if not job.remesh:
+        log(
+            f"  {measured.triangles:,} tris, over the {soft_high:,} target. Not remeshing: "
+            "the validator will flag it for cleanup. Pass remesh:true in the catalog "
+            "to decimate through the API anyway, but read the note in this function first."
+        )
+        return input_task_id
+
     target = soft_high
     ratio = measured.triangles / max(target, 1)
     log(f"  {measured.triangles:,} tris over the {soft_high:,} target, remeshing to {target:,}")
     if ratio > 4:
-        log(
-            f"  WARNING: that is a {ratio:.1f}x reduction. Decimation this aggressive "
-            "usually erases the features the prompt asked for. Review the preview "
-            "before accepting, and consider whether this class's budget is too tight."
-        )
+        log(f"  WARNING: {ratio:.1f}x reduction. Expect torn geometry.")
     try:
         remesh_id = client.remesh(input_task_id, target_polycount=target)
         result.task_ids.append(remesh_id)

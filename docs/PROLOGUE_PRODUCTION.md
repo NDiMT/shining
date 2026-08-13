@@ -117,17 +117,17 @@ the main reason the prologue is worth building before anything else.
 
 ## Asset production
 
-60 assets across four catalogs. Estimated **1,539 credits**; the account had
+60 assets across four catalogs. Estimated **1,239 credits**; the account had
 2,485 at the time of writing. Re-check with
 `hollowasset generate <catalog> --dry-run` rather than trusting this number after
 any catalog edit.
 
 | Catalog | Assets | Credits |
 | --- | --- | --- |
-| `greenvale_props.json` | 12 | 240 |
-| `prologue_cast.json` | 18 | 699 |
-| `prologue_environment.json` | 20 | 400 |
-| `prologue_weapons.json` | 10 | 200 |
+| `greenvale_props.json` | 12 | 180 |
+| `prologue_cast.json` | 18 | 609 |
+| `prologue_environment.json` | 20 | 300 |
+| `prologue_weapons.json` | 10 | 150 |
 
 ### Recommended order
 

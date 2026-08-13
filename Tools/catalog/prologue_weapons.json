@@ -10,76 +10,86 @@
     {
       "id": "weapon_training_sword_wood",
       "class": "weapon",
-      "subject": "wooden practice sword with a plain rounded tip and a bound grip",
+      "subject": "wooden practice sword, simple flat blade, rounded tip",
       "extra": "obviously wood, no metal anywhere",
       "rig": false,
-      "notes": "Scene 02: lies beside the sleeping Rowan. The visual contrast with the Iron Sword he collects later is the point."
+      "notes": "Scene 02: lies beside the sleeping Rowan. The visual contrast with the Iron Sword he collects later is the point.",
+      "surface": "wood grain, bound grip wrapping"
     },
     {
       "id": "weapon_iron_sword",
       "class": "weapon",
-      "subject": "straight iron short sword with a plain crossguard and a leather-wrapped grip",
+      "subject": "straight short sword, simple blade and crossguard",
       "extra": "blade slightly oversized for tactical-camera readability",
       "rig": false,
-      "notes": "Rowan's starting weapon, Attack +3. Collected in the equipment tutorial."
+      "notes": "Rowan's starting weapon, Attack +3. Collected in the equipment tutorial.",
+      "surface": "polished iron, leather grip wrapping, plain pommel"
     },
     {
       "id": "weapon_apprentice_staff",
       "class": "weapon",
-      "subject": "simple wooden mage staff with a forked head and a small unpolished violet stone",
+      "subject": "simple wooden staff, forked head",
       "extra": "unpolished stone marks her as an apprentice, not a mage",
       "rig": false,
-      "notes": "Maeve's starting weapon. The stone should look cheap; her later staffs escalate from it."
+      "notes": "Maeve's starting weapon. The stone should look cheap; her later staffs escalate from it.",
+      "surface": "wood grain, small unpolished violet stone, bound grip"
     },
     {
       "id": "weapon_soldier_spear",
       "class": "weapon",
-      "subject": "long infantry spear with a leaf-shaped iron head and a bound ash shaft",
+      "subject": "long spear, leaf-shaped head on a straight shaft",
       "extra": "long enough that the two-tile reach is legible on the grid",
       "rig": false,
-      "notes": "Tomas. Range 2 in battle 01's weapon-range tutorial, so the length has to sell it."
+      "notes": "Tomas. Range 2 in battle 01's weapon-range tutorial, so the length has to sell it.",
+      "surface": "iron head, ash grain, bound grip"
     },
     {
       "id": "weapon_officer_sword",
       "class": "weapon",
-      "subject": "long straight officer's sword with a swept guard, wire-wrapped grip and a plain pommel",
+      "subject": "long straight sword, swept guard, simple pommel",
       "extra": "cleaner and longer than the iron sword",
       "rig": false,
-      "notes": "Shared by Aldric and Varric, recoloured per character."
+      "notes": "Shared by Aldric and Varric, recoloured per character.",
+      "surface": "polished steel, wire grip wrapping"
     },
     {
       "id": "weapon_goblin_cleaver",
       "class": "weapon",
-      "subject": "crude notched iron cleaver with a bound wooden handle",
-      "rig": false
+      "subject": "crude cleaver, thick chopping blade",
+      "rig": false,
+      "surface": "notched rusty iron, bound wooden handle"
     },
     {
       "id": "weapon_goblin_spear",
       "class": "weapon",
-      "subject": "crude goblin spear of lashed bone and scrap iron on a crooked shaft",
+      "subject": "crude spear, crooked shaft with a lashed head",
       "extra": "visibly improvised next to the soldier spear",
-      "rig": false
+      "rig": false,
+      "surface": "bone and scrap iron, sinew lashings"
     },
     {
       "id": "weapon_goblin_shortbow",
       "class": "weapon",
-      "subject": "crude short bow of bent wood and sinew with a scrap-leather grip wrap",
-      "rig": false
+      "subject": "short bow, simple bent limbs",
+      "rig": false,
+      "surface": "wood grain, sinew string, scrap leather grip wrap"
     },
     {
       "id": "weapon_guard_shortsword",
       "class": "weapon",
-      "subject": "plain military short sword with a straight guard and a wooden grip",
+      "subject": "plain short sword, straight guard",
       "rig": false,
-      "notes": "Greenvale rank and file."
+      "notes": "Greenvale rank and file.",
+      "surface": "iron blade, wooden grip"
     },
     {
       "id": "weapon_guard_shield_round",
       "class": "weapon",
-      "subject": "round wooden shield with an iron boss and a painted green field",
+      "subject": "round shield, simple domed face with a central boss",
       "extra": "the green field is the Greenvale faction read",
       "rig": false,
-      "notes": "Carried by guards and Tomas. Classed as a weapon so it shares the attachment pipeline."
+      "notes": "Carried by guards and Tomas. Classed as a weapon so it shares the attachment pipeline.",
+      "surface": "painted green field, iron boss, plank seams"
     }
   ]
 }

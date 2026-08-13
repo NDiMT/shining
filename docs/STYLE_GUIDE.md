@@ -175,7 +175,66 @@ shape.
 
 ---
 
-## 5. Geometry and texture rules
+## 5. The dividing line: form is geometry, detail is texture
+
+The most important production rule in this project, and the one that decides
+whether an asset is cheap and clean or expensive and fragile:
+
+> **If it can be painted, paint it.**
+
+Geometry carries **form** — the silhouette, the mass, the shape you would
+recognise from across a battlefield. Texture carries **detail** — bands, seams,
+rivets, trim, panel lines, carved runes, wood grain, wear.
+
+This is not a compromise for performance. At tactical-camera distance a painted
+iron band and a modelled iron band are indistinguishable, and the painted one
+costs nothing, survives any reduction, and can be changed without touching the
+mesh.
+
+### Measured, not asserted
+
+A barrel prompted as *"wooden barrel with three iron bands"* had its bands
+modelled as raised rings. Reduced to fit the prop budget, it became a formless
+lump: the reducer had real geometry to destroy, and it destroyed it. At 561,
+1,030 and 2,061 triangles the result was a blob, a blob with hinted bands, and
+ragged bands full of holes.
+
+The bands were never supposed to be geometry.
+
+### How this is enforced
+
+Catalog entries split the description in two:
+
+```json
+{
+  "subject": "smooth tapered wooden barrel, simple drum form, flat top and base",
+  "surface": "three dark iron bands, vertical plank seams, warm painted wood grain"
+}
+```
+
+`subject` goes to the geometry prompt. `surface` goes **only** to the texture
+prompt, so the generator has no reason to build it. `style.py` also carries
+"surface detail painted in the texture, not modelled" as a core token that is
+never dropped, and avoid-tokens for *modelled surface detail*, *raised bands or
+trim* and *extruded panel lines*.
+
+### Where the line falls
+
+| Geometry | Texture |
+| --- | --- |
+| The barrel's drum | Its iron bands and plank seams |
+| A cape, a pauldron, a crested helm | Straps, buckles, stitching, heraldry |
+| A roof plane and wall mass | Timber framing, plaster texture, thatch |
+| A tree's canopy masses and trunk | Bark, leaf detail, moss |
+| A weapon's blade and guard | Engraving, wear, wrapping |
+| A boss's horns and armour plates | Every rune on them |
+
+The test: **cover the object and describe its outline from memory.** Whatever
+survives that description is geometry. Everything else is texture.
+
+---
+
+## 6. Geometry and texture rules
 
 Numbers live in `Tools/hollowasset/budgets.py`, enforced by
 `python -m hollowasset validate`. See `docs/ASSET_PIPELINE.md`.

@@ -14,155 +14,175 @@
     {
       "id": "set_crownwall_section",
       "class": "set_piece",
-      "subject": "colossal ancient wall section of dark fitted stone blocks with vast iron bands and buttresses, featureless and seamless, no gates or windows",
+      "subject": "colossal wall section, vast flat unbroken planes, simple buttresses",
       "extra": "modular horizontal tile, flush ends so the wall repeats to the horizon",
       "enable_pbr": true,
       "rig": false,
-      "notes": "Tiles horizontally to fill the skyline. Must read as inhuman: no human-scale detail anywhere on it, because a door or a window would give the eye a scale reference and destroy the effect. Scale is set in map data, not by the class default."
+      "notes": "Tiles horizontally to fill the skyline. Must read as inhuman: no human-scale detail anywhere on it, because a door or a window would give the eye a scale reference and destroy the effect. Scale is set in map data, not by the class default.",
+      "surface": "fitted stone block courses, iron band staining, age streaks"
     },
     {
       "id": "set_crownwall_breach",
       "class": "set_piece",
-      "subject": "cracked and buckled section of colossal ancient wall, one iron plate split inward, rubble spilling through a narrow gap",
+      "subject": "colossal wall section with one buckled plate and a narrow gap",
       "extra": "damage reads from the inside face, gap wide enough for a person",
       "enable_pbr": true,
       "rig": false,
-      "notes": "Scene 07 through 08. Needs two states: cracked (people audible behind it) and collapsed (the turn-3 battle event opens a passable gap). Generate the cracked version and author the collapsed variant from it so the silhouettes match."
+      "notes": "Scene 07 through 08. Needs two states: cracked (people audible behind it) and collapsed (the turn-3 battle event opens a passable gap). Generate the cracked version and author the collapsed variant from it so the silhouettes match.",
+      "surface": "fitted stone courses, cracked iron plating, dust and rubble staining"
     },
     {
       "id": "set_crownwall_breach_collapsed",
       "class": "set_piece",
-      "subject": "collapsed section of colossal ancient wall, one iron plate torn fully inward, a wide passable gap and a spill of massive rubble blocks",
+      "subject": "colossal wall section with a wide passable gap and a rubble spill",
       "extra": "gap wide enough for a cart, silhouette matches the cracked version",
       "enable_pbr": true,
       "rig": false,
-      "notes": "Swapped in by the turn-3 event in battle_the_breach. Must share the cracked version's overall silhouette and palette or the swap will read as a pop rather than a collapse. Generate after the cracked version and use it as the visual reference."
+      "notes": "Swapped in by the turn-3 event in battle_the_breach. Must share the cracked version's overall silhouette and palette or the swap will read as a pop rather than a collapse. Generate after the cracked version and use it as the visual reference.",
+      "surface": "fitted stone courses, torn iron plating, fresh fracture faces"
     },
     {
       "id": "set_watchtower",
       "class": "set_piece",
-      "subject": "squat round stone watchtower with a broken timber door, a battered conical roof and narrow slit windows",
+      "subject": "squat round stone tower, simple conical roof, one door opening",
       "extra": "stands directly against the Crownwall, so its top must sit far below the wall line",
       "rig": false,
-      "notes": "Scene 07. The height relationship with the Crownwall is the whole point of the composition."
+      "notes": "Scene 07. The height relationship with the Crownwall is the whole point of the composition.",
+      "surface": "stone block courses, timber door planks, roof shingle pattern"
     },
     {
       "id": "set_greenvale_castle_distant",
       "class": "set_piece",
-      "subject": "modest stone keep with two square towers and green pennants, low curtain wall",
+      "subject": "modest stone keep, two square towers, low curtain wall",
       "extra": "silhouette only, read at distance across the village rooftops",
       "rig": false,
-      "notes": "Scene 02 skyline. Deliberately modest: it has to look small against the Crownwall."
+      "notes": "Scene 02 skyline. Deliberately modest: it has to look small against the Crownwall.",
+      "surface": "stone courses, green pennants, roof tiles"
     },
     {
       "id": "prop_merchant_cart_overturned",
       "class": "prop",
-      "subject": "overturned two-wheeled wooden merchant cart with a broken axle, spilled crates and scattered cloth bundles",
+      "subject": "overturned two-wheeled cart, simple box body, one raised wheel",
       "extra": "reads as violence from above, one wheel still raised",
       "rig": false,
-      "notes": "Centrepiece of the battle 01 battlefield and the scene 06 investigation. The absence of a body is the story beat, so the spill pattern should look interrupted rather than looted."
+      "notes": "Centrepiece of the battle 01 battlefield and the scene 06 investigation. The absence of a body is the story beat, so the spill pattern should look interrupted rather than looted.",
+      "surface": "plank seams, iron rim, spilled cloth bundles, wood grain"
     },
     {
       "id": "prop_guard_checkpoint",
       "class": "prop",
-      "subject": "small abandoned timber guard post with a lean-to roof, a toppled brazier and an empty weapon rack",
+      "subject": "small timber guard post, simple lean-to roof",
       "extra": "abandoned in a hurry, nothing tidy",
       "rig": false,
-      "notes": "Gameplay 03. Sits beside the broken sword and the blood with no body."
+      "notes": "Gameplay 03. Sits beside the broken sword and the blood with no body.",
+      "surface": "plank seams, shingle pattern, soot on the brazier"
     },
     {
       "id": "prop_broken_sword",
       "class": "weapon",
-      "subject": "snapped iron sword blade, jagged break two thirds up, plain leather grip",
+      "subject": "snapped sword blade, jagged break",
       "extra": "lies flat, readable as broken from directly above",
       "rig": false,
-      "notes": "Story interactable: 'the blade is still warm'."
+      "notes": "Story interactable: 'the blade is still warm'.",
+      "surface": "iron with rust, leather grip"
     },
     {
       "id": "prop_weapon_rack",
       "class": "prop",
-      "subject": "upright timber weapon rack holding practice swords and spears",
+      "subject": "upright timber rack, simple A-frame form",
       "rig": false,
-      "notes": "Training yard. Rowan collects his Iron Sword here in the equipment tutorial."
+      "notes": "Training yard. Rowan collects his Iron Sword here in the equipment tutorial.",
+      "surface": "wood grain, iron fittings"
     },
     {
       "id": "prop_training_dummy",
       "class": "prop",
-      "subject": "straw and sackcloth training dummy on a timber post with rope bindings and old cuts",
-      "rig": false
+      "subject": "straw and sackcloth dummy on a simple post",
+      "rig": false,
+      "surface": "sackcloth weave, rope bindings, old cut marks"
     },
     {
       "id": "prop_village_fountain",
       "class": "prop",
-      "subject": "low round stone village fountain with a simple central spout and a mossy basin",
+      "subject": "low round stone basin with a simple central spout",
       "extra": "reads clearly from directly above",
       "rig": false,
-      "notes": "Scene 02 establishing shot."
+      "notes": "Scene 02 establishing shot.",
+      "surface": "stone block courses, moss, water staining"
     },
     {
       "id": "prop_chicken",
       "class": "prop",
-      "subject": "plump village chicken with folded wings and a red comb",
+      "subject": "plump simplified bird form, folded wings",
       "extra": "very small, chunky simplified bird shape",
       "rig": false,
-      "notes": "Scene 02 names chickens crossing the road. Static prop for now; if they need to wander, promote to a rigged asset with a walk clip."
+      "notes": "Scene 02 names chickens crossing the road. Static prop for now; if they need to wander, promote to a rigged asset with a walk clip.",
+      "surface": "feather patterning, red comb, beak and eye"
     },
     {
       "id": "building_house_small_a",
       "class": "building_module",
-      "subject": "small stone village house with a timber-framed upper storey and a steep thatched roof",
+      "subject": "small two-storey house, simple boxy massing, steep roof",
       "extra": "modular kit piece, flush walls and grid-aligned footprint",
-      "rig": false
+      "rig": false,
+      "surface": "timber framing, plaster panels, thatch texture, shutters"
     },
     {
       "id": "building_house_small_b",
       "class": "building_module",
-      "subject": "small stone village house with a single storey, a lean-to porch and a slate roof",
+      "subject": "small single-storey house with a lean-to porch",
       "extra": "modular kit piece, flush walls and grid-aligned footprint",
-      "rig": false
+      "rig": false,
+      "surface": "timber framing, plaster panels, slate roof pattern, shutters"
     },
     {
       "id": "building_house_large",
       "class": "building_module",
-      "subject": "two-storey village house with an overhanging upper floor, shuttered windows and a thatched roof",
+      "subject": "two-storey house with an overhanging upper floor",
       "extra": "modular kit piece, flush walls and grid-aligned footprint",
-      "rig": false
+      "rig": false,
+      "surface": "timber framing, plaster panels, thatch texture, shuttered windows"
     },
     {
       "id": "building_blacksmith_forge",
       "class": "building_module",
-      "subject": "open-fronted village smithy with a stone chimney, a brick forge, an anvil and a timber awning",
+      "subject": "open-fronted smithy, simple mass with a stone chimney",
       "extra": "open front so the interior reads from the street",
-      "rig": false
+      "rig": false,
+      "surface": "brick forge face, soot, timber framing, roof texture"
     },
     {
       "id": "building_inn",
       "class": "building_module",
-      "subject": "two-storey village inn with a wide timber door, a hanging sign bracket and a thatched roof",
+      "subject": "two-storey inn, simple boxy massing, wide door opening",
       "extra": "modular kit piece, widest building footprint in the village",
-      "rig": false
+      "rig": false,
+      "surface": "timber framing, plaster panels, thatch texture, painted sign bracket"
     },
     {
       "id": "building_wall_stone_module",
       "class": "building_module",
-      "subject": "low dry-stone village wall section, one module wide, flush ends for tiling",
+      "subject": "low dry-stone wall section, one module wide, flush ends",
       "extra": "modular kit piece aligned to a one metre grid",
-      "rig": false
+      "rig": false,
+      "surface": "stone block courses, moss, lichen"
     },
     {
       "id": "building_north_gate",
       "class": "building_module",
-      "subject": "timber and stone village gate with an open double door and a short palisade to either side",
+      "subject": "timber and stone gate, simple open double doorway, short palisade",
       "rig": false,
-      "notes": "Gameplay 02. Where the gate guard delivers the watchtower warning."
+      "notes": "Gameplay 02. Where the gate guard delivers the watchtower warning.",
+      "surface": "plank seams, iron bands, stone courses"
     },
     {
       "id": "veg_cliff_rock_large",
       "class": "vegetation",
-      "subject": "large flat-topped granite outcrop with angular faces, wide enough to sit on",
+      "subject": "large flat-topped granite outcrop, angular faces, flat seat-height top",
       "extra": "flat top at seat height",
       "rig": false,
-      "notes": "Scene 10 forest overlook. Maeve sits on this during the closing conversation, so the top face has to be flat and at a plausible height."
+      "notes": "Scene 10 forest overlook. Maeve sits on this during the closing conversation, so the top face has to be flat and at a plausible height.",
+      "surface": "stone grain, lichen, moss"
     }
   ]
 }

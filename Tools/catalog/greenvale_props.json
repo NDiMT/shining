@@ -10,64 +10,76 @@
     {
       "id": "prop_barrel_a",
       "class": "prop",
-      "subject": "wooden barrel with three iron bands, slightly tapered staves"
+      "subject": "smooth tapered wooden barrel, simple drum form, flat top and base",
+      "surface": "three dark iron bands, vertical plank seams, warm painted wood grain"
     },
     {
       "id": "prop_crate_a",
       "class": "prop",
-      "subject": "square wooden shipping crate with plank seams and corner braces"
+      "subject": "square wooden shipping crate, simple box form",
+      "surface": "plank seams, corner braces, stencilled markings, warm wood tones"
     },
     {
       "id": "prop_table_long",
       "class": "prop",
-      "subject": "long rough-hewn wooden trestle table"
+      "subject": "long wooden trestle table, simple slab top on angled legs",
+      "surface": "plank seams, worn wood grain, iron peg heads"
     },
     {
       "id": "prop_chair_simple",
       "class": "prop",
-      "subject": "simple wooden village chair with a woven rush seat"
+      "subject": "simple wooden village chair, plain seat and back",
+      "surface": "woven rush seat pattern, wood grain"
     },
     {
       "id": "prop_pottery_urn",
       "class": "prop",
-      "subject": "round clay storage urn with a painted band around the shoulder"
+      "subject": "round clay storage urn, smooth bulbous form with a narrow neck",
+      "surface": "painted band around the shoulder, matte clay finish, chips and wear"
     },
     {
       "id": "prop_sign_inn",
       "class": "prop",
-      "subject": "hanging wooden inn sign on an iron bracket, blank painted board"
+      "subject": "hanging rectangular board on a simple iron bracket",
+      "surface": "painted sign face, iron bracket detail, weathered paint"
     },
     {
       "id": "prop_fence_section",
       "class": "prop",
-      "subject": "three-rail wooden fence section, one module wide, flush ends for tiling",
-      "extra": "modular kit piece, ends flat and aligned to a one metre grid"
+      "subject": "three-rail wooden fence section, one module wide, flush ends",
+      "extra": "modular kit piece, ends flat and aligned to a one metre grid",
+      "surface": "wood grain, rope lashings, iron nail heads"
     },
     {
       "id": "prop_well_stone",
       "class": "prop",
-      "subject": "round stone village well with a wooden winch frame and bucket",
-      "extra": "reads clearly from directly above"
+      "subject": "round stone village well with a simple timber frame above",
+      "extra": "reads clearly from directly above",
+      "surface": "stone block courses, moss, rope, timber grain"
     },
     {
       "id": "prop_market_stall",
       "class": "prop",
-      "subject": "market stall with a striped cloth awning and a plank counter"
+      "subject": "market stall, flat counter slab under a simple sloped awning",
+      "surface": "striped awning cloth, plank counter seams"
     },
     {
       "id": "veg_tree_oak_a",
       "class": "vegetation",
-      "subject": "broad oak tree with a rounded canopy in three angular masses"
+      "subject": "broad oak tree, three rounded canopy masses on a sturdy trunk",
+      "surface": "bark texture, two-tone leaf clusters, moss at the base"
     },
     {
       "id": "veg_tree_oak_b",
       "class": "vegetation",
-      "subject": "narrower younger oak tree, leaning slightly, two canopy masses"
+      "subject": "narrower young oak, two canopy masses, leaning slightly",
+      "surface": "bark texture, two-tone leaf clusters"
     },
     {
       "id": "veg_rock_a",
       "class": "vegetation",
-      "subject": "weathered granite boulder with flat angular faces and moss on top"
+      "subject": "weathered granite boulder, flat angular faces",
+      "surface": "stone grain, lichen and moss on the upper faces"
     }
   ]
 }

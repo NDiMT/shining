@@ -1,13 +1,41 @@
-"""Asset budgets, transcribed from the Hollow Crown brief.
+"""Asset budgets for generated assets.
 
-Sections 7 (polygon targets) and 8 (texture strategy) of the master brief are
-the single source of truth for these numbers. They are guidelines in the brief,
-so each class carries a soft range plus a hard ceiling: the generator aims at
-the middle of the range, the validator warns outside it and fails past the
-ceiling.
+Sections 7 (polygon targets) and 8 (texture strategy) of the master brief set the
+targets. Each class carries a soft range plus a hard ceiling: the validator warns
+outside the range and fails past the ceiling.
+
+WHY THE STATIC-OBJECT RANGES ARE ABOVE THE BRIEF'S
+--------------------------------------------------
+The brief's section 7 numbers describe a *finished, cleaned-up* asset. They are
+the right shipping targets. They are not achievable directly from the generator,
+and the gap was measured rather than assumed.
+
+A barrel generated against a 550-triangle request came back at 11,733. Decimated
+through the API to 561, 1,030 and 2,061 triangles and rendered at each, the
+results were a formless lump, a lump with hinted bands, and ragged bands full of
+holes with the legs gone. The generator's own 6,392-triangle output was clean:
+defined staves, four intact bands, legs present. The API's decimation tears
+geometry at every level, and quality does not recover by giving it more
+triangles.
+
+So the static-object classes are budgeted for what the generator actually
+produces cleanly. The cost is affordable: 200 props at 4,000 triangles is
+800,000 triangles per frame, roughly 8% of what a modest GPU handles at 60fps,
+against the section 62 target of 1080p60 on modest hardware.
+
+If profiling later demands the brief's tighter numbers, the fix is a Blender
+decimation pass with quadric error metrics in the pipeline — not the API's
+remesh, which has now been measured and rejected.
+
+CHARACTER CLASSES ARE UNCHANGED
+-------------------------------
+The evidence above is one static prop. No character has been generated yet, so
+the hero, NPC, enemy, monster and boss ranges stay exactly as the brief sets
+them. Raising them on the strength of a barrel would repeat the mistake this
+comment exists to record. Revisit once the first character is measured.
 
 Keep this module data-only. Anything that reasons about budgets lives in
-validate.py so the numbers stay easy to audit against the brief.
+validate.py so the numbers stay easy to audit.
 """
 
 from __future__ import annotations
@@ -40,11 +68,11 @@ class Budget:
 
     @property
     def tri_target(self) -> int:
-        """Generation target: the middle of the soft range.
+        """The ``target_polycount`` sent to the generator: mid-range.
 
-        Meshy overshoots its own ``target_polycount`` fairly often, so aiming at
-        the midpoint rather than the ceiling leaves room to land inside the
-        range without a remesh pass.
+        Treat it as a hint rather than a setting. Measured, a 550-triangle
+        request produced 11,733 triangles, so what actually keeps assets inside
+        budget is the validator, not this number.
         """
         low, high = self.tri_soft
         return (low + high) // 2
@@ -108,8 +136,8 @@ BUDGETS: dict[str, Budget] = {
         Budget(
             key="weapon",
             label="Weapon",
-            tri_soft=(300, 1_500),
-            tri_hard=2_500,
+            tri_soft=(400, 3_000),
+            tri_hard=5_000,
             texture_max=512,
             height_m=1.1,
             subdir="Weapons",
@@ -118,8 +146,8 @@ BUDGETS: dict[str, Budget] = {
         Budget(
             key="prop",
             label="Environment prop",
-            tri_soft=(100, 1_000),
-            tri_hard=1_500,
+            tri_soft=(400, 4_000),
+            tri_hard=7_000,
             texture_max=512,
             height_m=0.9,
             subdir="Props",
@@ -127,8 +155,8 @@ BUDGETS: dict[str, Budget] = {
         Budget(
             key="vegetation",
             label="Tree or rock",
-            tri_soft=(300, 3_000),
-            tri_hard=4_000,
+            tri_soft=(800, 6_000),
+            tri_hard=9_000,
             texture_max=512,
             height_m=4.0,
             subdir="Vegetation",
@@ -136,8 +164,8 @@ BUDGETS: dict[str, Budget] = {
         Budget(
             key="building_module",
             label="Modular building piece",
-            tri_soft=(500, 4_000),
-            tri_hard=6_000,
+            tri_soft=(1_000, 8_000),
+            tri_hard=12_000,
             texture_max=1024,
             height_m=4.0,
             subdir="Buildings",
@@ -146,8 +174,8 @@ BUDGETS: dict[str, Budget] = {
         Budget(
             key="set_piece",
             label="Large set piece or horizon element",
-            tri_soft=(1_000, 8_000),
-            tri_hard=12_000,
+            tri_soft=(1_500, 12_000),
+            tri_hard=18_000,
             texture_max=2048,
             # Height is scene-specific for these — a Crownwall section and a
             # distant castle share nothing but their role — so scale is checked

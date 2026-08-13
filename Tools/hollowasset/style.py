@@ -26,12 +26,19 @@ from . import budgets
 # The house style
 # ---------------------------------------------------------------------------
 
-#: Non-negotiable. These two tokens are the entire art direction in miniature,
+#: Non-negotiable. These three tokens are the entire art direction in miniature,
 #: so they are never dropped to make room for a long subject: an asset generated
 #: without them is off-style by definition and has to be regenerated anyway.
+#:
+#: The third is the most important and the last to be learned. Anything that can
+#: be painted must be painted. A barrel's iron bands, a plank seam, a rivet, a
+#: carved rune are surface detail: modelled they cost geometry, break under any
+#: reduction, and read no better at tactical-camera distance than a texture does.
+#: Brief section 6 says it in four words — simple geometry, rich atmosphere.
 CORE_STYLE_TOKENS = [
     "stylized low-poly 3D game asset",
     "bold readable silhouette",
+    "surface detail painted in the texture, not modelled",
 ]
 
 #: Applied to every asset when there is room, most important token first.
@@ -52,6 +59,12 @@ BASE_STYLE_TOKENS = [
 BASE_AVOID_TOKENS = [
     "photorealistic",
     "hyperdetailed",
+    # The three that keep detail out of the mesh. Measured: a barrel whose iron
+    # bands were modelled as raised geometry became a torn lump under every
+    # reduction, because the reducer had real geometry to destroy.
+    "modelled surface detail",
+    "raised bands or trim",
+    "extruded panel lines",
     "grimdark",
     "muddy colours",
     "baked shadows",
@@ -92,15 +105,14 @@ CLASS_STYLE: dict[str, str] = {
         "oversized game-readable proportions, thick blade or shaft, "
         "simple pommel and guard"
     ),
-    "prop": "chunky hand-made village craft object, visible plank and band shapes",
+    "prop": "chunky hand-made village craft object, simple solid form",
     "vegetation": (
         "clustered angular canopy masses rather than individual leaves, "
         "sturdy simple trunk"
     ),
     "building_module": (
         "modular kit piece with flush edges for tiling, "
-        "timber-frame and plaster fantasy village construction, "
-        "clean straight roof and wall planes"
+        "clean straight roof and wall planes, simple boxy massing"
     ),
     "set_piece": (
         "monumental scale with large unbroken planes, "
@@ -119,9 +131,12 @@ CLASS_PALETTE: dict[str, str] = {
     "monster_large": "two-colour creature palette",
     "boss": "single dramatic accent colour against dark values",
     "weapon": "clear metal and wood separation",
-    "prop": "warm painted wood tones",
+    "prop": "warm painted wood tones, plank seams and iron bands painted on",
     "vegetation": "two-tone foliage with clear light and shadow greens",
-    "building_module": "plaster, timber and thatch reading as three distinct values",
+    "building_module": (
+        "plaster, timber and thatch as three distinct values, "
+        "timber framing painted on rather than modelled"
+    ),
     "set_piece": "narrow value range so it recedes behind foreground units",
 }
 
@@ -223,11 +238,22 @@ def build(
     region: str = "neutral",
     extra: str = "",
     avoid: str = "",
+    surface: str = "",
 ) -> Prompt:
     """Resolve a catalog entry into geometry and texture prompts.
 
-    ``subject`` is the plain description from the catalog, e.g. "wooden barrel
-    with iron bands". Everything else is style, and comes from this module.
+    ``subject`` describes the *form*: the silhouette a modeller would block out.
+    ``surface`` describes detail that must be **painted rather than modelled** —
+    iron bands, plank seams, rivets, carved runes, painted trim. It is added to
+    the texture prompt and deliberately kept out of the geometry prompt, so the
+    generator has no reason to build it as geometry.
+
+    That split is the single biggest lever on asset quality in this pipeline.
+    A barrel described as "wooden barrel with three iron bands" gets bands
+    modelled as raised rings, which cost triangles and tear apart under any
+    reduction. The same barrel as form "smooth tapered barrel" plus surface
+    "three iron bands" gets a clean drum and the bands in the texture, where they
+    read identically at tactical-camera distance for a fraction of the cost.
 
     Meshy takes the geometry prompt at preview time and the texture prompt at
     refine time, so silhouette language goes in the former and colour language
@@ -291,7 +317,8 @@ def build(
     # Region light outranks the generic painting notes, because it is what makes
     # the same mesh read as a different place.
     texture, texture_dropped = _pack(
-        _tokens(subject, "hand-painted stylized game texture", CLASS_PALETTE.get(class_key, "")),
+        _tokens(subject, surface, "hand-painted stylized game texture",
+                CLASS_PALETTE.get(class_key, "")),
         _tokens(
             REGIONS.get(region, ""),
             "flat colour blocks with soft gradients",
