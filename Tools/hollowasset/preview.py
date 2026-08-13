@@ -143,13 +143,19 @@ def render(
     pitch_degrees: float,
     *,
     textured: bool = True,
-    world_height: float | None = None,
+    world_scale: float | None = None,
     margin: int = 48,
+    height: int | None = None,
 ):
     """Rasterise one view. Z-buffered, per-pixel UV, single directional light.
 
-    ``world_height`` fixes the world-to-pixel scale across several renders so a
-    line-up shows real relative sizes. Leave it None to fit each asset to frame.
+    ``world_scale`` is pixels per world unit. Passing the same value to several
+    renders is what makes a line-up show real relative sizes; leave it None to fit
+    this asset to its own frame.
+
+    ``height`` decouples the frame's height from its width. A shared-scale line-up
+    is only as tall as its tallest asset, and square tiles then waste whatever the
+    widest asset's width bought.
     """
     numpy, Image, _ = _require()
     yaw, pitch = math.radians(yaw_degrees), math.radians(pitch_degrees)
@@ -163,22 +169,25 @@ def render(
     z2 = points[:, 1] * sin_pitch + z * cos_pitch
     view = numpy.stack([x, y2, z2], axis=1).reshape(-1, 3, 3)
 
-    if world_height is None:
-        span = max(numpy.ptp(view[:, :, 0]), numpy.ptp(view[:, :, 1])) or 1.0
-        scale = (size - margin) / span
-        origin_y = size / 2 + (view[:, :, 1].min() + view[:, :, 1].max()) / 2 * scale
+    frame_height = size if height is None else height
+
+    if world_scale is None:
+        span_x = numpy.ptp(view[:, :, 0]) or 1.0
+        span_y = numpy.ptp(view[:, :, 1]) or 1.0
+        scale = min((size - margin) / span_x, (frame_height - margin) / span_y)
+        origin_y = frame_height / 2 + (view[:, :, 1].min() + view[:, :, 1].max()) / 2 * scale
     else:
-        scale = (size - margin) / world_height
-        origin_y = size - margin / 2 - view[:, :, 1].min() * scale
+        scale = world_scale
+        origin_y = frame_height - margin / 2 - view[:, :, 1].min() * scale
 
     origin_x = size / 2 - (view[:, :, 0].min() + view[:, :, 0].max()) / 2 * scale
     screen_x = origin_x + view[:, :, 0] * scale
     screen_y = origin_y - view[:, :, 1] * scale
     depth = view[:, :, 2]
 
-    colour = numpy.zeros((size, size, 3), dtype=numpy.float64)
+    colour = numpy.zeros((frame_height, size, 3), dtype=numpy.float64)
     colour[:] = BACKGROUND
-    zbuffer = numpy.full((size, size), numpy.inf)
+    zbuffer = numpy.full((frame_height, size), numpy.inf)
     light = numpy.array([-0.42, 0.74, -0.52])
     light /= numpy.linalg.norm(light)
     texture = geometry.texture if textured else None
@@ -198,7 +207,8 @@ def render(
         shade = 0.28 + 0.72 * max(0.0, float(normal @ light))
 
         low_x, high_x = int(max(0, min(ax, bx, cx))), int(min(size - 1, max(ax, bx, cx)) + 1)
-        low_y, high_y = int(max(0, min(ay, by, cy))), int(min(size - 1, max(ay, by, cy)) + 1)
+        low_y, high_y = (int(max(0, min(ay, by, cy))),
+                         int(min(frame_height - 1, max(ay, by, cy)) + 1))
         if high_x <= low_x or high_y <= low_y:
             continue
 
@@ -240,6 +250,25 @@ def render(
     return Image.fromarray(colour.astype(numpy.uint8))
 
 
+def _projected_span(geometry: Geometry, yaw_degrees: float,
+                    pitch_degrees: float) -> tuple[float, float]:
+    """Width and height of this asset in world units, as seen from that angle."""
+    numpy, _, _ = _require()
+    yaw, pitch = math.radians(yaw_degrees), math.radians(pitch_degrees)
+    points = geometry.triangles.reshape(-1, 3)
+    x = points[:, 0] * math.cos(yaw) + points[:, 2] * math.sin(yaw)
+    z = -points[:, 0] * math.sin(yaw) + points[:, 2] * math.cos(yaw)
+    y = points[:, 1] * math.cos(pitch) - z * math.sin(pitch)
+    return float(numpy.ptp(x)) or 1.0, float(numpy.ptp(y)) or 1.0
+
+
+def _fit_scale(geometry: Geometry, size: int, yaw_degrees: float, pitch_degrees: float,
+               *, margin: int) -> float:
+    """Pixels per world unit at which this asset exactly fills its tile."""
+    span_x, span_y = _projected_span(geometry, yaw_degrees, pitch_degrees)
+    return (size - margin) / max(span_x, span_y)
+
+
 def contact_sheet(path: str, output: str, *, size: int = 420, textured: bool = True) -> str:
     """Several views of one asset, with its measurements underneath."""
     _, Image, ImageDraw = _require()
@@ -278,25 +307,43 @@ def line_up(
     hides the two things most worth checking: whether everything reads as one art
     direction, and whether a house is actually eight times a barrel.
     """
-    _, Image, ImageDraw = _require()
+    numpy, Image, ImageDraw = _require()
     geometries = [read_geometry(path) for path, _ in assets]
-    tallest = max(glb.read(path).size[1] for path, _ in assets)
+
+    # One shared pixels-per-metre, chosen so the widest asset still fits.
+    #
+    # Scaling by height alone looks right until an asset is wider than it is
+    # tall: a 1.24m crate at 0.90m tall overflowed its tile and rendered as a
+    # cropped close-up, while claiming to be at the same scale as the barrel
+    # beside it. The projected extents have to decide, not one axis.
+    margin = 48
+    spans = [_projected_span(geometry, yaw, pitch) for geometry in geometries]
+    shared_scale = min(
+        _fit_scale(geometry, size, yaw, pitch, margin=margin) for geometry in geometries)
+
+    # Tiles are as tall as the tallest asset needs and no taller. Squaring them
+    # would let one wide asset -- a house that arrived on a 7.8m ground slab --
+    # set the scale for everyone and leave the whole line-up in the bottom
+    # eighth of the image, which is how the first one came out.
+    tile_height = int(max(span_y for _, span_y in spans) * shared_scale + margin)
 
     header = 46 if title else 0
-    sheet = Image.new("RGB", (size * len(assets), size + 62 + header), BACKGROUND)
+    sheet = Image.new("RGB", (size * len(assets), tile_height + 62 + header), BACKGROUND)
     draw = ImageDraw.Draw(sheet)
     if title:
         draw.text((14, 16), title, fill=INK)
 
     for index, ((path, label), geometry) in enumerate(zip(assets, geometries)):
         sheet.paste(
-            render(geometry, size, yaw, pitch, textured=textured, world_height=tallest),
+            render(geometry, size, yaw, pitch, textured=textured,
+                   world_scale=shared_scale, margin=margin, height=tile_height),
             (index * size, header))
         info = glb.read(path)
-        draw.line([(index * size, header + size - 24), ((index + 1) * size, header + size - 24)],
+        ground = header + tile_height - margin // 2
+        draw.line([(index * size, ground), ((index + 1) * size, ground)],
                   fill=(58, 64, 54), width=1)
-        draw.text((index * size + 14, header + size + 8), label, fill=INK)
-        draw.text((index * size + 14, header + size + 26),
+        draw.text((index * size + 14, header + tile_height + 8), label, fill=INK)
+        draw.text((index * size + 14, header + tile_height + 26),
                   f"{info.triangles:,} tris   {info.size[1]:.2f} m   "
                   f"{info.max_texture_edge}px",
                   fill=FAINT)

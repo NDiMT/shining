@@ -211,6 +211,67 @@ in Blender.
 
 ---
 
+## What the generator actually does, measured
+
+Five assets generated and rendered — barrel, crate, iron sword, oak tree, village
+house. Three findings, all of them things the numeric checks alone would not have
+told us:
+
+**1. The style direction lands. The scenery habit does not go away.**
+
+The house came back half-timbered with painted framing and flat colour blocks,
+exactly the look the style guide asks for. It also came back standing on a
+7.79 × 7.79 m ground slab with two bonus trees on it. The tree came back on a
+baked grass disc. The barrel came back surrounded by grass tufts and pebbles.
+
+All three had `base plinth`, `ground plane` and `scenery around the object` in
+the avoid clause at generation time. **Avoid tokens do not stop this.** They also
+are not free: at eighteen tokens the avoid list filled 380 of the 600 characters
+and pushed vegetation's `clustered angular canopy masses rather than individual
+leaves` out of the prompt entirely — positive direction, which in the same
+samples did land. The list is now six tokens, split into geometry and texture
+halves, and `test_the_most_important_class_style_token_survives` guards the
+regression.
+
+The real fix is not another token. Scenery arrives as **separate mesh islands**,
+so it can be measured and removed:
+
+| Asset | Islands | Subject | Scenery |
+| --- | --- | --- | --- |
+| `building_house_small_a` | 4 | 2,933 | 779 + 770 (trees) + 56 (slab) |
+| `prop_barrel_a` | 33 | 1,060 | 3,546 across 32 islands |
+| `veg_tree_oak_a` | 2 | 22,104 | grass disc **fused to the trunk** |
+
+Stripping the non-subject islands would take the barrel from 4,606 triangles to
+1,060 — inside its 400–4,000 budget, with no reduction pass and nothing lost.
+That is the next pipeline stage to build, and it has to be opt-in per asset: a
+market stall is legitimately a counter plus an awning, and a blind "keep the
+largest island" rule would throw the awning away. The tree shows the limit of the
+approach — a fused disc needs Blender or a better prompt.
+
+**2. Prompts leak their own failure modes.** Two of the worst results were
+self-inflicted. The crate came back photoreal with stencilled lettering; its
+catalog `surface` literally said `stencilled markings` while the avoid clause said
+`no stencilled markings`. The tree came back on a grass disc; its `surface` said
+`moss at the base`. Read the resolved prompt before blaming the generator —
+`hollowasset prompt` is free.
+
+**3. `target_polycount` is a suggestion, and how bad a one depends on the class.**
+
+| Asset | Requested | Delivered | Over |
+| --- | --- | --- | --- |
+| `prop_crate_a` | 2,200 | 3,152 | 1.4× |
+| `prop_barrel_a` | 2,200 | 4,606 | 2.1× |
+| `weapon_iron_sword` | 1,200 | 8,555 | 7.1× |
+| `veg_tree_oak_a` | 3,400 | 22,124 | 6.5× |
+
+Dense organic subjects overshoot hardest. Budget enforcement has to measure the
+delivered file rather than trust the request, which is what
+`_enforce_triangle_budget` does — but remesh stays opt-in, because at an 11×
+reduction it tore the barrel apart. Island stripping first, remesh only after.
+
+---
+
 ## Look before you rig
 
 A character's mesh costs a preview and a refine. Rigging it and baking a clip set

@@ -54,34 +54,45 @@ BASE_STYLE_TOKENS = [
     "even neutral lighting",
 ]
 
-#: Tokens that keep the generator away from the failure modes in section 6,
-#: most important first, for the same reason.
+#: Tokens that keep the *mesh* away from the failure modes in section 6, most
+#: important first, for the same reason.
+#:
+#: Deliberately short. Meshy has no negative-prompt field, so an avoid clause is
+#: only a suggestion riding along in the positive prompt, and a long one is
+#: measurably worse than a short one for two reasons. It is weak: a tree
+#: generated with "base plinth", "ground plane" and "scenery around the object"
+#: all present came back standing on a baked grass disc anyway, and a barrel came
+#: back with grass tufts. And it is expensive: at eighteen tokens it filled 380 of
+#: the 600 characters and pushed out "clustered angular canopy masses rather than
+#: individual leaves" — positive direction, which in the same two samples *did*
+#: land. Space spent saying what we want beats space spent saying what we don't.
+#:
+#: So each entry here has to earn its characters, and anything that describes a
+#: painted surface rather than a shape belongs in TEXTURE_AVOID_TOKENS instead —
+#: telling a mesh generator to avoid "logos" was pure waste.
 BASE_AVOID_TOKENS = [
     "photorealistic",
     "hyperdetailed",
-    # The three that keep detail out of the mesh. Measured: a barrel whose iron
-    # bands were modelled as raised geometry became a torn lump under every
-    # reduction, because the reducer had real geometry to destroy.
-    "modelled surface detail",
-    "raised bands or trim",
-    "extruded panel lines",
-    "grimdark",
-    # Scenery the generator adds unasked. Rendered textured, a barrel's "debris"
-    # turned out to be grass tufts and pebbles scattered around its base. They
-    # are worse than ugly: they inflate the bounding box, so the height
-    # normalisation shrinks the actual barrel to fit scenery nobody wants, and
-    # every instance in the village would carry its own identical clump of grass.
-    "grass tufts",
-    "scattered stones or pebbles",
-    "scenery around the object",
-    "muddy colours",
-    "baked shadows",
-    "dense engraved ornament",
-    "many tiny straps and buckles",
-    "base plinth",
-    "ground plane",
-    "text",
-    "logos",
+    # Keeps detail out of the mesh. Measured: a barrel whose iron bands were
+    # modelled as raised geometry became a torn lump under every reduction,
+    # because the reducer had real geometry to destroy.
+    "surface detail modelled as raised trim or extruded panel lines",
+    # Scenery the generator adds unasked, and the costliest failure of the three.
+    # It is worse than ugly: the ground disc inflates the bounding box, so height
+    # normalisation shrinks the actual asset to fit scenery nobody wants, and
+    # every instance in the village carries its own identical clump of grass.
+    "any ground, base, plinth, terrain or scenery beneath or around the object",
+    "dense engraved ornament, many tiny straps and buckles",
+]
+
+#: Avoid tokens for the *texture* prompt. Separate from the geometry list because
+#: the two prompts fail in different directions and share no failure mode worth
+#: the characters: a mesh cannot have a logo, and a texture cannot have a plinth.
+TEXTURE_AVOID_TOKENS = [
+    "photographic detail",
+    "printed text, stencilled markings or logos",
+    "baked shadows or ambient occlusion",
+    "muddy desaturated colours",
 ]
 
 #: Per-class **shape** direction. These are the deltas that give a class its
@@ -154,7 +165,7 @@ CLASS_AVOID: dict[str, str] = {
     "npc": "armour, weapons, heroic pose",
     "prop": "modern materials, plastic, metal shipping container",
     "vegetation": "individual leaf geometry, thin twigs, transparent planes",
-    "building_module": "interior furniture, terrain, surrounding ground",
+    "building_module": "interior furniture",
 }
 
 # ---------------------------------------------------------------------------
@@ -219,12 +230,33 @@ def _truncate(text: str, limit: int) -> str:
     return text[: limit - 1].rsplit(" ", 1)[0].rstrip(",") + "…"
 
 
+def _dedupe(tokens: list[str], seen: set[str] | None = None) -> list[str]:
+    """Drop repeated tokens, keeping the first occurrence.
+
+    Style arrives from several layers that legitimately overlap — a crate whose
+    catalog ``surface`` said "warm painted wood tones" got it a second time from
+    the prop palette, and the repeat bought nothing but characters that a real
+    token then failed to fit into.
+    """
+    seen = set() if seen is None else seen
+    out: list[str] = []
+    for token in tokens:
+        key = token.lower()
+        if key not in seen:
+            seen.add(key)
+            out.append(token)
+    return out
+
+
 def _pack(required: list[str], optional: list[str], limit: int) -> tuple[str, list[str]]:
     """Join required tokens plus as many optional ones as fit.
 
     Returns the joined text and the optional tokens that were dropped. Required
     tokens are never dropped; callers must size them to fit before calling.
     """
+    seen: set[str] = set()
+    required = _dedupe(required, seen)
+    optional = _dedupe(optional, seen)
     text = ", ".join(required)
     if len(text) > limit:
         return _truncate(text, limit), list(optional)
@@ -319,23 +351,33 @@ def build(
     )
     geometry = f"{geometry}, {avoid_text}"
 
-    # Texture. The subject anchors it, then the class palette rule, which is
-    # required rather than optional: it is rule one of the style guide and the
-    # single strongest lever on whether a cast reads as one art direction.
-    # Region light outranks the generic painting notes, because it is what makes
-    # the same mesh read as a different place.
-    texture, texture_dropped = _pack(
-        _tokens(subject, surface, "hand-painted stylized game texture",
-                CLASS_PALETTE.get(class_key, "")),
-        _tokens(
-            REGIONS.get(region, ""),
-            "flat colour blocks with soft gradients",
-            "no baked shadows",
-            "high value contrast between neighbouring materials",
-            extra,
-        ),
-        PROMPT_LIMIT,
+    # Texture. Style leads, subject follows.
+    #
+    # The order matters and was learned the hard way. With the subject first, a
+    # crate came back photoreal: real wood grain, screwed metal corner brackets
+    # and stencilled lettering, despite "photorealistic" sitting in the avoid
+    # list. A subject like "shipping crate" carries an overwhelming photographic
+    # prior, and putting it in front of the style direction lets that prior win.
+    #
+    # So the prompt now opens by naming what kind of image this is, and only then
+    # says what it depicts.
+    texture_required = _tokens(
+        "hand-painted stylized game texture, flat colour blocks, painterly, "
+        "not photographic",
+        subject,
+        surface,
+        CLASS_PALETTE.get(class_key, ""),
     )
+    # Region palette first, then the avoid clause, then the rest. Positive
+    # direction outranks negative direction here for the same reason it does in
+    # the geometry prompt: in every sample so far the palette landed and the
+    # avoid tokens were a coin flip.
+    texture_optional = (
+        _tokens(REGIONS.get(region, ""))
+        + ["avoid: " + ", ".join(TEXTURE_AVOID_TOKENS)]
+        + _tokens("high value contrast between neighbouring materials", extra)
+    )
+    texture, texture_dropped = _pack(texture_required, texture_optional, PROMPT_LIMIT)
 
     return Prompt(
         geometry=geometry,

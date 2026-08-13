@@ -315,6 +315,40 @@ class TestStyle(unittest.TestCase):
         self.assertEqual(greenvale.geometry, vaelor.geometry)
         self.assertNotEqual(greenvale.texture, vaelor.texture)
 
+    def test_both_prompts_carry_their_own_avoid_clause(self):
+        """Geometry and texture fail in different directions, so each gets the
+        avoid list for its own medium and neither pays for the other's."""
+        prompt = style.build("barrel", "prop", surface="iron bands")
+        self.assertIn("avoid:", prompt.geometry)
+        self.assertIn("avoid:", prompt.texture)
+        # A mesh cannot have a logo and a texture cannot have a plinth.
+        self.assertNotIn("logos", prompt.geometry)
+        self.assertNotIn("plinth", prompt.texture)
+
+    def test_no_token_is_repeated_within_a_prompt(self):
+        """Catalog surface and class palette legitimately overlap. Paying twice
+        for the same words costs a real token its place in the 600 characters."""
+        prompt = style.build(
+            "square wooden storage crate",
+            "prop",
+            region="greenvale",
+            surface="plank seams, warm painted wood tones",
+        )
+        for text in (prompt.geometry, prompt.texture):
+            tokens = [t.strip().lower() for t in text.split(",") if t.strip()]
+            self.assertCountEqual(tokens, set(tokens), f"repeated token in: {text}")
+
+    def test_the_most_important_class_style_token_survives(self):
+        """A regression guard. The avoid clause once ran to eighteen tokens and
+        380 characters, which pushed vegetation's canopy direction out of the
+        prompt entirely -- and the generated tree grew individual leaves."""
+        prompt = style.build(
+            "broad oak tree, three rounded canopy masses on a sturdy trunk",
+            "vegetation",
+            extra="trunk cut flat at the bottom, nothing beneath it",
+        )
+        self.assertIn("clustered angular canopy masses", prompt.geometry)
+
     def test_no_third_party_ip_appears_in_any_prompt(self):
         """Brief-adjacent but commercially important: see docs/STYLE_GUIDE.md.
 

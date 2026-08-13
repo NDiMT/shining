@@ -16,8 +16,8 @@
     {
       "id": "prop_crate_a",
       "class": "prop",
-      "subject": "square wooden shipping crate, simple box form",
-      "surface": "plank seams, corner braces, stencilled markings, warm wood tones"
+      "subject": "square wooden storage crate, simple box form",
+      "surface": "plank seams, corner braces, warm painted wood tones"
     },
     {
       "id": "prop_table_long",
@@ -41,7 +41,7 @@
       "id": "prop_sign_inn",
       "class": "prop",
       "subject": "hanging rectangular board on a simple iron bracket",
-      "surface": "painted sign face, iron bracket detail, weathered paint"
+      "surface": "painted sign face, iron bracket, weathered paint"
     },
     {
       "id": "prop_fence_section",
@@ -67,12 +67,14 @@
       "id": "veg_tree_oak_a",
       "class": "vegetation",
       "subject": "broad oak tree, three rounded canopy masses on a sturdy trunk",
-      "surface": "bark texture, two-tone leaf clusters, moss at the base"
+      "extra": "trunk cut flat at the bottom, nothing beneath it",
+      "surface": "bark texture, two-tone leaf clusters"
     },
     {
       "id": "veg_tree_oak_b",
       "class": "vegetation",
       "subject": "narrower young oak, two canopy masses, leaning slightly",
+      "extra": "trunk cut flat at the bottom, nothing beneath it",
       "surface": "bark texture, two-tone leaf clusters"
     },
     {
