@@ -49,3 +49,15 @@ venv/
 *.user
 .DS_Store
 Thumbs.db
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Godot
+.godot/
+.import/
+export_presets.cfg
+*.translation

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The rules layer. Grid, movement, combat, progression, world state.
+
+    THIS PROJECT MUST NEVER REFERENCE GODOT.
+
+    That single constraint is what makes brief section 73's tests runnable without
+    an engine, section 74's determinism achievable, and the game's actual logic
+    portable. It is enforced in CI rather than by good intentions: see
+    .github/workflows/game.yml, which fails the build if a Godot package or using
+    directive appears anywhere under Game.Rules.
+
+    Presentation lives in Game.Godot and consumes the events this layer emits.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <RootNamespace>HollowCrown.Rules</RootNamespace>
+  </PropertyGroup>
+
+</Project>

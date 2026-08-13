@@ -1,0 +1,27 @@
+<Project Sdk="Godot.NET.Sdk/4.3.0">
+
+  <!--
+    Presentation. Scenes, input, rendering, audio, and the code that turns rule
+    events into things the player sees.
+
+    This project references Game.Rules. Game.Rules never references this one —
+    that direction is enforced in .github/workflows/game.yml.
+
+    NOT YET BUILT: Godot's .NET SDK package is only resolvable with Godot
+    installed, which was not possible in the environment this was authored in.
+    Game.Rules and its tests build and pass independently, which is exactly the
+    property the split was chosen for.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HollowCrown.Presentation</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Game.Rules\Game.Rules.csproj" />
+  </ItemGroup>
+
+</Project>

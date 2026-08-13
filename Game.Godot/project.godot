@@ -1,0 +1,49 @@
+; Hollow Crown — Godot project.
+;
+; NOT YET RUN. Godot cannot be installed in the environment this was authored in,
+; so these files are written to spec and reviewed, not executed. Open the project
+; once locally to confirm before building on top of it, and record the exact
+; Godot version in docs/BUILDING.md — brief-adjacent, but version drift between
+; Godot minor releases has broken projects before.
+;
+; Everything that can be verified without the engine already is: Game.Rules
+; builds and its 61 tests pass, and the CI job fails if this project's logic
+; leaks into it.
+
+config_version=5
+
+[application]
+
+config/name="Hollow Crown"
+config/description="A low-poly 3D fantasy tactical RPG."
+run/main_scene="res://Scenes/Main.tscn"
+config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+config/icon="res://icon.svg"
+
+[dotnet]
+
+project/assembly_name="Game.Godot"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+; Brief section 62 targets 1080p60 on modest hardware. Compatibility is the
+; fallback renderer for machines that cannot run Forward+.
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+anti_aliasing/quality/msaa_3d=1
+
+[physics]
+
+common/physics_ticks_per_second=60

@@ -1,0 +1,64 @@
+name: Game
+
+# Brief section 73: critical non-visual game logic is testable, and AI-written
+# code is not assumed correct. Game.Rules has no engine dependency, so the whole
+# suite runs on a bare runner in seconds — which is the point of that constraint.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Enforce the rules/presentation boundary
+        # The load-bearing architectural constraint of the whole project. If
+        # Game.Rules ever gains a Godot reference, the tests stop being runnable
+        # without an engine, determinism gets harder and the logic stops being
+        # portable. Cheaper to fail here than to discover it in a year.
+        #
+        # Matches real references only — a using directive, a qualified type, or a
+        # package/project reference. A plain search for the word also matches the
+        # comments explaining this rule, which is how the first version of this
+        # check failed on the very file documenting it.
+        run: |
+          violations=$(
+            { grep -rnE '^[[:space:]]*(global[[:space:]]+)?using[[:space:]]+Godot' \
+                --include='*.cs' Game.Rules/ || true
+              grep -rnE '\bGodot\.[A-Z]' --include='*.cs' Game.Rules/ || true
+              grep -rniE '<(Package|Project)Reference[^>]*Godot' \
+                --include='*.csproj' Game.Rules/ || true
+            }
+          )
+          if [ -n "$violations" ]; then
+            echo "$violations"
+            echo "::error::Game.Rules must not reference Godot. Presentation belongs in Game.Godot."
+            exit 1
+          fi
+          echo "Game.Rules is engine-free"
+
+      - name: Build
+        run: dotnet build HollowCrown.sln --configuration Release --nologo
+
+      - name: Test
+        run: dotnet test HollowCrown.sln --configuration Release --nologo --verbosity normal
+
+      - name: Warnings are errors
+        # TreatWarningsAsErrors is set in the csproj; this makes a regression in
+        # that setting visible rather than silent.
+        run: |
+          output=$(dotnet build Game.Rules/Game.Rules.csproj --no-incremental --nologo 2>&1)
+          echo "$output"
+          if echo "$output" | grep -qE '[0-9]+ Warning\(s\)' && \
+             ! echo "$output" | grep -q '0 Warning(s)'; then
+            echo "::error::Game.Rules built with warnings"
+            exit 1
+          fi

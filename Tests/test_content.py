@@ -288,6 +288,20 @@ class TestBattleChecks(unittest.TestCase):
         self.assertIn("impossible_coordinate", codes(report))
         self.assertTrue(any("occupied" in str(f) for f in report.errors))
 
+    def test_a_pure_npc_cannot_be_a_battle_unit(self):
+        """Existing is not the same as spawnable. An npcs entry has only a model
+        and a portrait; a unit that fights needs a class and base stats.
+
+        Found by the C# loader refusing to spawn greenvale_soldier after this
+        validator had already passed the same battle file."""
+        tree = minimal()
+        tree["battles"]["battle_test"]["ally_units"] = [
+            {"id": "helper", "npc": "guard", "position": [0, 1]}
+        ]
+        report = run(tree)
+        self.assertIn("invalid_reference", codes(report))
+        self.assertTrue(any("npcs" in str(f) for f in report.errors))
+
     def test_unknown_ai_behaviour(self):
         tree = minimal()
         tree["battles"]["battle_test"]["enemy_units"][0]["ai"] = "galaxy_brain"

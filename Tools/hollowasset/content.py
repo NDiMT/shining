@@ -617,6 +617,18 @@ def _check_unit(
             "invalid_reference",
             f"{where} {group} {label!r} references unknown unit {reference!r}",
         )
+    elif reference in content.npcs:
+        # Existing is not the same as spawnable. The npcs section carries only a
+        # model and a portrait, so a unit taking part in combat needs a class and
+        # base stats. This gap was found by the C# loader refusing to spawn
+        # greenvale_soldier after this validator had passed the same file.
+        report.add(
+            Severity.ERROR,
+            "invalid_reference",
+            f"{where} {group} {label!r} uses {reference!r}, which is declared under "
+            "'npcs' and therefore has no class or baseStats. A unit that fights must "
+            "be declared under 'characters' or 'enemies'",
+        )
 
     behaviour = unit.get("ai")
     if behaviour and behaviour not in AI_BEHAVIOURS:

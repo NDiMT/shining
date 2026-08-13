@@ -1,0 +1,35 @@
+[gd_scene load_steps=3 format=3 uid="uid://bhq1hollowcrownmain"]
+
+[ext_resource type="Script" path="res://Scripts/Main.cs" id="1_main"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.09, 0.106, 0.086, 1)
+content_margin_left = 24.0
+content_margin_top = 24.0
+content_margin_right = 24.0
+content_margin_bottom = 24.0
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.09, 0.106, 0.086, 1)
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = 48.0
+offset_right = -48.0
+offset_bottom = -48.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Output" type="RichTextLabel" parent="Panel"]
+unique_name_in_owner = true
+bbcode_enabled = true
+scroll_following = true
+fit_content = false

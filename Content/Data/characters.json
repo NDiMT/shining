@@ -223,12 +223,6 @@
       "displayName": "Refugee Child",
       "model": "Content/Models/Characters/npc_refugee_child.glb",
       "portrait": "Content/UI/Portraits/refugee_child.png"
-    },
-    {
-      "id": "greenvale_soldier",
-      "displayName": "Greenvale Soldier",
-      "model": "Content/Models/Characters/npc_guard_greenvale.glb",
-      "portrait": "Content/UI/Portraits/guard.png"
     }
   ],
   "enemies": [
@@ -319,6 +313,30 @@
       "ai": "boss",
       "xp": 60,
       "notes": "Prologue mini-boss. Effective defence is 6 plus the class directional_armour: 14 from the front, 8 from a flank, 6 from the rear. Rowan hits for 11 minus that, so a frontal attack does 1 damage and a rear attack does 5. The lesson is unmissable without a single line of tutorial text."
+    },
+    {
+      "id": "greenvale_soldier",
+      "displayName": "Greenvale Soldier",
+      "class": "guard",
+      "level": 2,
+      "baseStats": {
+        "hp": 20,
+        "mp": 2,
+        "attack": 7,
+        "defense": 6,
+        "magic": 0,
+        "resistance": 3,
+        "agility": 5,
+        "movement": 5
+      },
+      "model": "Content/Models/Characters/npc_guard_greenvale.glb",
+      "startingEquipment": {
+        "weapon": "guard_shortsword",
+        "armour": "guard_mail"
+      },
+      "ai": "hesitant",
+      "xp": 12,
+      "notes": "Varric's squad in battle 02, and the two injured guards who fight beside Rowan. Declared here rather than under npcs because it takes part in combat: the C# loader refuses to spawn a unit with no class or stats, which is how this gap was found. Attack 7 against Rowan's defence 3 is 4 damage - the same as a goblin, so the fight reads as dangerous without the soldiers being villains."
     }
   ]
 }
