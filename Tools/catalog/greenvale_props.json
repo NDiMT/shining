@@ -3,7 +3,14 @@
     "Greenvale village prop kit for the vertical slice (brief sections 69 and 90).",
     "Subjects only. Art direction lives in Tools/hollowasset/style.py so the whole",
     "kit can be restyled from one place. Region sets the texture palette.",
-    "Regenerate a single entry with: generate <this file> --id <asset id>"
+    "Regenerate a single entry with: generate <this file> --id <asset id>",
+    "",
+    "'surface' names painted colour and painted marks, never a material sample.",
+    "Under docs/ANIME_DIRECTION.md rule 3 a texture carries hue, not light and not",
+    "photography, and words like 'wood grain', 'weathered' or 'moss' are requests",
+    "for a photograph: the crate that came back photoreal and the tree that came",
+    "back on a grass disc were both asked for exactly that. See ASSET_PIPELINE.md,",
+    "'What the generator actually does, measured'."
   ],
   "region": "greenvale",
   "assets": [
@@ -11,77 +18,75 @@
       "id": "prop_barrel_a",
       "class": "prop",
       "subject": "smooth tapered wooden barrel, simple drum form, flat top and base",
-      "surface": "three dark iron bands, vertical plank seams, warm painted wood grain"
+      "surface": "flat warm wood colour, three dark iron bands, a few painted plank lines"
     },
     {
       "id": "prop_crate_a",
       "class": "prop",
       "subject": "square wooden storage crate, simple box form",
-      "surface": "plank seams, corner braces, warm painted wood tones"
+      "surface": "flat warm wood colour, a few dark painted plank lines, one darker painted band"
     },
     {
       "id": "prop_table_long",
       "class": "prop",
       "subject": "long wooden trestle table, simple slab top on angled legs",
-      "surface": "plank seams, worn wood grain, iron peg heads"
+      "surface": "flat warm wood colour, a few painted plank lines, dark painted peg dots"
     },
     {
       "id": "prop_chair_simple",
       "class": "prop",
       "subject": "simple wooden village chair, plain seat and back",
-      "surface": "woven rush seat pattern, wood grain"
+      "surface": "flat warm wood colour, pale straw-hued seat panel with a simple painted weave"
     },
     {
       "id": "prop_pottery_urn",
       "class": "prop",
       "subject": "round clay storage urn, smooth bulbous form with a narrow neck",
-      "surface": "painted band around the shoulder, matte clay finish, chips and wear"
+      "surface": "flat terracotta colour, one painted band around the shoulder in a teal hue"
     },
     {
       "id": "prop_sign_inn",
       "class": "prop",
       "subject": "hanging rectangular board on a simple iron bracket",
-      "surface": "painted sign face, iron bracket, weathered paint"
+      "surface": "flat painted board in one saturated hue, one bold symbol shape, dark iron bracket"
     },
     {
       "id": "prop_fence_section",
       "class": "prop",
       "subject": "three-rail wooden fence section, one module wide, flush ends",
       "extra": "modular kit piece, ends flat and aligned to a one metre grid",
-      "surface": "wood grain, rope lashings, iron nail heads"
+      "surface": "flat warm wood colour, painted rope lashings, dark painted nail dots"
     },
     {
       "id": "prop_well_stone",
       "class": "prop",
       "subject": "round stone village well with a simple timber frame above",
       "extra": "reads clearly from directly above",
-      "surface": "stone block courses, moss, rope, timber grain"
+      "surface": "flat cool stone colour, painted block courses, warm timber frame, pale rope"
     },
     {
       "id": "prop_market_stall",
       "class": "prop",
       "subject": "market stall, flat counter slab under a simple sloped awning",
-      "surface": "striped awning cloth, plank counter seams"
+      "surface": "awning boldly striped in two saturated hues, flat warm counter colour"
     },
     {
       "id": "veg_tree_oak_a",
       "class": "vegetation",
       "subject": "broad oak tree, three rounded canopy masses on a sturdy trunk",
-      "extra": "trunk cut flat at the bottom, nothing beneath it",
-      "surface": "bark texture, two-tone leaf clusters"
+      "extra": "trunk ends in a flat cut at the bottom, tree only"
     },
     {
       "id": "veg_tree_oak_b",
       "class": "vegetation",
       "subject": "narrower young oak, two canopy masses, leaning slightly",
-      "extra": "trunk cut flat at the bottom, nothing beneath it",
-      "surface": "bark texture, two-tone leaf clusters"
+      "extra": "trunk ends in a flat cut at the bottom, tree only"
     },
     {
       "id": "veg_rock_a",
       "class": "vegetation",
-      "subject": "weathered granite boulder, flat angular faces",
-      "surface": "stone grain, lichen and moss on the upper faces"
+      "subject": "granite boulder, few large flat angular faces",
+      "surface": "two flat stone greys separated by hue, a few dark painted crack lines"
     }
   ]
 }

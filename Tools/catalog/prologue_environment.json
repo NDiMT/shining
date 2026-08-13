@@ -7,7 +7,17 @@
     "Greenvale scene and the script says it should 'almost look impossible, too",
     "large to have been built by humans'. That is a lighting, fog and scale",
     "problem, not a polygon problem: it is budgeted as a set_piece because the",
-    "player never gets close to anything except the breached section."
+    "player never gets close to anything except the breached section.",
+    "",
+    "Every 'surface' names painted colour, not a material photograph: under",
+    "docs/ANIME_DIRECTION.md rule 3 the texture carries hue and the engine",
+    "carries the light. Moss, staining, soot and grain have been taken out for",
+    "that reason -- and moss for a second one, since 'moss at the base' is what",
+    "grew the grass disc under veg_tree_oak_a.",
+    "",
+    "enable_pbr is off on the Crownwall pieces for the same reason it is off on",
+    "the cast: the toon shader ignores metallic and normal maps, and these are",
+    "the largest textures in the game."
   ],
   "region": "greenvale",
   "assets": [
@@ -16,30 +26,30 @@
       "class": "set_piece",
       "subject": "colossal wall section, vast flat unbroken planes, simple buttresses",
       "extra": "modular horizontal tile, flush ends so the wall repeats to the horizon",
-      "enable_pbr": true,
+      "enable_pbr": false,
       "rig": false,
       "notes": "Tiles horizontally to fill the skyline. Must read as inhuman: no human-scale detail anywhere on it, because a door or a window would give the eye a scale reference and destroy the effect. Scale is set in map data, not by the class default.",
-      "surface": "fitted stone block courses, iron band staining, age streaks"
+      "surface": "flat pale stone colour, painted block courses, dark iron bands"
     },
     {
       "id": "set_crownwall_breach",
       "class": "set_piece",
       "subject": "colossal wall section with one buckled plate and a narrow gap",
       "extra": "damage reads from the inside face, gap wide enough for a person",
-      "enable_pbr": true,
+      "enable_pbr": false,
       "rig": false,
       "notes": "Scene 07 through 08. Needs two states: cracked (people audible behind it) and collapsed (the turn-3 battle event opens a passable gap). Generate the cracked version and author the collapsed variant from it so the silhouettes match.",
-      "surface": "fitted stone courses, cracked iron plating, dust and rubble staining"
+      "surface": "flat pale stone colour, painted block courses, cracked iron plating in a darker hue"
     },
     {
       "id": "set_crownwall_breach_collapsed",
       "class": "set_piece",
       "subject": "colossal wall section with a wide passable gap and a rubble spill",
       "extra": "gap wide enough for a cart, silhouette matches the cracked version",
-      "enable_pbr": true,
+      "enable_pbr": false,
       "rig": false,
       "notes": "Swapped in by the turn-3 event in battle_the_breach. Must share the cracked version's overall silhouette and palette or the swap will read as a pop rather than a collapse. Generate after the cracked version and use it as the visual reference.",
-      "surface": "fitted stone courses, torn iron plating, fresh fracture faces"
+      "surface": "flat pale stone colour, painted block courses, torn iron plating, paler fracture faces"
     },
     {
       "id": "set_watchtower",
@@ -48,7 +58,7 @@
       "extra": "stands directly against the Crownwall, so its top must sit far below the wall line",
       "rig": false,
       "notes": "Scene 07. The height relationship with the Crownwall is the whole point of the composition.",
-      "surface": "stone block courses, timber door planks, roof shingle pattern"
+      "surface": "flat cool stone colour, painted block courses, warm timber door, painted shingle rows"
     },
     {
       "id": "set_greenvale_castle_distant",
@@ -57,7 +67,7 @@
       "extra": "silhouette only, read at distance across the village rooftops",
       "rig": false,
       "notes": "Scene 02 skyline. Deliberately modest: it has to look small against the Crownwall.",
-      "surface": "stone courses, green pennants, roof tiles"
+      "surface": "flat pale stone colour, painted block courses, saturated green pennants, painted tile rows"
     },
     {
       "id": "prop_merchant_cart_overturned",
@@ -66,7 +76,7 @@
       "extra": "reads as violence from above, one wheel still raised",
       "rig": false,
       "notes": "Centrepiece of the battle 01 battlefield and the scene 06 investigation. The absence of a body is the story beat, so the spill pattern should look interrupted rather than looted.",
-      "surface": "plank seams, iron rim, spilled cloth bundles, wood grain"
+      "surface": "flat warm wood colour, painted plank lines, dark iron wheel rim"
     },
     {
       "id": "prop_guard_checkpoint",
@@ -75,7 +85,7 @@
       "extra": "abandoned in a hurry, nothing tidy",
       "rig": false,
       "notes": "Gameplay 03. Sits beside the broken sword and the blood with no body.",
-      "surface": "plank seams, shingle pattern, soot on the brazier"
+      "surface": "flat warm timber colour, painted plank lines, painted shingle rows"
     },
     {
       "id": "prop_broken_sword",
@@ -84,7 +94,7 @@
       "extra": "lies flat, readable as broken from directly above",
       "rig": false,
       "notes": "Story interactable: 'the blade is still warm'.",
-      "surface": "iron with rust, leather grip"
+      "surface": "flat steel blue-grey blade, one warm leather grip hue"
     },
     {
       "id": "prop_weapon_rack",
@@ -92,14 +102,14 @@
       "subject": "upright timber rack, simple A-frame form",
       "rig": false,
       "notes": "Training yard. Rowan collects his Iron Sword here in the equipment tutorial.",
-      "surface": "wood grain, iron fittings"
+      "surface": "flat warm wood colour, dark iron fittings"
     },
     {
       "id": "prop_training_dummy",
       "class": "prop",
       "subject": "straw and sackcloth dummy on a simple post",
       "rig": false,
-      "surface": "sackcloth weave, rope bindings, old cut marks"
+      "surface": "flat straw ochre body, paler sackcloth head, painted rope bindings"
     },
     {
       "id": "prop_village_fountain",
@@ -108,7 +118,7 @@
       "extra": "reads clearly from directly above",
       "rig": false,
       "notes": "Scene 02 establishing shot.",
-      "surface": "stone block courses, moss, water staining"
+      "surface": "flat cool stone colour, painted block courses, bright teal water"
     },
     {
       "id": "prop_chicken",
@@ -117,31 +127,31 @@
       "extra": "very small, chunky simplified bird shape",
       "rig": false,
       "notes": "Scene 02 names chickens crossing the road. Static prop for now; if they need to wander, promote to a rigged asset with a walk clip.",
-      "surface": "feather patterning, red comb, beak and eye"
+      "surface": "flat cream body, saturated red comb, ochre beak, simple round eye"
     },
     {
       "id": "building_house_small_a",
       "class": "building_module",
       "subject": "small two-storey house, simple boxy massing, steep roof",
-      "extra": "modular kit piece, flush walls and grid-aligned footprint",
+      "extra": "flush walls and grid-aligned footprint",
       "rig": false,
-      "surface": "timber framing, plaster panels, thatch texture, shutters"
+      "surface": "dark painted timber framing, flat cream plaster, warm ochre thatch, blue shutters"
     },
     {
       "id": "building_house_small_b",
       "class": "building_module",
       "subject": "small single-storey house with a lean-to porch",
-      "extra": "modular kit piece, flush walls and grid-aligned footprint",
+      "extra": "flush walls and grid-aligned footprint",
       "rig": false,
-      "surface": "timber framing, plaster panels, slate roof pattern, shutters"
+      "surface": "dark painted timber framing, flat cream plaster, blue-grey roof, green shutters"
     },
     {
       "id": "building_house_large",
       "class": "building_module",
       "subject": "two-storey house with an overhanging upper floor",
-      "extra": "modular kit piece, flush walls and grid-aligned footprint",
+      "extra": "flush walls and grid-aligned footprint",
       "rig": false,
-      "surface": "timber framing, plaster panels, thatch texture, shuttered windows"
+      "surface": "dark painted timber framing, flat cream plaster, warm ochre thatch, teal shutters"
     },
     {
       "id": "building_blacksmith_forge",
@@ -149,7 +159,7 @@
       "subject": "open-fronted smithy, simple mass with a stone chimney",
       "extra": "open front so the interior reads from the street",
       "rig": false,
-      "surface": "brick forge face, soot, timber framing, roof texture"
+      "surface": "flat brick-red forge face, dark painted timber framing, warm ochre roof"
     },
     {
       "id": "building_inn",
@@ -157,7 +167,7 @@
       "subject": "two-storey inn, simple boxy massing, wide door opening",
       "extra": "modular kit piece, widest building footprint in the village",
       "rig": false,
-      "surface": "timber framing, plaster panels, thatch texture, painted sign bracket"
+      "surface": "dark painted timber framing, flat cream plaster, warm ochre thatch, red sign board"
     },
     {
       "id": "building_wall_stone_module",
@@ -165,7 +175,7 @@
       "subject": "low dry-stone wall section, one module wide, flush ends",
       "extra": "modular kit piece aligned to a one metre grid",
       "rig": false,
-      "surface": "stone block courses, moss, lichen"
+      "surface": "two flat stone greys separated by hue, painted block courses"
     },
     {
       "id": "building_north_gate",
@@ -173,7 +183,7 @@
       "subject": "timber and stone gate, simple open double doorway, short palisade",
       "rig": false,
       "notes": "Gameplay 02. Where the gate guard delivers the watchtower warning.",
-      "surface": "plank seams, iron bands, stone courses"
+      "surface": "flat warm timber colour, painted plank lines, dark iron bands, flat stone colour"
     },
     {
       "id": "veg_cliff_rock_large",
@@ -182,7 +192,7 @@
       "extra": "flat top at seat height",
       "rig": false,
       "notes": "Scene 10 forest overlook. Maeve sits on this during the closing conversation, so the top face has to be flat and at a plausible height.",
-      "surface": "stone grain, lichen, moss"
+      "surface": "two flat stone greys separated by hue, a few dark painted crack lines"
     }
   ]
 }

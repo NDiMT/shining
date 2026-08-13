@@ -1,19 +1,29 @@
 """The Hollow Crown prompt grammar.
 
 Brief section 6 asks for "simple geometry, rich atmosphere" and section 89 asks
-for shapes that stay readable at tactical-camera distance. Shining Force II is
-the agreed touchstone for that look, so this module encodes what that game
-actually *does* visually and feeds it to the generator as concrete art
-direction.
+for shapes that stay readable at tactical-camera distance. docs/ANIME_DIRECTION.md
+is the director's call on *how* that is achieved: two lighting bands with one hard
+edge, a dark outline on every silhouette, flat colour in the texture, anime
+proportion at real height, and saturated separated hues. This module encodes the
+part of that spec the generator is allowed to know about.
 
-Two rules govern this file, and both matter for a commercial Steam release:
+Three rules govern this file, and all three matter for a commercial Steam release:
 
-1. No prompt ever names Shining Force, Sega, or any character from it. We
-   describe the visual language in our own terms. See docs/STYLE_GUIDE.md for
-   why this distinction is not cosmetic.
+1. No prompt ever names a third-party game, publisher or character. We describe
+   the visual language in our own terms. See docs/STYLE_GUIDE.md for why this
+   distinction is not cosmetic.
 2. Style lives here, not in the catalog. Catalog entries describe *subjects*;
    this module decides how they look. Changing the game's art direction should
    be one edit here, not a sweep through every asset definition.
+3. **The generator is never asked for the lighting.** Anime rules 1 and 2 — the
+   two-band ramp and the outline — belong to the renderer and the Godot shaders.
+   A generator asked for "cel shaded", "toon shaded", "outlined" or "rim light"
+   paints those bands and that ink line into the texture, and the texture then
+   double-shades under the real toon shader: two terminators, a painted outline
+   swimming against the inverted-hull one, and the mud ANIME_DIRECTION.md names
+   as the one failure that makes cel shading look cheap instead of deliberate.
+   So these prompts ask for flat colour and anime *form*, nothing else, and
+   ``test_no_prompt_ever_asks_the_generator_for_the_lighting`` guards it.
 """
 
 from __future__ import annotations
@@ -30,13 +40,21 @@ from . import budgets
 #: so they are never dropped to make room for a long subject: an asset generated
 #: without them is off-style by definition and has to be regenerated anyway.
 #:
+#: "anime style" replaces the old bare "stylized" because a bare "stylized"
+#: bought us very little: the crate and the guard in Content/Models both came
+#: back essentially photoreal under it, with real wood grain and woven chainmail.
+#: "low-poly" stays — it is the token that keeps the *form* simple, and it is
+#: doing separate work from the anime cue.
+#:
 #: The third is the most important and the last to be learned. Anything that can
 #: be painted must be painted. A barrel's iron bands, a plank seam, a rivet, a
 #: carved rune are surface detail: modelled they cost geometry, break under any
 #: reduction, and read no better at tactical-camera distance than a texture does.
-#: Brief section 6 says it in four words — simple geometry, rich atmosphere.
+#: Brief section 6 says it in four words — simple geometry, rich atmosphere, and
+#: anime rule 2 sharpens it: under an inverted-hull outline every modelled crease
+#: becomes a black line, so modelled detail is now actively worse than before.
 CORE_STYLE_TOKENS = [
-    "stylized low-poly 3D game asset",
+    "anime style low-poly 3D game asset",
     "bold readable silhouette",
     "surface detail painted in the texture, not modelled",
 ]
@@ -47,11 +65,19 @@ CORE_STYLE_TOKENS = [
 #: characters by the API. When a detailed subject uses most of that budget,
 #: whole tokens are dropped from the end of this list instead of the string
 #: being cut mid-clause, so the surviving prompt is always well formed.
+#:
+#: The first token carries anime rule 3 and is phrased positively on purpose:
+#: "flat unshaded colour" asks for the thing we want, where the equivalent
+#: negative ("no baked shading") would spend the same characters asking the
+#: generator not to do something the eighteen-token avoid list already proved it
+#: will do anyway. The old "even neutral lighting" is gone entirely — asking for
+#: *any* lighting invites it into the texture, which is the one thing rule 3
+#: forbids.
 BASE_STYLE_TOKENS = [
-    "clean flat-shaded surfaces",
-    "saturated storybook fantasy palette",
+    "flat unshaded colour",
     "large simple forms, very few small details",
-    "even neutral lighting",
+    "saturated separated hues on neighbouring parts",
+    "crisp hard edges between large planes",
 ]
 
 #: Tokens that keep the *mesh* away from the failure modes in section 6, most
@@ -88,16 +114,35 @@ BASE_AVOID_TOKENS = [
 #: Avoid tokens for the *texture* prompt. Separate from the geometry list because
 #: the two prompts fail in different directions and share no failure mode worth
 #: the characters: a mesh cannot have a logo, and a texture cannot have a plinth.
+#:
+#: Still four tokens, because this whole list is packed as one optional element:
+#: if it grows past the space a long hero subject leaves, it is not truncated, it
+#: is dropped entirely. Third and fourth carry anime rules 3 and 5 — painted
+#: highlights and soft gradients are the two shapes baked lighting arrives in, and
+#: a desaturated palette destroys the hue separation that a collapsed value range
+#: leaves as the only way to tell a brown belt from a brown tunic.
 TEXTURE_AVOID_TOKENS = [
     "photographic detail",
     "printed text, stencilled markings or logos",
-    "baked shadows or ambient occlusion",
-    "muddy desaturated colours",
+    "baked shadows, ambient occlusion or painted highlights",
+    "soft gradients, muddy desaturated colours",
 ]
 
-#: Per-class **shape** direction. These are the deltas that give a class its
-#: identity at 30 metres on a tactical camera, which is the only distance that
-#: matters.
+#: Per-class **shape** direction, and where anime rule 4 is implemented. These are
+#: the deltas that give a class its identity at 30 metres on a tactical camera,
+#: which is the only distance that matters.
+#:
+#: Rule 4 is "anime proportion, *real height*", and both halves are here for the
+#: character classes: a larger head and simplified features buy the read, while
+#: "full adult height" and CLASS_AVOID's chibi token defend the 1.7m the grid,
+#: the movement costs and the camera all depend on. Hair as a few solid angular
+#: clumps and cloth in a few big folds are the same instruction as the rest of
+#: this file wearing anime clothes — they are large forms, which is what survives
+#: reduction, an outline pass and a 60-pixel-tall unit.
+#:
+#: Each entry is split on commas by _tokens, so a clause at a time is dropped when
+#: a subject is long. Proportion therefore comes first in every character entry:
+#: it is the clause that must survive.
 #:
 #: Colour deliberately does not live here. It goes in CLASS_PALETTE and rides the
 #: texture prompt, which is both the correct place for it and the one with room
@@ -105,20 +150,25 @@ TEXTURE_AVOID_TOKENS = [
 #: and would otherwise push the palette rule out entirely.
 CLASS_STYLE: dict[str, str] = {
     "hero": (
-        "heroic proportions with broad shoulders and a slightly oversized head, "
-        "distinctive hairstyle, strong cape or shoulder shape, iconic weapon"
+        "anime proportions about six and a half heads tall at full adult height, "
+        "large clean eyes and simplified features, hair in a few solid angular clumps, "
+        "strong cape or shoulder shape, iconic weapon"
     ),
-    "npc": "ordinary villager build, simple cloth shapes",
+    "npc": (
+        "anime proportions with a slightly enlarged head at full adult height, "
+        "simplified features, cloth in a few big folds"
+    ),
     "enemy_humanoid": (
-        "menacing but readable build, crude asymmetric armour plates, exaggerated weapon"
+        "anime proportions with an oversized head and hands, crude asymmetric armour "
+        "plates, exaggerated weapon"
     ),
     "monster_large": (
-        "heavy imposing mass, exaggerated dominant feature such as jaws claws or horns, "
-        "readable animal silhouette"
+        "oversized head on a heavy imposing mass, exaggerated dominant feature such as "
+        "jaws claws or horns, readable animal silhouette"
     ),
     "boss": (
-        "commanding scale and theatrical silhouette, ornate but large-form armour, "
-        "unmistakable profile"
+        "commanding scale and theatrical silhouette, large-form armour with few big "
+        "shapes, unmistakable profile"
     ),
     "weapon": (
         "oversized game-readable proportions, thick blade or shaft, "
@@ -139,31 +189,60 @@ CLASS_STYLE: dict[str, str] = {
     ),
 }
 
-#: Per-class **colour** direction, applied to the texture prompt.
+#: Per-class **colour** direction, applied to the texture prompt, and where anime
+#: rule 5 is implemented.
 #:
 #: Rule one of docs/STYLE_GUIDE.md is one dominant hue per character, and this is
 #: where that rule is actually enforced on the generator.
+#:
+#: Every entry now separates by *hue* rather than by value or shade, because the
+#: two-band ramp collapses the value range by design: a brown belt on a brown
+#: tunic that differed only in brightness reads as one brown shape once the shader
+#: has quantised it to two tones. The old vegetation entry — "clear light and
+#: shadow greens" — was worse than merely weak, it asked the generator to paint
+#: the light, which is exactly the rule 3 failure that produces mud under the real
+#: shader. set_piece keeps a value instruction on purpose: backdrops recede by
+#: value (style guide rule 6), and a distant wall has no neighbouring material to
+#: separate itself from anyway.
 CLASS_PALETTE: dict[str, str] = {
-    "hero": "one dominant costume hue plus one bright accent and clean metal",
-    "npc": "muted earthy costume with a single brighter accent colour",
-    "enemy_humanoid": "cohesive faction colour across every unit of the type",
-    "monster_large": "two-colour creature palette",
-    "boss": "single dramatic accent colour against dark values",
-    "weapon": "clear metal and wood separation",
-    "prop": "warm painted wood tones, plank seams and iron bands painted on",
-    "vegetation": "two-tone foliage with clear light and shadow greens",
+    "hero": "one dominant saturated costume hue, one bright accent hue, clean bright metal",
+    "npc": "one clear costume hue with a single brighter accent hue",
+    "enemy_humanoid": "cohesive faction hue across every unit of the type, one contrast hue",
+    "monster_large": "two-hue creature palette, skin and plate clearly different hues",
+    "boss": "one dramatic saturated accent hue against deep cool darks",
+    "weapon": "metal and wood as two clearly different hues, not two browns",
+    # Deliberately material-agnostic. The old wording named wood and iron, which a
+    # clay urn, a stone well and a stone fountain all inherited from the same class.
+    "prop": "two or three flat material hues clearly separated, bands and seams painted on",
+    "vegetation": "two flat foliage greens separated by hue, warmer trunk hue",
     "building_module": (
-        "plaster, timber and thatch as three distinct values, "
+        "plaster, timber and thatch as three distinct hues, "
         "timber framing painted on rather than modelled"
     ),
     "set_piece": "narrow value range so it recedes behind foreground units",
 }
 
 #: Extra avoid-tokens per class, layered on top of BASE_AVOID.
+#:
+#: The chibi token is the other half of anime rule 4 and is deliberately *not* in
+#: BASE_AVOID: it is only meaningful for the humanoid classes, and the avoid clause
+#: is the scarcest space in the prompt — a prop paying characters for it would push
+#: real direction out, which is the failure recorded in docs/ASSET_PIPELINE.md.
+#:
+#: The npc entry no longer says "armour, weapons". It contradicted half the class:
+#: npc_guard_greenvale's subject is a soldier "over mail with a conical helm, round
+#: shield and short sword", so the prompt was arguing with itself, and a prompt
+#: that argues with itself spends characters to buy nothing.
 CLASS_AVOID: dict[str, str] = {
-    "hero": "generic knight, faceless armour, modern clothing",
-    "npc": "armour, weapons, heroic pose",
-    "prop": "modern materials, plastic, metal shipping container",
+    "hero": "generic knight, chibi proportions, modern clothing",
+    "npc": "chibi proportions, heroic pose",
+    "enemy_humanoid": "chibi proportions",
+    # "metal shipping container" is gone. Meshy has no negative-prompt field, so
+    # every avoid token is also a noun sitting in the positive prompt, and the one
+    # asset that carried this token is prop_crate_a — which came back photoreal
+    # with metal corner brackets and stencilled lettering, i.e. a shipping crate.
+    # Naming the failure mode is not free when the naming happens in the prompt.
+    "prop": "modern materials, plastic",
     "vegetation": "individual leaf geometry, thin twigs, transparent planes",
     "building_module": "interior furniture",
 }
@@ -176,13 +255,20 @@ CLASS_AVOID: dict[str, str] = {
 #: a Greenvale barrel and a Vaelor barrel read as different places from the same
 #: mesh.
 #:
-#: These describe *light and value only*, never scene content: a region string
-#: that mentioned foliage would tint every barrel in the region green.
+#: These describe *palette only*, never scene content: a region string that
+#: mentioned foliage would tint every barrel in the region green.
+#:
+#: "desaturated" is gone from ruins and vaelor. Anime rule 5 needs saturation to
+#: separate neighbouring materials by hue, and TEXTURE_AVOID_TOKENS now bans muddy
+#: desaturated colour outright, so a region asking for the banned thing was the
+#: same self-contradiction as telling a guard to avoid armour. Regional identity is
+#: bought instead by naming the hue the region is biased towards, which is a
+#: positive instruction and reads as a stronger place-difference, not a weaker one.
 REGIONS: dict[str, str] = {
-    "greenvale": "warm afternoon colour temperature, bright mid values, gentle contrast",
-    "ruins": "cool desaturated colour temperature, low mid values, sparse warm highlights",
-    "vaelor": "cold desaturated colour temperature, dark values, one warm orange accent",
-    "outer_world": "dusty ochre and teal colour temperature, weathered mid values",
+    "greenvale": "warm afternoon palette, bright mid values, gentle contrast",
+    "ruins": "cool blue-grey palette, low mid values, sparse warm highlight hue",
+    "vaelor": "cold steel-blue palette, dark values, one warm orange accent hue",
+    "outer_world": "dusty ochre and teal palette, weathered mid values",
     "neutral": "",
 }
 
@@ -248,13 +334,20 @@ def _dedupe(tokens: list[str], seen: set[str] | None = None) -> list[str]:
     return out
 
 
-def _pack(required: list[str], optional: list[str], limit: int) -> tuple[str, list[str]]:
+def _pack(
+    required: list[str], optional: list[str], limit: int, *, seen: set[str] | None = None
+) -> tuple[str, list[str]]:
     """Join required tokens plus as many optional ones as fit.
 
     Returns the joined text and the optional tokens that were dropped. Required
     tokens are never dropped; callers must size them to fit before calling.
+
+    ``seen`` pre-loads the dedupe. The geometry prompt needs it because its
+    required half arrives as one already-joined string, so the tokens inside it
+    are invisible to _dedupe: a house whose catalog said "simple boxy massing"
+    got it a second time from the building class, and paid twice.
     """
-    seen: set[str] = set()
+    seen = set() if seen is None else set(seen)
     required = _dedupe(required, seen)
     optional = _dedupe(optional, seen)
     text = ", ".join(required)
@@ -301,22 +394,37 @@ def build(
     low-priority style tokens, in this order of precedence:
 
         subject, per-asset extras, core style  (never dropped)
+        the class signature clause             (never dropped)
         avoid clause                           (gets all remaining space)
-        class art direction                    (dropped before the subject)
+        rest of the class art direction        (dropped before the subject)
         remaining house style tokens           (dropped first)
     """
     budget = budgets.get(class_key)
 
     # 1. What can never be dropped: the subject, the catalog's own extra
-    #    direction, and the core style tokens. If a subject is long enough to
-    #    crowd out the core tokens, the *subject* is what gets trimmed — an asset
-    #    generated without the house style is off-style by definition, so keeping
-    #    every word of an over-long description would be the wrong trade.
+    #    direction, the core style tokens, and the first clause of the class
+    #    direction. If a subject is long enough to crowd them out, the *subject*
+    #    is what gets trimmed — an asset generated without the house style is
+    #    off-style by definition, so keeping every word of an over-long
+    #    description would be the wrong trade.
+    #
+    #    The class signature is protected because measured on the real catalogs it
+    #    was not surviving: _pack fills greedily, so a 69-character proportion
+    #    clause was skipped and three shorter tail tokens took its place. Every
+    #    character in prologue_cast.json lost "anime proportions ..." that way,
+    #    which would have made anime rule 4 a no-op in the one prompt that decides
+    #    the mesh. Vegetation lost its canopy clause to a different mechanism once
+    #    before — an eighteen-token avoid list — and the tree grew individual
+    #    leaves. Losing the class signature has cost us a generation twice now, so
+    #    it stops being optional.
     core_text = ", ".join(CORE_STYLE_TOKENS)
+    class_clauses = _tokens(CLASS_STYLE.get(class_key, ""))
+    signature = class_clauses[0] if class_clauses else ""
+    fixed_text = f"{core_text}, {signature}" if signature else core_text
     subject_text = ", ".join(_tokens(subject, extra))
-    room_for_subject = PROMPT_LIMIT - AVOID_RESERVE - len(core_text) - 2
+    room_for_subject = PROMPT_LIMIT - AVOID_RESERVE - len(fixed_text) - 2
     subject_text = _truncate(subject_text, room_for_subject)
-    required_text = f"{subject_text}, {core_text}" if subject_text else core_text
+    required_text = f"{subject_text}, {fixed_text}" if subject_text else fixed_text
 
     # 2. The avoid clause gets whatever space is left rather than a fixed slice:
     #    a short subject should get the full avoid list, not an arbitrarily
@@ -343,11 +451,14 @@ def build(
     # 3. Remaining house style fills whatever is still free. The triangle hint
     #    sits last on purpose: target_polycount is passed to the API as a real
     #    parameter, so losing the prompt version costs nothing.
-    optional = _tokens(CLASS_STYLE.get(class_key, "")) + BASE_STYLE_TOKENS + [
+    optional = class_clauses[1:] + BASE_STYLE_TOKENS + [
         f"clean topology around {budget.tri_target} triangles"
     ]
     geometry, style_dropped = _pack(
-        [required_text], optional, PROMPT_LIMIT - len(avoid_text) - 2
+        [required_text],
+        optional,
+        PROMPT_LIMIT - len(avoid_text) - 2,
+        seen={token.lower() for token in _tokens(required_text)},
     )
     geometry = f"{geometry}, {avoid_text}"
 
@@ -361,9 +472,14 @@ def build(
     #
     # So the prompt now opens by naming what kind of image this is, and only then
     # says what it depicts.
+    #
+    # The opener names the medium, not the lighting: "flat unshaded colour blocks"
+    # is anime rule 3, and there is deliberately no "cel shaded" anywhere near it.
+    # The engine's toon ramp needs an unlit albedo to band; hand it a texture with
+    # bands already in it and it bands the bands.
     texture_required = _tokens(
-        "hand-painted stylized game texture, flat colour blocks, painterly, "
-        "not photographic",
+        "hand-painted anime game texture, flat unshaded colour blocks, "
+        "crisp colour edges, not photographic",
         subject,
         surface,
         CLASS_PALETTE.get(class_key, ""),
@@ -375,7 +491,10 @@ def build(
     texture_optional = (
         _tokens(REGIONS.get(region, ""))
         + ["avoid: " + ", ".join(TEXTURE_AVOID_TOKENS)]
-        + _tokens("high value contrast between neighbouring materials", extra)
+        # Hue contrast, not value contrast: the shader quantises value into two
+        # bands, so two materials differing only in value collapse into one flat
+        # shape once it has run. Hue is what survives.
+        + _tokens("strong hue contrast between neighbouring materials", extra)
     )
     texture, texture_dropped = _pack(texture_required, texture_optional, PROMPT_LIMIT)
 

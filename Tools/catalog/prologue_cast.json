@@ -15,7 +15,15 @@
     "pipeline switches to image-to-3d automatically.",
     "",
     "Palette assignments come from docs/STYLE_GUIDE.md. No two characters in the",
-    "same scene share an accent hue."
+    "same scene share an accent hue.",
+    "",
+    "Proportion is NOT set here. Anime rule 4 -- a larger head and simplified",
+    "features at unchanged adult height -- comes from the class, in style.py, so",
+    "the whole cast moves together. Subjects describe who the character is.",
+    "",
+    "enable_pbr is now false everywhere. docs/ANIME_DIRECTION.md bans metallic,",
+    "roughness and normal maps outright: a two-band toon shader ignores them, so",
+    "they were texture memory bought for nothing on four characters."
   ],
   "region": "greenvale",
   "assets": [
@@ -24,7 +32,7 @@
       "class": "hero",
       "subject": "young human swordsman soldier in a light blue tabard over leather armour, short dark hair, a single asymmetric pauldron on the left shoulder, and a short travelling cape",
       "extra": "cape and single pauldron carry the silhouette",
-      "enable_pbr": true,
+      "enable_pbr": false,
       "pose": "t-pose",
       "rig": true,
       "animations": [
@@ -46,7 +54,7 @@
       "class": "hero",
       "subject": "young human apprentice mage in a deep violet robe with wide sleeves, a short shoulder cloak, long light hair tied back, holding a simple wooden staff",
       "extra": "wide sleeves and staff carry the silhouette",
-      "enable_pbr": true,
+      "enable_pbr": false,
       "pose": "t-pose",
       "rig": true,
       "animations": [
@@ -85,7 +93,7 @@
     {
       "id": "npc_aldric",
       "class": "npc",
-      "subject": "weathered human captain in his late forties, greying beard, a worn officer's surcoat over mail, a heavy sword at the hip, no helmet",
+      "subject": "veteran human captain in his late forties, greying beard, an officer's surcoat over mail, a heavy sword at the hip, no helmet",
       "extra": "grey beard and bare head separate him from every helmeted soldier",
       "pose": "t-pose",
       "rig": true,
@@ -101,9 +109,9 @@
     {
       "id": "npc_varric",
       "class": "npc",
-      "subject": "cold human officer in polished dark plate with a tall crested helm and a long crimson half-cloak, mounted officer's sword",
-      "extra": "polished and immaculate, deliberately the cleanest figure in a dusty scene",
-      "enable_pbr": true,
+      "subject": "cold human officer in dark plate with a tall crested helm and a long crimson half-cloak, mounted officer's sword",
+      "extra": "immaculate and hard-edged, deliberately the sharpest figure in the cast",
+      "enable_pbr": false,
       "pose": "t-pose",
       "rig": true,
       "animations": [
@@ -132,7 +140,7 @@
       "id": "npc_guard_greenvale",
       "class": "npc",
       "subject": "human Greenvale soldier in a green tabard over mail with a conical helm, round shield and short sword",
-      "extra": "faceless by design so the mesh can be reused across the whole squad",
+      "extra": "helm and tabard carry the silhouette",
       "pose": "t-pose",
       "rig": true,
       "animations": [
@@ -143,7 +151,7 @@
         "hit_front",
         "death"
       ],
-      "notes": "Reused for the gate guard, the training yard guards, Captain Heron's unconscious men and Varric's squad in battle 02. One mesh, recoloured and rescaled per role."
+      "notes": "Reused for the gate guard, the training yard guards, Captain Heron's unconscious men and Varric's squad in battle 02. One mesh, recoloured and rescaled per role. Generic by design, but 'faceless by design' has been taken out of 'extra': it was 67 characters of production note sitting in the geometry prompt, and under anime rule 4 a simplified readable face is part of the look rather than something to suppress."
     },
     {
       "id": "npc_villager_old_woman",
@@ -295,7 +303,7 @@
       "class": "monster_large",
       "subject": "alien armoured quadruped beast with a chitinous plated head shield, four long blade-tipped limbs and no visible eyes, void violet carapace with pale gold seams",
       "extra": "heavily plated front, exposed soft flank and rear, silhouette unlike any known monster",
-      "enable_pbr": true,
+      "enable_pbr": false,
       "pose": "t-pose",
       "rig": true,
       "animations": [

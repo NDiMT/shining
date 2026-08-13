@@ -3,7 +3,12 @@
     "Weapons the prologue script names or implies.",
     "Kept in their own catalog because weapons are attached to character hands",
     "at runtime rather than being part of the character mesh, which is what makes",
-    "the promotion visuals in brief section 31 possible later."
+    "the promotion visuals in brief section 31 possible later.",
+    "",
+    "Weapons are the clearest case of anime rule 5: a weapon is two materials",
+    "touching, so metal and wood are given two different hues rather than two",
+    "browns, which a two-band shader would collapse into one shape. 'Polished',",
+    "'rusty' and 'grain' are gone -- all three ask for a photograph."
   ],
   "region": "greenvale",
   "assets": [
@@ -14,7 +19,7 @@
       "extra": "obviously wood, no metal anywhere",
       "rig": false,
       "notes": "Scene 02: lies beside the sleeping Rowan. The visual contrast with the Iron Sword he collects later is the point.",
-      "surface": "wood grain, bound grip wrapping"
+      "surface": "flat pale wood colour, darker painted grip binding"
     },
     {
       "id": "weapon_iron_sword",
@@ -23,7 +28,7 @@
       "extra": "blade slightly oversized for tactical-camera readability",
       "rig": false,
       "notes": "Rowan's starting weapon, Attack +3. Collected in the equipment tutorial.",
-      "surface": "polished iron, leather grip wrapping, plain pommel"
+      "surface": "flat bright steel blade, warm brown grip binding, plain pommel"
     },
     {
       "id": "weapon_apprentice_staff",
@@ -32,7 +37,7 @@
       "extra": "unpolished stone marks her as an apprentice, not a mage",
       "rig": false,
       "notes": "Maeve's starting weapon. The stone should look cheap; her later staffs escalate from it.",
-      "surface": "wood grain, small unpolished violet stone, bound grip"
+      "surface": "flat warm wood colour, one saturated violet stone, darker painted grip binding"
     },
     {
       "id": "weapon_soldier_spear",
@@ -41,7 +46,7 @@
       "extra": "long enough that the two-tile reach is legible on the grid",
       "rig": false,
       "notes": "Tomas. Range 2 in battle 01's weapon-range tutorial, so the length has to sell it.",
-      "surface": "iron head, ash grain, bound grip"
+      "surface": "flat steel head, pale ash shaft, darker painted grip binding"
     },
     {
       "id": "weapon_officer_sword",
@@ -50,14 +55,14 @@
       "extra": "cleaner and longer than the iron sword",
       "rig": false,
       "notes": "Shared by Aldric and Varric, recoloured per character.",
-      "surface": "polished steel, wire grip wrapping"
+      "surface": "flat bright steel, dark painted grip wrapping"
     },
     {
       "id": "weapon_goblin_cleaver",
       "class": "weapon",
       "subject": "crude cleaver, thick chopping blade",
       "rig": false,
-      "surface": "notched rusty iron, bound wooden handle"
+      "surface": "flat dull grey blade, rust-red painted notches, warm wood handle"
     },
     {
       "id": "weapon_goblin_spear",
@@ -65,14 +70,14 @@
       "subject": "crude spear, crooked shaft with a lashed head",
       "extra": "visibly improvised next to the soldier spear",
       "rig": false,
-      "surface": "bone and scrap iron, sinew lashings"
+      "surface": "flat bone cream head, dull grey scrap iron, painted sinew lashings"
     },
     {
       "id": "weapon_goblin_shortbow",
       "class": "weapon",
       "subject": "short bow, simple bent limbs",
       "rig": false,
-      "surface": "wood grain, sinew string, scrap leather grip wrap"
+      "surface": "flat warm wood colour, pale sinew string, rust-red grip wrap"
     },
     {
       "id": "weapon_guard_shortsword",
@@ -80,7 +85,7 @@
       "subject": "plain short sword, straight guard",
       "rig": false,
       "notes": "Greenvale rank and file.",
-      "surface": "iron blade, wooden grip"
+      "surface": "flat steel blade, warm wood grip"
     },
     {
       "id": "weapon_guard_shield_round",
@@ -89,7 +94,7 @@
       "extra": "the green field is the Greenvale faction read",
       "rig": false,
       "notes": "Carried by guards and Tomas. Classed as a weapon so it shares the attachment pipeline.",
-      "surface": "painted green field, iron boss, plank seams"
+      "surface": "saturated green painted field, flat iron boss, a few painted plank lines"
     }
   ]
 }
