@@ -72,6 +72,7 @@ def build_glb(
     base_colour_factor: bool = True,
     node_scale: float | None = None,
     node_translation: tuple[float, float, float] | None = None,
+    islands: int = 1,
 ) -> bytes:
     """Assemble a minimal but spec-valid GLB with the requested properties."""
     low, high = bounds
@@ -87,7 +88,18 @@ def build_glb(
         binary.extend(payload)
         return len(buffer_views) - 1
 
-    position_view = add_view(b"\x00" * (vertex_count * 12))
+    # Vertex positions. With islands=1 every vertex sits at the origin, which
+    # welds into a single connected component. With more, each group is pushed
+    # far apart so it reads as a separate island.
+    coords = bytearray()
+    for v in range(vertex_count):
+        group = (v // 3) % max(islands, 1)
+        coords += struct.pack("<fff", float(group) * 100.0, 0.0, 0.0)
+    position_view = add_view(bytes(coords))
+
+    index_bytes = b"".join(struct.pack("<I", i) for i in range(vertex_count))
+    index_view = add_view(index_bytes)
+
     accessors = [
         {
             "bufferView": position_view,
@@ -96,7 +108,13 @@ def build_glb(
             "type": "VEC3",
             "min": list(low),
             "max": list(high),
-        }
+        },
+        {
+            "bufferView": index_view,
+            "componentType": 5125,  # UNSIGNED_INT
+            "count": vertex_count,
+            "type": "SCALAR",
+        },
     ]
 
     document: dict = {
@@ -105,7 +123,9 @@ def build_glb(
         "meshes": [
             {
                 "name": "mesh",
-                "primitives": [{"attributes": {"POSITION": 0}, "material": 0, "mode": 4}],
+                "primitives": [
+                    {"attributes": {"POSITION": 0}, "indices": 1, "material": 0, "mode": 4}
+                ],
             }
         ],
         "materials": [{"name": "surface", "pbrMetallicRoughness": {}}],
@@ -492,6 +512,33 @@ class TestValidator(unittest.TestCase):
             report = validate.validate(path, "enemy_humanoid", expect_animations=True)
         self.assertFalse(report.ok)
         self.assertIn("animations", self.codes(report, validate.Severity.ERROR))
+
+    def test_a_single_solid_mesh_reports_no_loose_parts(self):
+        report = self.check("prop", triangles=600, islands=1)
+        self.assertNotIn("loose_parts", self.codes(report, validate.Severity.WARN))
+
+    def test_generator_debris_is_flagged(self):
+        """Measured on a real generation: a barrel came back as one body plus
+        eleven floating shards, and nothing else the validator checks noticed."""
+        # 600 triangles across 100 islands is 6 each, 1% of the mesh apiece,
+        # comfortably under the 2% debris threshold.
+        report = self.check("prop", triangles=600, islands=100)
+        self.assertIn("loose_parts", self.codes(report, validate.Severity.WARN))
+        self.assertTrue(report.ok, "debris warns, it does not fail the asset")
+
+    def test_a_few_substantial_parts_are_not_debris(self):
+        """A cart has wheels, a chest has a lid. Separate is not the same as
+        broken, so large islands report as INFO rather than a warning."""
+        report = self.check("prop", triangles=600, islands=3)
+        self.assertNotIn("loose_parts", self.codes(report, validate.Severity.WARN))
+
+    def test_flat_shading_alone_is_not_debris(self):
+        """Islands are welded by position first. Without that, a flat-shaded
+        low-poly mesh reports one island per face - the first version of the
+        check found 351 in a barrel with one body."""
+        with GlbTempFile(triangles=600, islands=1) as path:
+            info = glb.read(path)
+        self.assertEqual(len(info.islands), 1, info.islands[:8])
 
     def test_unreadable_file_reports_rather_than_raising(self):
         report = validate.validate("/nonexistent/asset.glb", "prop")

@@ -161,6 +161,7 @@ def validate(path: str, asset_class: str, *, expect_animations: bool = False) ->
     _check_orientation(report, info, budget)
     _check_skeleton(report, info, budget)
     _check_animations(report, info, budget, expect_animations)
+    _check_loose_parts(report, info)
     _check_draw_cost(report, info)
     return report
 
@@ -360,6 +361,46 @@ def _check_animations(
             Severity.INFO,
             "animations",
             f"{len(info.animations)} clip(s): {', '.join(info.animations[:8])}",
+        )
+
+
+#: An island smaller than this share of the whole mesh is treated as debris
+#: rather than as a deliberate separate part.
+DEBRIS_SHARE = 0.02
+
+
+def _check_loose_parts(report: Report, info: glb.GlbInfo) -> None:
+    """Report floating fragments left beside an otherwise good mesh.
+
+    Measured on a real generation: a barrel came back as a clean drum with six
+    disconnected shards floating around it. Triangle count, bounds, scale and
+    textures were all fine, so nothing else here would have caught it.
+
+    Small islands are a warning, not an error: plenty of legitimate assets have
+    separate parts — a cart's two wheels, a weapon rack's crossbars, a chest's
+    lid. Only a human can tell debris from design, so this points at it rather
+    than rejecting it.
+    """
+    if len(info.islands) < 2:
+        return
+    total = sum(info.islands)
+    if total == 0:
+        return
+    debris = [n for n in info.islands[1:] if n / total < DEBRIS_SHARE]
+    if debris:
+        report.add(
+            Severity.WARN,
+            "loose_parts",
+            f"{len(info.islands)} disconnected islands; {len(debris)} of them are "
+            f"under {DEBRIS_SHARE:.0%} of the mesh ({', '.join(str(n) for n in debris[:8])} "
+            "triangles). Likely generator debris — delete the loose parts in Blender, "
+            "or confirm they are intentional separate pieces",
+        )
+    else:
+        report.add(
+            Severity.INFO,
+            "loose_parts",
+            f"{len(info.islands)} separate parts, all substantial",
         )
 
 

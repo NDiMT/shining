@@ -64,6 +64,9 @@ class GlbInfo:
     #: Materials that declare no base colour texture and no base colour factor.
     untextured_materials: list[str] = field(default_factory=list)
     generator: str = ""
+    #: Triangle count of each connected mesh island, largest first. Generators
+    #: routinely leave small floating fragments beside an otherwise good asset.
+    islands: list[int] = field(default_factory=list)
 
     @property
     def size(self) -> tuple[float, float, float]:
@@ -100,6 +103,7 @@ def read(path: str) -> GlbInfo:
 
     accessors = document.get("accessors", [])
     _measure_geometry(document, accessors, info)
+    _measure_islands(document, accessors, binary, info)
     _measure_bounds(document, accessors, info)
     _measure_images(document, binary, info)
     _measure_rig(document, info)
@@ -295,6 +299,114 @@ def _measure_bounds(document: dict, accessors: list[dict], info: GlbInfo) -> Non
     if world_low[0] != float("inf"):
         info.bounds_min = (world_low[0], world_low[1], world_low[2])
         info.bounds_max = (world_high[0], world_high[1], world_high[2])
+
+
+_INDEX_FORMAT = {5121: ("B", 1), 5123: ("H", 2), 5125: ("I", 4)}
+
+#: Positions closer than this in model units are treated as the same vertex.
+#: Assets are metres-scale, so 0.1 mm is well below anything meaningful and well
+#: above float noise from an exporter.
+_WELD_EPSILON = 1e-4
+
+
+def _weld_map(
+    document: dict, accessors: list[dict], binary: bytes, primitive: dict
+) -> list[int] | None:
+    """Map each vertex index to a canonical index for its position.
+
+    Returns None if POSITION is missing or not readable as float32 VEC3.
+    """
+    position = primitive.get("attributes", {}).get("POSITION")
+    if position is None:
+        return None
+    accessor = accessors[position]
+    if accessor.get("componentType") != 5126 or accessor.get("type") != "VEC3":
+        return None
+    view = document["bufferViews"][accessor["bufferView"]]
+    stride = int(view.get("byteStride") or 12)
+    base = int(view.get("byteOffset", 0)) + int(accessor.get("byteOffset", 0))
+    count = int(accessor.get("count", 0))
+    if base + (count - 1) * stride + 12 > len(binary):
+        return None
+
+    canonical: dict[tuple[int, int, int], int] = {}
+    out: list[int] = []
+    quantum = 1.0 / _WELD_EPSILON
+    for i in range(count):
+        x, y, z = struct.unpack_from("<fff", binary, base + i * stride)
+        key = (round(x * quantum), round(y * quantum), round(z * quantum))
+        out.append(canonical.setdefault(key, i))
+    return out
+
+
+def _measure_islands(document: dict, accessors: list[dict], binary: bytes, info: GlbInfo) -> None:
+    """Count connected mesh islands via union-find over shared vertex indices.
+
+    Generators leave floating debris: a barrel came back as a clean drum
+    surrounded by half a dozen disconnected fragments. Nothing else the validator
+    measures notices that — the triangle count, bounds, scale and textures are
+    all perfectly reasonable — so it needs its own check.
+
+    Connectivity is by vertex POSITION, not by index, and that distinction is the
+    whole check. A flat-shaded low-poly mesh duplicates its vertices at every hard
+    edge for shading and UV seams, so index-sharing reports one island per face:
+    the first version of this function found 351 "islands" in a barrel that has
+    one body and a handful of shards. Welding by quantised position first gives
+    the answer a human would give by looking at it.
+    """
+    islands: list[int] = []
+    for mesh in document.get("meshes", []):
+        for primitive in mesh.get("primitives", []):
+            if primitive.get("mode", 4) != 4 or "indices" not in primitive:
+                continue
+            accessor = accessors[primitive["indices"]]
+            entry = _INDEX_FORMAT.get(accessor.get("componentType"))
+            if entry is None:
+                continue
+            fmt, size = entry
+            view = document["bufferViews"][accessor["bufferView"]]
+            start = int(view.get("byteOffset", 0)) + int(accessor.get("byteOffset", 0))
+            count = int(accessor.get("count", 0))
+            if count < 3 or start + count * size > len(binary):
+                continue
+            raw_indices = struct.unpack_from("<" + fmt * count, binary, start)
+
+            weld = _weld_map(document, accessors, binary, primitive)
+            if weld is None:
+                continue
+            indices = [weld[i] if i < len(weld) else i for i in raw_indices]
+
+            parent: dict[int, int] = {}
+
+            def find(a: int) -> int:
+                root = a
+                while parent.get(root, root) != root:
+                    root = parent[root]
+                while parent.get(a, a) != root:  # path compression
+                    parent[a], a = root, parent[a]
+                parent[a] = root
+                return root
+
+            def union(a: int, b: int) -> None:
+                ra, rb = find(a), find(b)
+                if ra != rb:
+                    parent[ra] = rb
+
+            for i in range(0, count - 2, 3):
+                a, b, c = indices[i], indices[i + 1], indices[i + 2]
+                parent.setdefault(a, a)
+                parent.setdefault(b, b)
+                parent.setdefault(c, c)
+                union(a, b)
+                union(b, c)
+
+            sizes: dict[int, int] = {}
+            for i in range(0, count - 2, 3):
+                root = find(indices[i])
+                sizes[root] = sizes.get(root, 0) + 1
+            islands.extend(sizes.values())
+
+    info.islands = sorted(islands, reverse=True)
 
 
 def _measure_images(document: dict, binary: bytes, info: GlbInfo) -> None:
