@@ -130,7 +130,7 @@ public sealed partial class BattleScene : Node3D
         _turns.BeginRound(_battle.Units);
 
         _hud.ShowBattle(_battle, _round);
-        _hud.ShowUnit(null, null, null);
+        RefreshInspector();
 
         // Open on the player's line rather than on the geometric centre of the
         // field: the first thing a player should see is their own party.
