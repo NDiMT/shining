@@ -66,6 +66,14 @@ BASE_AVOID_TOKENS = [
     "raised bands or trim",
     "extruded panel lines",
     "grimdark",
+    # Scenery the generator adds unasked. Rendered textured, a barrel's "debris"
+    # turned out to be grass tufts and pebbles scattered around its base. They
+    # are worse than ugly: they inflate the bounding box, so the height
+    # normalisation shrinks the actual barrel to fit scenery nobody wants, and
+    # every instance in the village would carry its own identical clump of grass.
+    "grass tufts",
+    "scattered stones or pebbles",
+    "scenery around the object",
     "muddy colours",
     "baked shadows",
     "dense engraved ornament",
