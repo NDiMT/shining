@@ -1,0 +1,1063 @@
+<title>North Meadow Ambush</title>
+<style>
+  /* ---- tokens: light is the base, both themes defined at token level ---- */
+  :root {
+    --ground: #E8E2D2;
+    --panel: #F2EDE0;
+    --panel-2: #DED6C2;
+    --ink: #23271F;
+    --ink-soft: #5C6154;
+    --ink-faint: #8A8D7E;
+    --rule: #C3BAA1;
+    --gold: #A8752F;
+    --gold-soft: #C9A163;
+    --player: #3E6FB0;
+    --player-soft: #6E97CE;
+    --enemy: #8E4430;
+    --enemy-soft: #B0674F;
+    --goblin: #6B8742;
+    --good: #4A7A46;
+    --warn: #C08A3E;
+    --crit: #C4404A;
+    --t-grass: #7E9A5A;
+    --t-grass-2: #8CA766;
+    --t-path: #B9A97E;
+    --t-forest: #4E7343;
+    --t-rock: #A09A85;
+    --t-hill: #AEBE74;
+    --t-block: #3B3529;
+    --t-exit: #6F7FA8;
+    --shadow: rgba(35, 39, 31, .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #171B16;
+      --panel: #1F241D;
+      --panel-2: #2A3026;
+      --ink: #E4E0D2;
+      --ink-soft: #A6AA97;
+      --ink-faint: #74796A;
+      --rule: #3A4034;
+      --gold: #C9A163;
+      --gold-soft: #8A6B34;
+      --player: #6E97CE;
+      --player-soft: #3E6FB0;
+      --enemy: #C4715A;
+      --enemy-soft: #8E4430;
+      --goblin: #8CAA5C;
+      --good: #6FA669;
+      --warn: #D6A356;
+      --crit: #E06A72;
+      --t-grass: #4E6B3C;
+      --t-grass-2: #5A7A46;
+      --t-path: #8A7B54;
+      /* Forest was #2C4529, too close to the blocked colour to tell apart at a
+         glance. Pushed greener and lighter so cover reads as cover. */
+      --t-forest: #37592F;
+      --t-rock: #6E695A;
+      --t-hill: #7E9250;
+      --t-block: #241F1A;
+      --t-exit: #47547A;
+      --shadow: rgba(0, 0, 0, .45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #171B16; --panel: #1F241D; --panel-2: #2A3026;
+    --ink: #E4E0D2; --ink-soft: #A6AA97; --ink-faint: #74796A; --rule: #3A4034;
+    --gold: #C9A163; --gold-soft: #8A6B34;
+    --player: #6E97CE; --player-soft: #3E6FB0;
+    --enemy: #C4715A; --enemy-soft: #8E4430; --goblin: #8CAA5C;
+    --good: #6FA669; --warn: #D6A356; --crit: #E06A72;
+    --t-grass: #4E6B3C; --t-grass-2: #5A7A46; --t-path: #8A7B54;
+    --t-forest: #37592F; --t-rock: #6E695A; --t-hill: #7E9250;
+    --t-block: #241F1A; --t-exit: #47547A;
+    --shadow: rgba(0, 0, 0, .45);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.5 "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .frame {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px 20px 56px;
+  }
+
+  /* ---- header ---- */
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .eyebrow {
+    font: 600 11px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  h1 {
+    margin: 6px 0 0;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 600;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  .sub { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; max-width: 62ch; }
+
+  .status { display: flex; gap: 22px; align-items: flex-end; }
+  .stat { text-align: right; }
+  .stat .k {
+    font: 600 10px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .stat .v {
+    font: 600 22px/1.1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    margin-top: 4px;
+  }
+
+  /* ---- objective banner ---- */
+  .objective {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0 0; padding: 10px 14px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--gold);
+  }
+  .objective .label {
+    font: 600 10px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--gold);
+  }
+  .objective .text { font-size: 15px; }
+
+  /* ---- main layout ---- */
+  .board {
+    display: grid;
+    grid-template-columns: minmax(0, 186px) minmax(0, auto) minmax(0, 1fr);
+    gap: 18px;
+    margin-top: 18px;
+    align-items: start;
+  }
+  @media (max-width: 940px) {
+    .board { grid-template-columns: 1fr; }
+    .queue-col { order: 2; }
+    .grid-col { order: 1; }
+    .info-col { order: 3; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    padding: 12px;
+  }
+  .card > h2 {
+    margin: 0 0 10px;
+    font: 600 10px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  /* ---- turn queue ---- */
+  .queue { display: flex; flex-direction: column; gap: 5px; }
+  .qrow {
+    display: grid; grid-template-columns: 20px 1fr auto;
+    align-items: center; gap: 8px;
+    padding: 5px 6px;
+    border-left: 3px solid transparent;
+    font-size: 13px;
+  }
+  .qrow.now { background: var(--panel-2); border-left-color: var(--gold); }
+  .qrow.dead { opacity: .32; text-decoration: line-through; }
+  .qrow .n {
+    font: 600 10px/1 ui-monospace, Menlo, monospace;
+    color: var(--ink-faint); font-variant-numeric: tabular-nums;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .qrow .ag {
+    font: 12px/1 ui-monospace, Menlo, monospace;
+    font-variant-numeric: tabular-nums; color: var(--ink-faint);
+  }
+
+  /* ---- canvas ---- */
+  .grid-col { display: flex; flex-direction: column; gap: 10px; }
+  .canvas-wrap {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    padding: 10px;
+    box-shadow: 0 2px 0 var(--shadow);
+  }
+  canvas { display: block; max-width: 100%; height: auto; cursor: pointer; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    font: 11px/1.4 ui-sans-serif, system-ui, sans-serif;
+    color: var(--ink-soft);
+  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .swatch { width: 11px; height: 11px; border: 1px solid var(--shadow); }
+
+  /* ---- action bar ---- */
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: 600 13px/1 ui-sans-serif, system-ui, sans-serif;
+    padding: 9px 14px;
+    color: var(--ink);
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    cursor: pointer;
+    transition: background .12s, border-color .12s, transform .06s;
+  }
+  button:hover:not(:disabled) { border-color: var(--gold); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: .38; cursor: default; }
+  button.primary { background: var(--player); border-color: var(--player); color: #fff; }
+  button.primary:hover:not(:disabled) { border-color: var(--gold-soft); }
+  button.armed { background: var(--enemy); border-color: var(--enemy); color: #fff; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  /* ---- info column ---- */
+  .info-col { display: flex; flex-direction: column; gap: 14px; }
+
+  .unitcard .name { font-size: 17px; font-weight: 600; }
+  .unitcard .cls {
+    font: 600 10px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint);
+    margin-top: 3px;
+  }
+  .bar { height: 7px; background: var(--panel-2); margin-top: 8px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--good); transition: width .25s; }
+  .bar.mp > i { background: var(--player); }
+  .barlab {
+    display: flex; justify-content: space-between;
+    font: 11px/1 ui-monospace, Menlo, monospace;
+    font-variant-numeric: tabular-nums; color: var(--ink-soft); margin-top: 5px;
+  }
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px 6px; margin-top: 12px;
+  }
+  .stats div {
+    font: 11px/1.3 ui-sans-serif, system-ui, sans-serif;
+    color: var(--ink-faint); text-align: center;
+  }
+  .stats b {
+    display: block;
+    font: 600 15px/1.2 ui-monospace, Menlo, monospace;
+    font-variant-numeric: tabular-nums; color: var(--ink);
+  }
+
+  .preview {
+    margin-top: 12px; padding: 10px;
+    background: var(--panel-2);
+    border-left: 3px solid var(--enemy);
+    font-size: 13px;
+  }
+  .preview .big {
+    font: 600 26px/1 ui-monospace, Menlo, monospace;
+    font-variant-numeric: tabular-nums; color: var(--enemy);
+  }
+  .preview .note { color: var(--ink-soft); font-size: 12px; margin-top: 4px; }
+
+  .tile-inspect {
+    font: 12px/1.6 ui-monospace, Menlo, Consolas, monospace;
+    color: var(--ink-soft); font-variant-numeric: tabular-nums;
+  }
+  .tile-inspect b { color: var(--ink); font-weight: 600; }
+
+  .log {
+    max-height: 260px; overflow-y: auto;
+    font-size: 13px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .log p { margin: 0; padding-left: 10px; border-left: 2px solid var(--rule); }
+  .log p.hit { border-left-color: var(--enemy); }
+  .log p.crit { border-left-color: var(--crit); font-weight: 600; }
+  .log p.die { border-left-color: var(--ink-faint); color: var(--ink-soft); }
+  .log p.event { border-left-color: var(--gold); }
+  .log p.turn { border-left-color: var(--player); color: var(--ink-soft); }
+
+  /* ---- verdict overlay ---- */
+  .verdict {
+    position: absolute; inset: 10px;
+    display: none; place-items: center;
+    background: color-mix(in srgb, var(--panel) 88%, transparent);
+    text-align: center; padding: 20px;
+  }
+  .verdict.show { display: grid; }
+  .verdict h3 { margin: 0; font-size: 30px; font-weight: 600; }
+  .verdict p { margin: 8px 0 16px; color: var(--ink-soft); max-width: 40ch; }
+
+  footer {
+    margin-top: 30px; padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-soft); font-size: 13px;
+  }
+  footer h2 {
+    font: 600 10px/1 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+  footer ul { margin: 0; padding-left: 18px; }
+  footer li { margin-bottom: 4px; }
+  footer code {
+    font: 12px ui-monospace, Menlo, monospace;
+    background: var(--panel-2); padding: 1px 5px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="frame">
+  <header>
+    <div>
+      <div class="eyebrow">Hollow Crown &middot; Prologue &middot; Battle 01</div>
+      <h1>North Meadow Ambush</h1>
+      <p class="sub">
+        A playable prototype of the tactical loop, running on the real
+        <code style="font:12px ui-monospace,Menlo,monospace">Content/Data</code> —
+        same grid, stats, terrain rules and scripted events the engine will load.
+      </p>
+    </div>
+    <div class="status">
+      <div class="stat"><div class="k">Turn</div><div class="v" id="s-turn">1</div></div>
+      <div class="stat"><div class="k">Party</div><div class="v" id="s-party">3</div></div>
+      <div class="stat"><div class="k">Enemies</div><div class="v" id="s-foes">7</div></div>
+    </div>
+  </header>
+
+  <div class="objective">
+    <span class="label">Objective</span>
+    <span class="text" id="s-objective">Defeat all enemies</span>
+  </div>
+
+  <div class="board">
+    <div class="queue-col card">
+      <h2>Turn order &middot; by agility</h2>
+      <div class="queue" id="queue"></div>
+    </div>
+
+    <div class="grid-col">
+      <div class="canvas-wrap">
+        <canvas id="cv" width="480" height="560"></canvas>
+        <div class="verdict" id="verdict">
+          <div>
+            <h3 id="v-title">Victory</h3>
+            <p id="v-text"></p>
+            <button class="primary" onclick="restart()">Fight again</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="b-move" onclick="arm('move')">Move</button>
+        <button id="b-attack" onclick="arm('attack')">Attack</button>
+        <button id="b-skill" onclick="arm('skill')">Spark &middot; 3 MP</button>
+        <button id="b-wait" onclick="doWait()">Wait</button>
+        <button id="b-undo" onclick="undoMove()">Undo move</button>
+      </div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--t-grass)"></i>Grass 1</span>
+        <span><i class="swatch" style="background:var(--t-path)"></i>Road 1</span>
+        <span><i class="swatch" style="background:var(--t-forest)"></i>Forest 2 &middot; +2 def</span>
+        <span><i class="swatch" style="background:var(--t-rock)"></i>Rocks 2 &middot; +1 def</span>
+        <span><i class="swatch" style="background:var(--t-hill)"></i>Hill 2 &middot; height 1</span>
+        <span><i class="swatch" style="background:var(--t-block)"></i>Blocked</span>
+        <span><i class="swatch" style="background:var(--t-exit)"></i>Escape edge</span>
+      </div>
+    </div>
+
+    <div class="info-col">
+      <div class="card unitcard">
+        <h2>Active unit</h2>
+        <div id="u-body"></div>
+      </div>
+      <div class="card">
+        <h2>Tile</h2>
+        <div class="tile-inspect" id="tile-body">Hover the grid.</div>
+      </div>
+      <div class="card">
+        <h2>Combat log</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <h2>What this prototype is for</h2>
+    <ul>
+      <li>It runs the data, not a copy of it: grid, terrain costs, stats, weapon
+        ranges and the scripted flee event come from <code>battle_north_meadow.json</code>,
+        <code>characters.json</code>, <code>classes.json</code>,
+        <code>weapons.json</code>, <code>skills.json</code> and <code>terrain.json</code>.</li>
+      <li>It validates the <em>design</em> before any engine code exists — whether the
+        numbers are fun, whether the grid reads, whether 7 enemies against 3 units is
+        the right first fight.</li>
+      <li>Damage has no random variation here, so the preview is exact and the
+        script's promise holds: Rowan's opening hit deals <b>8</b>. Criticals still fire.</li>
+      <li>It is <strong>not</strong> the game. No 3D, no animation, no camera work —
+        the real thing is Godot 4 with these rules in C#. Presentation is the part
+        this deliberately leaves out.</li>
+    </ul>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   DATA — transcribed from Content/Data. Keep in sync by hand;
+   the engine loads the JSON directly.
+   ============================================================ */
+const TERRAIN = {
+  g: { id:'grass',  name:'Grass',        cost:1, def:0, ev:0,  h:0, blocked:false },
+  p: { id:'path',   name:'Road',         cost:1, def:0, ev:0,  h:0, blocked:false },
+  t: { id:'forest', name:'Forest',       cost:2, def:2, ev:10, h:0, blocked:false },
+  r: { id:'rock',   name:'Rocks',        cost:2, def:1, ev:0,  h:0, blocked:false },
+  h: { id:'hill',   name:'Hill',         cost:2, def:1, ev:0,  h:1, blocked:false },
+  f: { id:'fence',  name:'Fence',        cost:0, def:0, ev:0,  h:0, blocked:true },
+  o: { id:'obstacle',name:'Cart',        cost:0, def:0, ev:0,  h:0, blocked:true },
+  x: { id:'exit',   name:'Escape edge',  cost:1, def:0, ev:0,  h:0, blocked:false },
+};
+
+const BATTLE = {
+  width: 12, height: 14,
+  // North row first, so y = height-1-rowIndex.
+  terrain: [
+    'xxxxxxxxxxxx',
+    'ggggtggggggg',
+    'gggghhhggggg',
+    'gggghhhgggrg',
+    'ggrggggggggg',
+    'gggggoogggtg',
+    'ggffgggggggg',
+    'ggffggggrggg',
+    'gggggggggggg',
+    'ggggggggggrg',
+    'gggggggggggg',
+    'gggggpgggggg',
+    'gggggpgggggg',
+    'gggggpgggggg',
+  ],
+};
+
+const WEAPONS = {
+  iron_sword:       { name:'Iron Sword',       atk:3, mag:0, range:1, crit:5 },
+  apprentice_staff: { name:'Apprentice Staff', atk:1, mag:2, range:1, crit:0 },
+  soldier_spear:    { name:"Soldier's Spear",  atk:2, mag:0, range:2, crit:3 },
+  goblin_cleaver:   { name:'Notched Cleaver',  atk:1, mag:0, range:1, crit:2 },
+  goblin_spear:     { name:'Crooked Spear',    atk:1, mag:0, range:2, crit:0 },
+  goblin_shortbow:  { name:'Crude Short Bow',  atk:1, mag:0, range:3, crit:2 },
+};
+
+const SPARK = { name:'Spark', cost:3, range:3, power:6, element:'lightning' };
+
+const ROSTER = {
+  rowan:  { name:'Rowan',  cls:'Swordsman',      side:'player', glyph:'R',
+            hp:22, mp:4,  atk:8, def:3, mag:2, res:4, agi:7, mov:6, weapon:'iron_sword' },
+  maeve:  { name:'Maeve',  cls:'Apprentice Mage',side:'player', glyph:'M',
+            hp:14, mp:12, atk:3, def:2, mag:4, res:7, agi:6, mov:5, weapon:'apprentice_staff',
+            skill:true },
+  tomas:  { name:'Tomas',  cls:'Soldier',        side:'player', glyph:'T',
+            hp:24, mp:2,  atk:7, def:8, mag:1, res:4, agi:5, mov:5, weapon:'soldier_spear' },
+  raider: { name:'Goblin Raider',   cls:'Raider',   side:'enemy', glyph:'g',
+            hp:12, mp:0, atk:6, def:3, mag:0, res:1, agi:7, mov:5,
+            weapon:'goblin_cleaver', ai:'melee' },
+  spear:  { name:'Goblin Spearman', cls:'Spearman', side:'enemy', glyph:'s',
+            hp:15, mp:0, atk:6, def:4, mag:0, res:1, agi:6, mov:5,
+            weapon:'goblin_spear', ai:'melee' },
+  archer: { name:'Goblin Archer',   cls:'Archer',   side:'enemy', glyph:'a',
+            hp:11, mp:0, atk:5, def:2, mag:0, res:1, agi:8, mov:5,
+            weapon:'goblin_shortbow', ai:'kite' },
+};
+
+const DEPLOY = [
+  { id:'rowan', type:'rowan', x:5, y:1 },
+  { id:'tomas', type:'tomas', x:4, y:1 },
+  { id:'maeve', type:'maeve', x:5, y:0 },
+  { id:'raider_1',   type:'raider', x:4, y:9 },
+  { id:'raider_2',   type:'raider', x:7, y:9 },
+  { id:'raider_3',   type:'raider', x:3, y:8 },
+  { id:'raider_4',   type:'raider', x:8, y:8 },
+  { id:'spearman_1', type:'spear',  x:3, y:10 },
+  { id:'spearman_2', type:'spear',  x:8, y:10 },
+  { id:'archer_1',   type:'archer', x:6, y:12 },
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const TILE = 40, PAD = 0;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let S;
+
+function tileAt(x, y) {
+  if (x < 0 || y < 0 || x >= BATTLE.width || y >= BATTLE.height) return null;
+  return TERRAIN[BATTLE.terrain[BATTLE.height - 1 - y][x]];
+}
+
+function restart() {
+  S = {
+    turn: 1,
+    units: DEPLOY.map(d => {
+      const t = ROSTER[d.type];
+      return { ...t, uid: d.id, x: d.x, y: d.y, hp: t.hp, maxHp: t.hp,
+               mp: t.mp, maxMp: t.mp, alive: true, moved: false, acted: false, fled: false };
+    }),
+    order: [], idx: 0, mode: null, reach: null, targets: null,
+    hover: null, preview: null, fx: [], shake: 0,
+    fled: false, over: null, objective: 'Defeat all enemies',
+  };
+  document.getElementById('verdict').classList.remove('show');
+  document.getElementById('log').innerHTML = '';
+  log('turn', 'Seven goblins. Rowan, Maeve and Tomas hold the trail.');
+  buildOrder();
+  beginTurn();
+}
+
+function buildOrder() {
+  S.order = S.units.filter(u => u.alive && !u.fled)
+                   .sort((a, b) => b.agi - a.agi || a.uid.localeCompare(b.uid))
+                   .map(u => u.uid);
+  S.idx = 0;
+}
+
+const cur = () => S.units.find(u => u.uid === S.order[S.idx]);
+const at = (x, y) => S.units.find(u => u.alive && !u.fled && u.x === x && u.y === y);
+const dist = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+
+/* ---- movement: Dijkstra over terrain cost ---- */
+function reachable(u) {
+  const key = (x, y) => y * BATTLE.width + x;
+  const cost = new Map([[key(u.x, u.y), 0]]);
+  const from = new Map();
+  const queue = [{ x: u.x, y: u.y, c: 0 }];
+  while (queue.length) {
+    queue.sort((a, b) => a.c - b.c);
+    const n = queue.shift();
+    if (n.c > (cost.get(key(n.x, n.y)) ?? Infinity)) continue;
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = n.x + dx, ny = n.y + dy;
+      const t = tileAt(nx, ny);
+      if (!t || t.blocked) continue;
+      const occupant = at(nx, ny);
+      if (occupant && occupant.uid !== u.uid) continue;
+      const c = n.c + t.cost;
+      if (c > u.mov) continue;
+      if (c < (cost.get(key(nx, ny)) ?? Infinity)) {
+        cost.set(key(nx, ny), c);
+        from.set(key(nx, ny), key(n.x, n.y));
+        queue.push({ x: nx, y: ny, c });
+      }
+    }
+  }
+  cost.delete(key(u.x, u.y));
+  return { cost, from };
+}
+
+function pathTo(u, tx, ty) {
+  if (!S.reach) return [];
+  const key = (x, y) => y * BATTLE.width + x;
+  const out = [];
+  let k = key(tx, ty);
+  const start = key(u.x, u.y);
+  let guard = 0;
+  while (k !== start && S.reach.from.has(k) && guard++ < 500) {
+    out.push([k % BATTLE.width, Math.floor(k / BATTLE.width)]);
+    k = S.reach.from.get(k);
+  }
+  return out.reverse();
+}
+
+/* ---- combat ---- */
+function terrainDef(u) { return tileAt(u.x, u.y)?.def ?? 0; }
+function height(u)     { return tileAt(u.x, u.y)?.h ?? 0; }
+
+function physical(a, d) {
+  const w = WEAPONS[a.weapon];
+  // Brief section 28: Attack + weapon - (Defense + terrain). Height gives a
+  // flat +1 so the rule stays understandable (section 25).
+  const hb = height(a) > height(d) ? 1 : 0;
+  return Math.max(1, a.atk + w.atk + hb - (d.def + terrainDef(d)));
+}
+
+function magical(a, d) {
+  const w = WEAPONS[a.weapon];
+  return Math.max(1, SPARK.power + a.mag + w.mag - d.res);
+}
+
+function inRange(a, d, r) { return dist(a, d) <= r; }
+
+function attackTargets(u, kind) {
+  const r = kind === 'skill' ? SPARK.range : WEAPONS[u.weapon].range;
+  return S.units.filter(t =>
+    t.alive && !t.fled && t.side !== u.side && inRange(u, t, r));
+}
+
+function resolve(a, d, kind) {
+  const w = WEAPONS[a.weapon];
+  let dmg = kind === 'skill' ? magical(a, d) : physical(a, d);
+  const critical = kind !== 'skill' && Math.random() * 100 < w.crit;
+  if (critical) dmg = Math.round(dmg * 1.5);
+  d.hp = Math.max(0, d.hp - dmg);
+
+  S.fx.push({ x: d.x, y: d.y, text: `-${dmg}`, crit: critical, life: 1 });
+  S.shake = critical ? 7 : 4;
+
+  if (kind === 'skill') {
+    a.mp -= SPARK.cost;
+    log('hit', `${a.name} casts Spark on ${d.name} for ${dmg}.`);
+  } else if (critical) {
+    log('crit', `Critical! ${a.name} hits ${d.name} for ${dmg}.`);
+  } else {
+    log('hit', `${a.name} hits ${d.name} for ${dmg}.`);
+  }
+
+  if (d.hp === 0) {
+    d.alive = false;
+    log('die', `${d.name} falls.`);
+  }
+}
+
+/* ---- turn flow ---- */
+function beginTurn() {
+  if (S.over) return;
+  if (S.idx >= S.order.length) { S.turn++; buildOrder(); }
+  let guard = 0;
+  while (guard++ < 40) {
+    const u = cur();
+    if (!u) { S.turn++; buildOrder(); continue; }
+    if (!u.alive || u.fled) { S.idx++; if (S.idx >= S.order.length) { S.turn++; buildOrder(); } continue; }
+    u.moved = false; u.acted = false; u.origin = { x: u.x, y: u.y };
+    if (u.side === 'enemy') { setTimeout(enemyTurn, 420); }
+    else { S.mode = 'move'; S.reach = reachable(u); S.targets = null; }
+    break;
+  }
+  render();
+}
+
+function endTurn() {
+  S.mode = null; S.reach = null; S.targets = null; S.preview = null;
+  checkEvents();
+  if (S.over) { render(); return; }
+  S.idx++;
+  beginTurn();
+}
+
+function checkEvents() {
+  const foes = S.units.filter(u => u.side === 'enemy' && u.alive && !u.fled);
+  // Scripted event from battle_north_meadow.json: at 3 or fewer enemies a
+  // spearman breaks north toward the Wall rather than fighting.
+  if (!S.fled && foes.length <= 3) {
+    const runner = foes.find(u => u.type !== 'archer' && u.cls === 'Spearman') ||
+                   foes.find(u => u.cls === 'Spearman');
+    if (runner) {
+      S.fled = true;
+      runner.fled = true;
+      log('event', `${runner.name} breaks and runs — north, toward the Wall. Not away from you.`);
+      log('event', `Maeve: "He's not running away from us. He's running toward the Wall."`);
+    }
+  }
+  const left = S.units.filter(u => u.side === 'enemy' && u.alive && !u.fled);
+  if (!left.length) { finish('Victory', 'North Meadow is clear. The cart is empty — and the tracks lead north.'); return; }
+  const rowan = S.units.find(u => u.uid === 'rowan');
+  if (!rowan.alive) { finish('Defeat', 'Rowan falls. The prologue cannot continue without him.'); return; }
+  if (!S.units.some(u => u.side === 'player' && u.alive)) finish('Defeat', 'The party is destroyed.');
+}
+
+function finish(title, text) {
+  S.over = title;
+  document.getElementById('v-title').textContent = title;
+  document.getElementById('v-text').textContent = text;
+  document.getElementById('verdict').classList.add('show');
+  log(title === 'Victory' ? 'event' : 'die', title + '.');
+}
+
+/* ---- enemy AI ---- */
+function enemyTurn() {
+  const u = cur();
+  if (!u || !u.alive || u.fled) { endTurn(); return; }
+  const foes = S.units.filter(t => t.alive && !t.fled && t.side === 'player');
+  if (!foes.length) { endTurn(); return; }
+
+  const r = WEAPONS[u.weapon].range;
+  const reach = reachable(u);
+
+  // Score every tile it can stand on, plus staying put.
+  const options = [{ x: u.x, y: u.y, c: 0 }];
+  for (const [k, c] of reach.cost) {
+    options.push({ x: k % BATTLE.width, y: Math.floor(k / BATTLE.width), c });
+  }
+
+  let best = null;
+  for (const o of options) {
+    const probe = { ...u, x: o.x, y: o.y };
+    const hittable = foes.filter(f => inRange(probe, f, r));
+    const nearest = Math.min(...foes.map(f => dist(probe, f)));
+    const t = tileAt(o.x, o.y);
+    let score = 0;
+    if (hittable.length) {
+      // aggressive_melee, per brief section 39: "understandable rather than
+      // sophisticated". It closes and hits whatever is nearest. It deliberately
+      // does NOT focus-fire the squishiest target.
+      //
+      // This was measured, not assumed. An earlier version added a bonus for
+      // lethal hits, which made seven goblins converge on Maeve and killed her
+      // in every one of three simulated runs. Same numbers, same map - the
+      // difference between a fair first fight and a guaranteed party wipe was
+      // entirely in how aggressive_melee was implemented. Smarter AI belongs in
+      // Chapter One, not in the tutorial battle.
+      score = 100;
+      if (u.ai === 'kite') score += t.h * 8 + (dist(probe, hittable[0]) === r ? 6 : 0);
+    } else {
+      score = 40 - nearest * 2;
+      if (u.ai === 'kite') score += t.h * 4;
+    }
+    score += t.def;
+    if (!best || score > best.score) best = { ...o, score, hittable };
+  }
+
+  if (best.x !== u.x || best.y !== u.y) { u.x = best.x; u.y = best.y; }
+  render();
+
+  setTimeout(() => {
+    const probe = u;
+    const hittable = foes.filter(f => f.alive && inRange(probe, f, r));
+    if (hittable.length) {
+      hittable.sort((a, b) => dist(u, a) - dist(u, b));   // nearest, not weakest
+      resolve(u, hittable[0], 'attack');
+    }
+    render();
+    setTimeout(endTurn, 260);
+  }, 300);
+}
+
+/* ---- player input ---- */
+function arm(mode) {
+  const u = cur();
+  if (!u || u.side !== 'player' || S.over) return;
+  if (mode === 'move' && u.moved) return;
+  if (mode === 'skill' && (!u.skill || u.mp < SPARK.cost)) return;
+  if ((mode === 'attack' || mode === 'skill') && u.acted) return;
+  S.mode = mode;
+  S.preview = null;
+  if (mode === 'move') { S.reach = reachable(u); S.targets = null; }
+  else { S.reach = null; S.targets = attackTargets(u, mode); }
+  render();
+}
+
+function doWait() {
+  const u = cur();
+  if (!u || u.side !== 'player' || S.over) return;
+  log('turn', `${u.name} holds position.`);
+  endTurn();
+}
+
+function undoMove() {
+  const u = cur();
+  if (!u || u.side !== 'player' || !u.moved || u.acted || S.over) return;
+  u.x = u.origin.x; u.y = u.origin.y; u.moved = false;
+  arm('move');
+}
+
+cv.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  const sx = cv.width / rect.width;
+  const x = Math.floor((e.clientX - rect.left) * sx / TILE);
+  const y = BATTLE.height - 1 - Math.floor((e.clientY - rect.top) * sx / TILE);
+  S.hover = tileAt(x, y) ? { x, y } : null;
+
+  S.preview = null;
+  const u = cur();
+  if (u && u.side === 'player' && S.targets && S.hover) {
+    const t = S.targets.find(t => t.x === S.hover.x && t.y === S.hover.y);
+    if (t) {
+      const dmg = S.mode === 'skill' ? magical(u, t) : physical(u, t);
+      S.preview = { target: t, dmg, kind: S.mode };
+    }
+  }
+  render();
+});
+cv.addEventListener('mouseleave', () => { S.hover = null; S.preview = null; render(); });
+
+cv.addEventListener('click', e => {
+  const u = cur();
+  if (!u || u.side !== 'player' || S.over) return;
+  const rect = cv.getBoundingClientRect();
+  const sx = cv.width / rect.width;
+  const x = Math.floor((e.clientX - rect.left) * sx / TILE);
+  const y = BATTLE.height - 1 - Math.floor((e.clientY - rect.top) * sx / TILE);
+  if (!tileAt(x, y)) return;
+
+  if (S.mode === 'move' && S.reach) {
+    const k = y * BATTLE.width + x;
+    if (S.reach.cost.has(k)) {
+      u.x = x; u.y = y; u.moved = true;
+      S.mode = null; S.reach = null;
+      // Auto-offer attack if anything is now in reach.
+      const t = attackTargets(u, 'attack');
+      if (t.length && !u.acted) arm('attack'); else render();
+      return;
+    }
+  }
+
+  if (S.targets) {
+    const t = S.targets.find(t => t.x === x && t.y === y);
+    if (t) {
+      resolve(u, t, S.mode);
+      u.acted = true;
+      render();
+      setTimeout(endTurn, 320);
+      return;
+    }
+  }
+  render();
+});
+
+document.addEventListener('keydown', e => {
+  const map = { m:'move', a:'attack', s:'skill' };
+  if (map[e.key]) { arm(map[e.key]); e.preventDefault(); }
+  if (e.key === ' ') { doWait(); e.preventDefault(); }
+  if (e.key === 'u') { undoMove(); e.preventDefault(); }
+});
+
+/* ---- log ---- */
+function log(cls, text) {
+  const el = document.getElementById('log');
+  const p = document.createElement('p');
+  p.className = cls; p.textContent = text;
+  el.prepend(p);
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const TC = {
+  grass: '--t-grass', path: '--t-path', forest: '--t-forest', rock: '--t-rock',
+  hill: '--t-hill', fence: '--t-block', obstacle: '--t-block', exit: '--t-exit',
+};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function render() {
+  const sx = S.shake ? (Math.random() - .5) * S.shake : 0;
+  const sy = S.shake ? (Math.random() - .5) * S.shake : 0;
+  if (S.shake) S.shake *= 0.72;
+  if (S.shake < 0.4) S.shake = 0;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.translate(sx, sy);
+
+  const u = cur();
+
+  // tiles
+  for (let y = 0; y < BATTLE.height; y++) {
+    for (let x = 0; x < BATTLE.width; x++) {
+      const t = tileAt(x, y);
+      const px = x * TILE, py = (BATTLE.height - 1 - y) * TILE;
+      ctx.fillStyle = css(TC[t.id]);
+      ctx.fillRect(px, py, TILE, TILE);
+      // subtle checker so the grid reads without hard lines
+      if ((x + y) % 2 === 0) {
+        ctx.fillStyle = 'rgba(255,255,255,.045)';
+        ctx.fillRect(px, py, TILE, TILE);
+      }
+      if (t.h > 0) {
+        ctx.fillStyle = 'rgba(255,255,255,.10)';
+        ctx.fillRect(px, py, TILE, 3);
+      }
+      ctx.strokeStyle = 'rgba(0,0,0,.16)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px + .5, py + .5, TILE - 1, TILE - 1);
+    }
+  }
+
+  // movement overlay. A light wash plus an inner outline rather than a heavy
+  // fill: a 34% blue over green turned everything teal and made terrain
+  // unreadable, which defeats the point of colour-coded terrain.
+  if (S.reach && u) {
+    for (const k of S.reach.cost.keys()) {
+      const x = k % BATTLE.width, y = Math.floor(k / BATTLE.width);
+      const px = x * TILE, py = (BATTLE.height - 1 - y) * TILE;
+      ctx.fillStyle = 'rgba(120,175,255,.16)';
+      ctx.fillRect(px, py, TILE, TILE);
+      ctx.strokeStyle = 'rgba(150,195,255,.55)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px + 2.5, py + 2.5, TILE - 5, TILE - 5);
+    }
+    // path preview
+    if (S.hover && S.reach.cost.has(S.hover.y * BATTLE.width + S.hover.x)) {
+      const path = pathTo(u, S.hover.x, S.hover.y);
+      ctx.strokeStyle = css('--gold'); ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(u.x * TILE + TILE / 2, (BATTLE.height - 1 - u.y) * TILE + TILE / 2);
+      for (const [px, py] of path) {
+        ctx.lineTo(px * TILE + TILE / 2, (BATTLE.height - 1 - py) * TILE + TILE / 2);
+      }
+      ctx.stroke();
+    }
+  }
+
+  // attack targets
+  if (S.targets) {
+    for (const t of S.targets) {
+      ctx.fillStyle = 'rgba(196,64,74,.32)';
+      ctx.fillRect(t.x * TILE, (BATTLE.height - 1 - t.y) * TILE, TILE, TILE);
+      ctx.strokeStyle = css('--crit'); ctx.lineWidth = 2;
+      ctx.strokeRect(t.x * TILE + 1, (BATTLE.height - 1 - t.y) * TILE + 1, TILE - 2, TILE - 2);
+    }
+  }
+
+  // hover
+  if (S.hover) {
+    ctx.strokeStyle = css('--gold'); ctx.lineWidth = 2;
+    ctx.strokeRect(S.hover.x * TILE + 1, (BATTLE.height - 1 - S.hover.y) * TILE + 1, TILE - 2, TILE - 2);
+  }
+
+  // units
+  for (const unit of S.units) {
+    if (!unit.alive || unit.fled) continue;
+    const px = unit.x * TILE, py = (BATTLE.height - 1 - unit.y) * TILE;
+    const isCur = u && unit.uid === u.uid;
+    const colour = unit.side === 'player' ? css('--player') : css('--enemy');
+
+    if (isCur) {
+      ctx.strokeStyle = css('--gold'); ctx.lineWidth = 3;
+      ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4);
+    }
+    ctx.beginPath();
+    ctx.arc(px + TILE / 2, py + TILE / 2 - 2, TILE * .30, 0, Math.PI * 2);
+    ctx.fillStyle = colour; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 15px ui-sans-serif, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(unit.glyph, px + TILE / 2, py + TILE / 2 - 1);
+
+    // hp bar
+    const bw = TILE - 12, frac = unit.hp / unit.maxHp;
+    ctx.fillStyle = 'rgba(0,0,0,.5)';
+    ctx.fillRect(px + 6, py + TILE - 8, bw, 4);
+    ctx.fillStyle = frac > .5 ? css('--good') : frac > .25 ? css('--warn') : css('--crit');
+    ctx.fillRect(px + 6, py + TILE - 8, bw * frac, 4);
+  }
+
+  // floating damage
+  S.fx = S.fx.filter(f => f.life > 0);
+  for (const f of S.fx) {
+    const px = f.x * TILE + TILE / 2;
+    const py = (BATTLE.height - 1 - f.y) * TILE + TILE / 2 - (1 - f.life) * 26;
+    ctx.globalAlpha = Math.min(1, f.life * 1.6);
+    ctx.fillStyle = f.crit ? css('--crit') : '#fff';
+    ctx.font = `700 ${f.crit ? 22 : 18}px ui-monospace, Menlo, monospace`;
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
+    ctx.strokeText(f.text, px, py); ctx.fillText(f.text, px, py);
+    ctx.globalAlpha = 1;
+    f.life -= 0.035;
+  }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  paintPanels();
+  if (S.fx.length || S.shake) requestAnimationFrame(render);
+}
+
+function paintPanels() {
+  const u = cur();
+  const foes = S.units.filter(x => x.side === 'enemy' && x.alive && !x.fled).length;
+  const party = S.units.filter(x => x.side === 'player' && x.alive).length;
+  document.getElementById('s-turn').textContent = S.turn;
+  document.getElementById('s-party').textContent = party;
+  document.getElementById('s-foes').textContent = foes;
+  document.getElementById('s-objective').textContent = S.objective;
+
+  // queue
+  const q = document.getElementById('queue');
+  q.innerHTML = '';
+  S.order.forEach((uid, i) => {
+    const unit = S.units.find(x => x.uid === uid);
+    const row = document.createElement('div');
+    row.className = 'qrow' + (i === S.idx ? ' now' : '') +
+                    (!unit.alive || unit.fled ? ' dead' : '');
+    const colour = unit.side === 'player' ? 'var(--player)' : 'var(--enemy)';
+    row.innerHTML =
+      `<span class="n">${i + 1}</span>` +
+      `<span><i class="dot" style="background:${colour}"></i>${unit.name}</span>` +
+      `<span class="ag">${unit.agi}</span>`;
+    q.appendChild(row);
+  });
+
+  // active unit
+  const body = document.getElementById('u-body');
+  if (!u) { body.textContent = '—'; return; }
+  const w = WEAPONS[u.weapon];
+  let html =
+    `<div class="name">${u.name}</div><div class="cls">${u.cls} &middot; ${w.name}</div>` +
+    `<div class="bar"><i style="width:${u.hp / u.maxHp * 100}%"></i></div>` +
+    `<div class="barlab"><span>HP</span><span>${u.hp} / ${u.maxHp}</span></div>`;
+  if (u.maxMp > 0) {
+    html += `<div class="bar mp"><i style="width:${u.mp / u.maxMp * 100}%"></i></div>` +
+            `<div class="barlab"><span>MP</span><span>${u.mp} / ${u.maxMp}</span></div>`;
+  }
+  html += `<div class="stats">
+      <div>ATK<b>${u.atk}</b></div><div>DEF<b>${u.def}</b></div>
+      <div>MAG<b>${u.mag}</b></div><div>RES<b>${u.res}</b></div>
+      <div>AGI<b>${u.agi}</b></div><div>MOV<b>${u.mov}</b></div>
+      <div>RNG<b>${w.range}</b></div><div>CRT<b>${w.crit}%</b></div>
+    </div>`;
+
+  if (S.preview) {
+    const p = S.preview;
+    const lethal = p.dmg >= p.target.hp;
+    html += `<div class="preview">
+        <div>${p.kind === 'skill' ? 'Spark on' : 'Attack'} <b>${p.target.name}</b></div>
+        <div class="big">${p.dmg}</div>
+        <div class="note">${p.target.hp} HP &rarr; ${Math.max(0, p.target.hp - p.dmg)}` +
+        (lethal ? ' &middot; <b>lethal</b>' : '') +
+        (terrainDef(p.target) ? ` &middot; +${terrainDef(p.target)} terrain defence` : '') +
+        (height(u) > height(p.target) ? ' &middot; +1 height' : '') +
+      `</div></div>`;
+  }
+  body.innerHTML = html;
+
+  const isPlayer = u.side === 'player' && !S.over;
+  document.getElementById('b-move').disabled = !isPlayer || u.moved;
+  document.getElementById('b-attack').disabled = !isPlayer || u.acted || !attackTargets(u, 'attack').length;
+  document.getElementById('b-skill').disabled = !isPlayer || u.acted || !u.skill || u.mp < SPARK.cost;
+  document.getElementById('b-wait').disabled = !isPlayer;
+  document.getElementById('b-undo').disabled = !isPlayer || !u.moved || u.acted;
+  for (const [id, mode] of [['b-move','move'],['b-attack','attack'],['b-skill','skill']]) {
+    document.getElementById(id).classList.toggle('armed', S.mode === mode && mode !== 'move');
+  }
+
+  // tile inspector
+  const ti = document.getElementById('tile-body');
+  if (S.hover) {
+    const t = tileAt(S.hover.x, S.hover.y);
+    const occ = at(S.hover.x, S.hover.y);
+    const k = S.hover.y * BATTLE.width + S.hover.x;
+    const c = S.reach?.cost.get(k);
+    ti.innerHTML =
+      `<b>[${S.hover.x}, ${S.hover.y}]</b> ${t.name}<br>` +
+      `move cost ${t.blocked ? '&mdash; blocked' : t.cost}` +
+      (t.def ? ` &middot; +${t.def} def` : '') +
+      (t.ev ? ` &middot; +${t.ev}% eva` : '') +
+      (t.h ? ` &middot; height ${t.h}` : '') + '<br>' +
+      (c !== undefined ? `reachable, ${c} of ${cur()?.mov} MP<br>` : '') +
+      (occ ? `<b>${occ.name}</b> &middot; ${occ.hp}/${occ.maxHp} HP` : 'empty');
+  } else {
+    ti.textContent = 'Hover the grid.';
+  }
+}
+
+restart();
+</script>

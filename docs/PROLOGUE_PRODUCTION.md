@@ -21,31 +21,36 @@ document is what gets built and in what order.
 
 ---
 
-## A discrepancy the director should settle
+## Source of truth: the script wins
 
-**Brief section 69** describes the first vertical slice as roughly 15 minutes in
-Greenvale, with a party of Rowan, Maeve, a knight-type ally and an archer-type
-ally, 6–8 enemies, and a **goblin commander** as the boss.
+**Decided by the director, 2026-08-13.** Where the master brief and the prologue
+script disagree about the first hour, **the script is canonical.** Build what the
+script says.
 
-**The prologue script** describes 45–60 minutes, with a party of Rowan, Maeve and
-**Tomas** (a spear soldier, not a knight and not an archer), two battles, and the
-**Wallstalker** as the boss.
+This rule exists because the two documents genuinely conflict, and a future
+session reading brief section 69 alone would build the wrong thing:
 
-The data and catalogs follow the script, on the grounds that it is the more
-specific and more recent document, and that its ending — Rowan exiled — is the
-brief's own section 4 opening. Three consequences worth confirming:
+| | Brief section 69 | Prologue script | Built |
+| --- | --- | --- | --- |
+| Duration | ~15 minutes | 45–60 minutes | Script |
+| Party | Rowan, Maeve, knight ally, archer ally | Rowan, Maeve, Tomas (spear) | Script |
+| Battles | One | Two | Script |
+| Boss | Goblin commander | **Wallstalker** | Script |
+| Enemies | 6–8 | 7 in battle 01 | Both agree |
 
-1. **There is no archer in the prologue party.** The archer-type ally from section
-   69 does not appear. `hero_archer_ally` has been dropped from the catalogs.
-2. **The goblin commander is unused.** The prologue's boss is the Wallstalker.
-   The goblin commander may still belong somewhere in Act I; it is currently not
-   defined anywhere.
-3. **The vertical slice is now the whole prologue**, not a 15-minute subset. That
-   is a larger milestone 10, and it is also a far better trailer.
+Consequences, now settled rather than open:
 
-If the intent was for section 69's slice to be built *first* as a smaller
-milestone, say so and battle 01 alone becomes the target — it is already
-self-contained.
+1. **No archer in the prologue party.** `hero_archer_ally` is not in any catalog
+   and should not be added.
+2. **No goblin commander.** The prologue's boss is the Wallstalker. If a goblin
+   commander is wanted later in Act I, it is new work, not prologue work.
+3. **The vertical slice is the whole prologue**, not a 15-minute subset. Milestone
+   10 is larger than brief section 69 implied, and it is a far better trailer.
+
+Everywhere else the two documents agree, and where the script is silent the brief
+still governs — polygon budgets, texture strategy, the turn system, the shared
+skeleton, the save format. The precedence rule is scoped to the prologue's
+content, not to the technical standards.
 
 ---
 

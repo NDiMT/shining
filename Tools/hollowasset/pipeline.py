@@ -346,10 +346,21 @@ def _enforce_triangle_budget(
     if measured.triangles <= soft_high:
         return input_task_id
 
-    log(f"  {measured.triangles:,} tris over the {soft_high:,} target, remeshing "
-        f"to {job.budget.tri_target:,}")
+    # Remesh to the TOP of the soft range, not the midpoint. Measured on a real
+    # barrel: the generator produced a clean 6,392-triangle mesh with defined
+    # staves and iron bands, and decimating it to the 550 midpoint destroyed both.
+    # Every triangle inside the budget is a triangle worth keeping.
+    target = soft_high
+    ratio = measured.triangles / max(target, 1)
+    log(f"  {measured.triangles:,} tris over the {soft_high:,} target, remeshing to {target:,}")
+    if ratio > 4:
+        log(
+            f"  WARNING: that is a {ratio:.1f}x reduction. Decimation this aggressive "
+            "usually erases the features the prompt asked for. Review the preview "
+            "before accepting, and consider whether this class's budget is too tight."
+        )
     try:
-        remesh_id = client.remesh(input_task_id, target_polycount=job.budget.tri_target)
+        remesh_id = client.remesh(input_task_id, target_polycount=target)
         result.task_ids.append(remesh_id)
         task = client.wait(
             meshy.REMESH, remesh_id, poll_seconds=poll_seconds, on_progress=_progress(log)

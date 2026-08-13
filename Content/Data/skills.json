@@ -18,7 +18,7 @@
       "effect": "fx_spark",
       "icon": "Content/UI/Icons/skill_spark.png",
       "description": "A short, loud bolt. Maeve is proud of it.",
-      "notes": "Power 6 plus Maeve's magic 9 minus a Goblin Raider's resistance 1 kills a 12 HP raider in exactly two casts. Brief section 60 wants the VFX simple but punchy; the script says the same."
+      "notes": "Damage is power + magic - resistance, per brief section 28's formula. Power 6 plus Maeve's magic 4 plus her staff's +2 minus a Goblin Raider's resistance 1 is 11 against 12 HP: two casts, matching Rowan's two hits. Brief section 60 wants the VFX simple but punchy; the script says the same."
     }
   ]
 }
