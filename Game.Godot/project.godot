@@ -7,8 +7,9 @@
 ; Godot minor releases has broken projects before.
 ;
 ; Everything that can be verified without the engine already is: Game.Rules
-; builds and its 61 tests pass, and the CI job fails if this project's logic
-; leaks into it.
+; builds and its 100 tests pass, and the CI job fails if this project's logic
+; leaks into it. docs/GODOT_SCENE.md draws that line explicitly and lists what
+; still needs the editor opened once.
 
 config_version=5
 
@@ -16,7 +17,10 @@ config_version=5
 
 config/name="Hollow Crown"
 config/description="A low-poly 3D fantasy tactical RPG."
-run/main_scene="res://Scenes/Main.tscn"
+; The battle scene. Scenes/Main.tscn is still here as the data smoke test — it
+; loads Content/Data through Game.Rules and prints what it found, which is the
+; first thing to run if the battle scene comes up empty.
+run/main_scene="res://Scenes/Battle.tscn"
 config/features=PackedStringArray("4.3", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -42,7 +46,13 @@ renderer/rendering_method="forward_plus"
 ; fallback renderer for machines that cannot run Forward+.
 renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
-anti_aliasing/quality/msaa_3d=1
+; 4x MSAA rather than 2x. An inverted-hull outline (ANIME_DIRECTION rule 2) is a
+; thin high-contrast edge across the whole frame, which is the worst case for
+; aliasing and the case MSAA handles best. Measure the cost against the 1080p60
+; target before keeping it.
+anti_aliasing/quality/msaa_3d=2
+; Nearest-neighbour texture filtering is already set for canvas items above; 3D
+; keeps mipmaps, because a flat-colour texture minified without them shimmers.
 
 [physics]
 

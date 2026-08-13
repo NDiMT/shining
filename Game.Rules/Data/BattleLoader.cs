@@ -17,6 +17,7 @@ public sealed record BattleDefinition
         Array.Empty<ObjectiveDefinition>();
     public IReadOnlyList<Battle.ScriptedEvent> Events { get; init; } =
         Array.Empty<Battle.ScriptedEvent>();
+    public IReadOnlyList<PropPlacement> Props { get; init; } = Array.Empty<PropPlacement>();
     public IReadOnlyList<string> NonLethalSides { get; init; } = Array.Empty<string>();
     public string? Scene { get; init; }
     public string? Music { get; init; }
@@ -34,6 +35,43 @@ public sealed record ObjectiveDefinition
     public string? Description { get; init; }
     public string? UnitId { get; init; }
     public int Turns { get; init; }
+}
+
+/// <summary>
+/// One piece of set dressing placed on the battlefield: a cart, a tree, a fence.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Props carry no rules. A prop that blocks movement blocks it because the tile
+/// underneath it is <c>obstacle</c> or <c>fence</c> in the terrain grid, never
+/// because a model is standing there — which is why the North Meadow cart sits on
+/// the two 'o' tiles and the fence sections on 'f' tiles. Keeping the two
+/// independent means a missing GLB changes how the battle looks and never how it
+/// plays, and it is why the whole scene can be built before the art exists.
+/// </para>
+/// <para>
+/// It is parsed here rather than in the presentation layer because it is content,
+/// it is validated with the rest of the battle file, and a prop off the edge of
+/// the grid should fail the same load that a unit off the edge fails.
+/// </para>
+/// </remarks>
+public sealed record PropPlacement
+{
+    /// <summary>Catalog asset id, without a path or extension: <c>veg_tree_oak_a</c>.</summary>
+    public required string AssetId { get; init; }
+
+    public required Coord Position { get; init; }
+
+    /// <summary>
+    /// Degrees clockwise from north, seen from above — the sense a person editing a
+    /// map thinks in. 0 leaves the model in its authored orientation.
+    /// </summary>
+    public double RotationDegrees { get; init; }
+
+    /// <summary>Uniform scale. Non-uniform scale is not offered: it breaks the outline hull.</summary>
+    public double Scale { get; init; } = 1.0;
+
+    public string? Notes { get; init; }
 }
 
 /// <summary>
@@ -122,6 +160,7 @@ public static class BattleLoader
                 })
                 .ToList(),
             Events = ParseEvents(json.Events, path),
+            Props = ParseProps(json.Props, grid, path),
             NonLethalSides = (IReadOnlyList<string>?)json.Rules?.NonLethalSides
                              ?? Array.Empty<string>(),
             Scene = json.Scene,
@@ -130,6 +169,59 @@ public static class BattleLoader
             XpPerUnit = json.Rewards?.XpPerUnit ?? 0,
             Gold = json.Rewards?.Gold ?? 0,
         };
+    }
+
+    /// <summary>
+    /// Turn the JSON prop list into placements the scene builder can instance.
+    /// </summary>
+    /// <remarks>
+    /// Strict about position, permissive about the asset: whether
+    /// <c>veg_tree_oak_b</c> has been generated yet is not a content error, because
+    /// most of the catalog has not been. A prop off the edge of the grid is,
+    /// because it means the file was edited against the wrong axis.
+    /// </remarks>
+    private static IReadOnlyList<PropPlacement> ParseProps(
+        List<PropJson>? source, BattleGrid grid, string path)
+    {
+        var result = new List<PropPlacement>();
+        foreach (PropJson json in source ?? new List<PropJson>())
+        {
+            if (string.IsNullOrWhiteSpace(json.Asset))
+            {
+                throw new ContentException($"{path}: a prop names no asset");
+            }
+
+            if (json.Position is null || json.Position.Count != 2)
+            {
+                throw new ContentException($"{path}: prop '{json.Asset}' has no [x, y] position");
+            }
+
+            var at = new Coord(json.Position[0], json.Position[1]);
+            if (!grid.Contains(at))
+            {
+                throw new ContentException(
+                    $"{path}: prop '{json.Asset}' sits at {at}, outside the " +
+                    $"{grid.Width}x{grid.Height} grid");
+            }
+
+            double scale = json.Scale ?? 1.0;
+            if (scale <= 0.0)
+            {
+                throw new ContentException(
+                    $"{path}: prop '{json.Asset}' has scale {scale}, which would make it invisible");
+            }
+
+            result.Add(new PropPlacement
+            {
+                AssetId = json.Asset!,
+                Position = at,
+                RotationDegrees = json.Rotation,
+                Scale = scale,
+                Notes = json.Notes,
+            });
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -304,6 +396,18 @@ internal sealed class BattleJson
     [JsonPropertyName("on_victory")] public OnVictoryJson? OnVictory { get; set; }
     [JsonPropertyName("defeat_conditions")] public List<ObjectiveJson>? DefeatConditions { get; set; }
     public List<EventJson>? Events { get; set; }
+    public List<PropJson>? Props { get; set; }
+}
+
+internal sealed class PropJson
+{
+    public string? Asset { get; set; }
+    public List<int>? Position { get; set; }
+    public double Rotation { get; set; }
+
+    /// <summary>Nullable so an absent scale defaults to 1 rather than to 0.</summary>
+    public double? Scale { get; set; }
+    public string? Notes { get; set; }
 }
 
 internal sealed class EventJson

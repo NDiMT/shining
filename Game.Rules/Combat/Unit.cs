@@ -77,6 +77,26 @@ public sealed class Unit
     public int ArmourDefense { get; set; }
     public DirectionalArmour Armour { get; init; } = DirectionalArmour.None;
     public IReadOnlyList<Skill> Skills { get; init; } = Array.Empty<Skill>();
+
+    /// <summary>The class it was spawned from. Empty for units built in a test.</summary>
+    public string ClassId { get; init; } = string.Empty;
+
+    /// <summary>Display name of the class, for the battle HUD.</summary>
+    public string ClassName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Repository-relative path to the unit's model, straight from characters.json.
+    /// </summary>
+    /// <remarks>
+    /// A path, not a loaded thing: the rules layer never opens it. It is carried
+    /// here so the presentation layer can ask a unit what it looks like without
+    /// reaching back into <see cref="Data.ContentDatabase"/> and re-deriving which
+    /// definition spawned it. Most of the catalog is not generated yet, so the
+    /// file at the end of this path very often does not exist, and the scene
+    /// builder is expected to cope rather than the loader to complain.
+    /// </remarks>
+    public string? ModelPath { get; init; }
+
     public string MovementType { get; init; } = "ground";
     public string AiBehaviour { get; init; } = "aggressive_melee";
     public bool IsCommander { get; init; }

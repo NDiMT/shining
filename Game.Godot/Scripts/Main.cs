@@ -28,7 +28,7 @@ public partial class Main : Node
 
         try
         {
-            string dataRoot = ResolveDataRoot();
+            string dataRoot = ContentPaths.Data;
             Report($"[b]Content root[/b]  {dataRoot}");
 
             ContentDatabase content = ContentDatabase.Load(dataRoot);
@@ -62,7 +62,7 @@ public partial class Main : Node
             Report($"\nRowan would deal [b]{forecast.Damage}[/b] to a Goblin Raider " +
                    "— the number the prologue script states.");
         }
-        catch (ContentException exception)
+        catch (Exception exception) when (exception is ContentException or DirectoryNotFoundException)
         {
             // Brief section 75: development builds fail loudly and informatively.
             Report($"\n[color=red][b]Content error[/b]\n{exception.Message}[/color]");
@@ -76,33 +76,4 @@ public partial class Main : Node
         _output.AppendText(line + "\n");
     }
 
-    /// <summary>
-    /// Find Content/Data by walking up from the project directory.
-    /// </summary>
-    /// <remarks>
-    /// Content/Data sits outside the Godot project on purpose (see
-    /// ARCHITECTURE.md): it is the game's content contract, edited by humans and
-    /// AI sessions and validated offline, not an engine resource. That keeps hot
-    /// reload trivial and stops Godot's importer from owning the game's data.
-    ///
-    /// Exported builds will need the folder shipped alongside the executable;
-    /// that packaging step arrives with milestone 10.
-    /// </remarks>
-    private static string ResolveDataRoot()
-    {
-        string start = ProjectSettings.GlobalizePath("res://");
-        var directory = new DirectoryInfo(start);
-        while (directory is not null)
-        {
-            string candidate = Path.Combine(directory.FullName, "Content", "Data");
-            if (Directory.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new ContentException($"could not find Content/Data above {start}");
-    }
 }

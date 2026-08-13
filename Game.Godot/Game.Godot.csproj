@@ -10,13 +10,22 @@
     NOT YET BUILT: Godot's .NET SDK package is only resolvable with Godot
     installed, which was not possible in the environment this was authored in.
     Game.Rules and its tests build and pass independently, which is exactly the
-    property the split was chosen for.
+    property the split was chosen for. It is also why this project is absent from
+    HollowCrown.sln: adding it would make `dotnet build` and CI depend on an
+    engine install, and the whole point of the boundary is that they do not.
   -->
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <Nullable>enable</Nullable>
+    <!--
+      Stated rather than inherited. The scripts use System.IO, System.Linq and
+      System.Collections.Generic without using directives, matching the style of
+      Game.Rules; relying on an SDK default for that is a silent dependency on
+      which Godot.NET.Sdk version happens to be installed.
+    -->
+    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>HollowCrown.Presentation</RootNamespace>
   </PropertyGroup>
 

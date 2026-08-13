@@ -177,6 +177,7 @@ public sealed class ContentDatabase
                     Movement = stats.Movement > 0 ? stats.Movement : classes[c.Class].Movement,
                 },
                 SkillIds = (IReadOnlyList<string>?)c.Skills ?? Array.Empty<string>(),
+                ModelPath = c.Model,
                 WeaponId = c.StartingEquipment?.Weapon,
                 ArmourId = c.StartingEquipment?.Armour,
                 Ai = c.Ai ?? "aggressive_melee",
@@ -218,6 +219,9 @@ public sealed class ContentDatabase
             Base = definition.Stats,
             Armour = klass.Armour,
             Skills = skills,
+            ClassId = klass.Id,
+            ClassName = klass.Name,
+            ModelPath = definition.ModelPath,
             MovementType = klass.MovementType,
             AiBehaviour = definition.Ai,
             IsBoss = definition.IsBoss,
@@ -305,6 +309,9 @@ public sealed record CharacterDefinition
     public int Level { get; init; } = 1;
     public required Stats Stats { get; init; }
     public IReadOnlyList<string> SkillIds { get; init; } = Array.Empty<string>();
+
+    /// <summary>Repository-relative model path, as written in characters.json.</summary>
+    public string? ModelPath { get; init; }
     public string? WeaponId { get; init; }
     public string? ArmourId { get; init; }
     public string Ai { get; init; } = "aggressive_melee";
@@ -372,6 +379,7 @@ internal sealed class CharacterJson
     public string? Class { get; set; }
     public int Level { get; set; } = 1;
     public StatsJson? BaseStats { get; set; }
+    public string? Model { get; set; }
     public List<string>? Skills { get; set; }
     public EquipmentJson? StartingEquipment { get; set; }
     public string? Ai { get; set; }

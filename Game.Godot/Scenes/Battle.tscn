@@ -1,0 +1,79 @@
+; Hollow Crown — the North Meadow battle.
+;
+; Deliberately almost empty. Everything on the battlefield — terrain, elevation,
+; props, units, overlays, HUD — is built at runtime from
+; Content/Data/Battles/battle_north_meadow.json by Scripts/Battle/BattleScene.cs.
+; What lives here is only what the data cannot decide: the lighting rig, the
+; camera, and the environment.
+;
+; A hand-placed battlefield would have to be rebuilt every time a designer moved a
+; tree, and battle 02 would be a second scene rather than a second file.
+;
+; NOT YET OPENED IN THE EDITOR. See docs/GODOT_SCENE.md.
+
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Battle/BattleScene.cs" id="1_battle"]
+[ext_resource type="Script" path="res://Scripts/Battle/TacticalCamera.cs" id="2_camera"]
+[ext_resource type="Script" path="res://Scripts/UI/BattleHud.cs" id="3_hud"]
+
+[sub_resource type="Environment" id="Environment_battle"]
+; Flat sky colour, no sky shader. ANIME_DIRECTION rule 1 is about a hard
+; terminator; a physical sky would light the shadow side with a smooth gradient
+; and put back exactly what the toon shader takes out.
+background_mode = 1
+background_color = Color(0.55, 0.72, 0.85, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.70, 0.88, 1)
+; Low on purpose. Ambient is a smooth term by definition, so a large one softens
+; the terminator; this is only enough to keep the shadow band off pure black.
+ambient_light_energy = 0.30
+; Everything below is a screen-space effect that produces a gradient. All of them
+; are named in the spec's ban table, directly or by implication.
+ssao_enabled = false
+ssil_enabled = false
+sdfgi_enabled = false
+glow_enabled = false
+fog_enabled = false
+volumetric_fog_enabled = false
+
+[node name="Battle" type="Node3D"]
+script = ExtResource("1_battle")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_battle")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+; One light, and only one. Every additional directional light adds a second
+; terminator, which is the usual way a cel-shaded scene stops reading as one.
+; Sun to the south-east and 48 degrees up, so the terminator falls across units
+; roughly along the camera's own axis and silhouettes stay legible.
+transform = Transform3D(0.7433, 0, -0.669, -0.498, 0.6677, -0.5534, 0.4437, 0.7395, 0.493, 0, 12, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.0
+; No specular: a highlight is a smooth gradient, and the toon shader writes
+; nothing to SPECULAR_LIGHT anyway. This keeps the two in agreement.
+light_specular = 0.0
+shadow_enabled = true
+; Zero blur and a single orthogonal split: the field is 24 x 28 m, so one split
+; covers it at full resolution, and a soft shadow edge next to a hard terminator
+; looks like a bug rather than like depth.
+shadow_blur = 0.0
+directional_shadow_mode = 0
+directional_shadow_max_distance = 90.0
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2_camera")
+
+[node name="Camera" type="Camera3D" parent="CameraRig"]
+; Perspective, not orthographic: the outline shader's width term uses
+; PROJECTION_MATRIX[1][1] as cot(fov/2), which is a perspective identity.
+; A narrow field of view keeps the tactical read flat without the outline
+; thickness varying much across the grid.
+current = true
+fov = 40.0
+near = 0.5
+far = 400.0
+
+[node name="Hud" type="CanvasLayer" parent="."]
+script = ExtResource("3_hud")
