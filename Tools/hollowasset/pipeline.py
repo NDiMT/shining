@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from . import animations as anim
-from . import budgets, glb, meshy, postprocess, provenance, style, validate
+from . import budgets, glb, meshy, postprocess, provenance, strip, style, validate
 
 #: Rough credit cost per stage, used only for the pre-flight estimate. The
 #: authoritative number is ``consumed_credits`` on each finished task, which is
@@ -55,6 +55,10 @@ class Job:
     #: Opt in to API decimation. Off by default; see _enforce_triangle_budget
     #: for the measurements behind that default.
     remesh: bool = False
+    #: How many mesh islands this asset legitimately has. None runs the safe
+    #: automatic rule; a number switches on the manual override that can
+    #: delete real parts. See strip.py before setting it.
+    keep_islands: int | None = None
     notes: str = ""
 
     @property
@@ -89,6 +93,7 @@ class Result:
     error: str = ""
     #: Automated corrections applied by postprocess, recorded in provenance.
     normalised: list[str] = field(default_factory=list)
+    stripped: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -165,6 +170,7 @@ def load_catalog(path: str, *, content_root: str = "Content/Models") -> list[Job
                 rig=rig,
                 animations=anim.resolve_all(entry.get("animations", [])),
                 remesh=bool(entry.get("remesh", False)),
+                keep_islands=entry.get("keep_islands"),
                 notes=str(entry.get("notes", "")),
             )
         )
@@ -202,6 +208,12 @@ def run_job(
         written = client.download(model_url, job.output_path)
         result.downloaded.append(job.output_path)
         log(f"  wrote {written / 1024:.0f} KiB")
+
+        # Before the budget check, not after. Stripping the barrel's grass took
+        # it from 4,606 triangles to 1,060 — from over budget to comfortably
+        # inside it — so a remesh that would otherwise have been spent, and would
+        # have torn the mesh, is simply not needed.
+        _strip_scenery(job, log=log, result=result)
 
         mesh_task_id = _enforce_triangle_budget(
             job, client, mesh_task_id, log=log, poll_seconds=poll_seconds, result=result
@@ -390,6 +402,24 @@ def _enforce_triangle_budget(
         return input_task_id
 
 
+def _strip_scenery(job: Job, *, log: Logger, result: Result) -> None:
+    """Remove the ground litter the generator attaches. See strip.py.
+
+    Runs on every asset, because the default rule only removes islands lying
+    entirely below the subject's base and cannot take a part off it. ``keep_islands``
+    switches to the manual mode, which can and does.
+    """
+    try:
+        changes = strip.strip(job.output_path, keep=job.keep_islands)
+    except (postprocess.PostProcessError, OSError) as exc:
+        log(f"  scenery strip failed, keeping the mesh as generated: {exc}")
+        return
+
+    for line in changes.describe():
+        log(f"  {line}")
+    result.stripped = changes.describe()
+
+
 def _normalise(job: Job, *, log: Logger, result: Result) -> None:
     """Bring the asset in line with our scale, origin and texture conventions.
 
@@ -472,7 +502,7 @@ def _record(job: Job, result: Result, provenance_path: str) -> None:
         # Brief section 54's "manual edits" field, carrying the automated
         # corrections too. Prefixed so a hand repair in Blender stays
         # distinguishable from something the pipeline did on its own.
-        manual_edits=[f"auto: {line}" for line in result.normalised],
+        manual_edits=[f"auto: {line}" for line in result.stripped + result.normalised],
     )
     provenance.append(record, provenance_path)
 
