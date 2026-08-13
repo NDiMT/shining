@@ -18,7 +18,7 @@ import os
 import sys
 from dataclasses import replace
 
-from . import budgets, content, meshy, pipeline, provenance, style, validate
+from . import budgets, content, meshy, pipeline, preview, provenance, style, validate
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -68,6 +68,23 @@ def main(argv: list[str] | None = None) -> int:
     content_parser.add_argument("--catalogs", default="Tools/catalog")
     content_parser.add_argument("--verbose", action="store_true", help="show INFO findings too")
 
+    preview_parser = subparsers.add_parser(
+        "preview", help="render generated assets so a human can look at them"
+    )
+    preview_parser.add_argument("paths", nargs="*", help="GLB files to render")
+    preview_parser.add_argument("--catalog", help="render every generated asset in this catalog")
+    preview_parser.add_argument("--out", required=True, help="output PNG")
+    preview_parser.add_argument(
+        "--flat", action="store_true",
+        help="flat grey instead of textures. Silhouette is what the style guide "
+        "judges, and a texture hides a bad one")
+    preview_parser.add_argument(
+        "--line-up", action="store_true",
+        help="all assets side by side at one shared scale, rather than a contact "
+        "sheet of one asset")
+    preview_parser.add_argument("--title", default="")
+    preview_parser.add_argument("--size", type=int, default=0)
+
     provenance_parser = subparsers.add_parser("provenance", help="inspect the asset database")
     provenance_parser.add_argument("--report", action="store_true", help="render markdown")
     provenance_parser.add_argument("--out", help="write the report here instead of stdout")
@@ -103,6 +120,9 @@ def _dispatch(args: argparse.Namespace) -> int:
 
     if args.command == "validate-content":
         return _cmd_validate_content(args)
+
+    if args.command == "preview":
+        return _cmd_preview(args)
 
     if args.command == "provenance":
         return _cmd_provenance(args)
@@ -214,6 +234,36 @@ def _cmd_validate_content(args: argparse.Namespace) -> int:
         if args.verbose or finding.severity >= validate.Severity.WARN:
             print(f"  {finding}")
     return 0 if report.ok else 1
+
+
+def _cmd_preview(args: argparse.Namespace) -> int:
+    if not preview.available():
+        raise ValueError(
+            "preview needs Pillow and numpy: pip install Pillow numpy. "
+            "Everything else in hollowasset works without them")
+
+    assets: list[tuple[str, str]] = []
+    if args.catalog:
+        for job in pipeline.load_catalog(args.catalog):
+            if os.path.exists(job.output_path):
+                assets.append((job.output_path, job.asset_id))
+            else:
+                print(f"skip {job.asset_id}: not generated yet")
+    assets.extend((path, os.path.basename(path)) for path in args.paths)
+
+    if not assets:
+        raise ValueError("nothing to render; pass GLB paths or --catalog")
+
+    textured = not args.flat
+    if args.line_up or len(assets) > 1:
+        size = args.size or 380
+        out = preview.line_up(assets, args.out, size=size, textured=textured, title=args.title)
+    else:
+        size = args.size or 420
+        out = preview.contact_sheet(assets[0][0], args.out, size=size, textured=textured)
+
+    print(f"wrote {out}  ({len(assets)} asset(s), {'textured' if textured else 'flat'})")
+    return 0
 
 
 def _cmd_provenance(args: argparse.Namespace) -> int:
