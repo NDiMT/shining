@@ -159,7 +159,7 @@ class Client:
         if style_image is None:
             return self._image(self._request("POST", "/generate-image-pixflux", payload))
 
-        payload["style_image"] = _encode(style_image)
+        payload["style_image"] = _encode(_match_size(style_image, size))
         payload["style_strength"] = style_strength
         return self._image(self._request("POST", "/generate-image-bitforge", payload))
 
@@ -231,6 +231,47 @@ class Client:
         body = self._request("POST", "/animate-with-text", payload)
         return [_decode(image) for image in body.get("images", [])]
 
+    def animate_skeleton(
+        self,
+        sprite: bytes,
+        *,
+        skeleton_frames: list[list[dict]],
+        size: int = 128,
+        direction: str = "east",
+        view: str = "side",
+        guidance_scale: float = 4.0,
+        seed: int | None = None,
+    ) -> list[bytes]:
+        """Frames for one clip, from three posed skeletons.
+
+        The route to a Shining Force II-scale attack screen. ``animate-with-text``
+        is capped at 64x64; this one goes to 256x256, which is the difference
+        between a map sprite and a battle sprite.
+
+        **Exactly three frames**, and the API answers a 422 rather than
+        truncating, so the check is here where the error can name the real
+        problem. Longer sequences are chained windows -- which is also how the
+        attack screen reads: approach, strike, reaction are three beats, not one
+        continuous take.
+        """
+        if len(skeleton_frames) != 3:
+            raise PixelLabError(
+                f"animate-with-skeleton takes exactly 3 frames, got {len(skeleton_frames)}. "
+                "Chain windows for anything longer."
+            )
+        payload: dict[str, Any] = {
+            "image_size": {"width": size, "height": size},
+            "reference_image": _encode(sprite),
+            "skeleton_keypoints": [_integral_z(frame) for frame in skeleton_frames],
+            "view": view,
+            "direction": direction,
+            "guidance_scale": guidance_scale,
+        }
+        if seed is not None:
+            payload["seed"] = seed
+        body = self._request("POST", "/animate-with-skeleton", payload)
+        return [_decode(image) for image in body.get("images", [])]
+
     def estimate_skeleton(self, sprite: bytes) -> list[dict]:
         """Eighteen labelled keypoints — NOSE, LEFT EYE, and so on.
 
@@ -250,6 +291,46 @@ class Client:
         if image is None:
             raise PixelLabError(f"no image in response: {sorted(body)}")
         return _decode(image)
+
+
+def _integral_z(frame: list[dict]) -> list[dict]:
+    """Round ``z_index`` to an integer, because the API is asymmetric about it.
+
+    ``estimate-skeleton`` hands back fractional depths (-3.5 was in the first
+    real skeleton) and ``animate-with-skeleton`` rejects them with a 422:
+    "Input should be a valid integer, got a number with a fractional part". Its
+    own output is not valid input. Fixed here rather than in the pose maths,
+    which has no business knowing about a transport quirk.
+    """
+    return [dict(point, z_index=int(round(float(point.get("z_index", 0))))) for point in frame]
+
+
+def _match_size(image: bytes, size: int) -> bytes:
+    """Resize a style reference to the output size, without smoothing.
+
+    bitforge rejects a mismatch outright -- "style_image must be size (128, 128),
+    not torch.Size([64, 64])" -- so a 64px map sprite cannot style a 128px battle
+    sprite as it stands. Nearest neighbour is the only correct filter here:
+    anything else invents intermediate colours, and the palette is the thing the
+    style reference exists to carry.
+
+    Pillow is optional everywhere else in this package, so a caller without it
+    gets the original bytes and the API's own error rather than a crash here.
+    """
+    try:
+        import io
+
+        from PIL import Image
+    except ImportError:  # pragma: no cover - depends on the environment
+        return image
+
+    with Image.open(io.BytesIO(image)) as opened:
+        if opened.size == (size, size):
+            return image
+        resized = opened.convert("RGBA").resize((size, size), Image.NEAREST)
+    buffer = io.BytesIO()
+    resized.save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def _encode(payload: bytes) -> dict[str, str]:
