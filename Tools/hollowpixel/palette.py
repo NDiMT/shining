@@ -149,9 +149,14 @@ def apply_palette(image: bytes, colours: list[tuple[int, int, int]]) -> Quantise
     alpha = source.getchannel("A").point(lambda a: 255 if a > 127 else 0)
     before = len({p[:3] for p in source.getdata() if p[3] > 127})
 
+    # Pad the unused entries by repeating the last real colour, not with black.
+    # Pillow's quantize can land a pixel on an index past the ones supplied, and
+    # padding with black introduced exactly one stray colour -- pure black -- into
+    # 24 of 58 files, in a palette that had no pure black in it. Repeating a real
+    # colour makes an out-of-range index harmless by construction.
     reference = Image.new("P", (1, 1))
     flat = [component for colour in colours for component in colour]
-    reference.putpalette((flat + [0, 0, 0] * 256)[:768])
+    reference.putpalette((flat + list(colours[-1]) * 256)[:768])
 
     flat_rgb = Image.new("RGB", source.size, colours[0])
     flat_rgb.paste(source.convert("RGB"), mask=alpha)

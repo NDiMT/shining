@@ -402,3 +402,28 @@ class TestReferenceFitting(unittest.TestCase):
             rgba = fitted.convert("RGBA")
             columns = [x for x in range(128) if rgba.getpixel((x, 64))[3] > 0]
         self.assertAlmostEqual((min(columns) + max(columns)) / 2, 63.5, delta=1.5)
+
+
+class TestPalettePaddingCannotLeak(unittest.TestCase):
+    def test_no_colour_outside_the_palette_survives(self):
+        """Padding the unused palette entries with black put pure black into 24
+        of 58 files, in a palette that contained no black."""
+        try:
+            from PIL import Image
+        except ImportError:  # pragma: no cover
+            self.skipTest("Pillow not installed")
+        import io
+
+        from hollowpixel import palette
+        source = Image.new("RGBA", (32, 32))
+        for y in range(32):
+            for x in range(32):
+                source.putpixel((x, y), ((x * 8) % 256, (y * 8) % 256, 120, 255))
+        buffer = io.BytesIO()
+        source.save(buffer, format="PNG")
+
+        anchor = [(219, 73, 73), (36, 36, 146), (255, 219, 109)]
+        result = palette.apply_palette(buffer.getvalue(), anchor)
+        with Image.open(io.BytesIO(result.image)) as out:
+            used = {p[:3] for p in out.convert("RGBA").getdata() if p[3] > 127}
+        self.assertTrue(used <= set(anchor), used - set(anchor))
