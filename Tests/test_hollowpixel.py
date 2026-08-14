@@ -286,3 +286,78 @@ class TestTiersMatchTheReference(unittest.TestCase):
         for tier in style.TIERS.values():
             self.assertEqual(tier.shading, "flat shading", tier.key)
             self.assertNotEqual(tier.detail, "highly detailed", tier.key)
+
+
+class TestSharedPalette(unittest.TestCase):
+    """One palette per character, as the ROM format itself implies."""
+
+    def setUp(self):
+        try:
+            from PIL import Image  # noqa: F401
+        except ImportError:  # pragma: no cover
+            self.skipTest("Pillow not installed")
+
+    def solid(self, colours, size=8):
+        import io
+
+        from PIL import Image
+        image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        for i, colour in enumerate(colours):
+            for y in range(size):
+                image.putpixel((i % size, y), (*colour, 255))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return buffer.getvalue()
+
+    def test_extract_returns_opaque_colours_most_used_first(self):
+        from hollowpixel import palette
+        import io
+
+        from PIL import Image
+        image = Image.new("RGBA", (10, 10), (255, 0, 0, 255))
+        image.paste((0, 0, 255, 255), (0, 0, 2, 10))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        colours = palette.extract(buffer.getvalue())
+        self.assertEqual(colours[0], (255, 0, 0))
+        self.assertIn((0, 0, 255), colours)
+
+    def test_applying_a_palette_uses_only_that_palette(self):
+        from hollowpixel import palette
+        anchor = [(255, 0, 0), (0, 0, 255)]
+        result = palette.apply_palette(self.solid([(250, 10, 10), (10, 10, 250)]), anchor)
+        import io
+
+        from PIL import Image
+        with Image.open(io.BytesIO(result.image)) as out:
+            used = {p[:3] for p in out.convert("RGBA").getdata() if p[3] > 127}
+        self.assertTrue(used <= set(anchor), used)
+
+    def test_a_near_colour_maps_to_its_nearest_neighbour(self):
+        """The point of the whole exercise: sixteen slightly different browns
+        for the same hair across a walk cycle become one brown."""
+        from hollowpixel import palette
+        import io
+
+        from PIL import Image
+        anchor = [(146, 73, 36), (0, 0, 0)]
+        result = palette.apply_palette(self.solid([(150, 76, 40)]), anchor)
+        with Image.open(io.BytesIO(result.image)) as out:
+            used = {p[:3] for p in out.convert("RGBA").getdata() if p[3] > 127}
+        self.assertIn((146, 73, 36), used)
+
+    def test_transparency_survives_a_palette_swap(self):
+        from hollowpixel import palette
+        import io
+
+        from PIL import Image
+        result = palette.apply_palette(self.solid([(200, 30, 30)]), [(255, 0, 0)])
+        with Image.open(io.BytesIO(result.image)) as out:
+            alphas = {p[3] for p in out.convert("RGBA").getdata()}
+        self.assertTrue(alphas <= {0, 255}, alphas)
+        self.assertIn(0, alphas)
+
+    def test_an_empty_palette_is_refused(self):
+        from hollowpixel import palette
+        with self.assertRaises(ValueError):
+            palette.apply_palette(self.solid([(1, 2, 3)]), [])

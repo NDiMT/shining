@@ -104,3 +104,61 @@ def _snap(image):
     table = bytes(min(GENESIS_LEVELS, key=lambda level: abs(level - value))
                   for value in range(256))
     return image.point(table * len(image.getbands()))
+
+
+def extract(image: bytes) -> list[tuple[int, int, int]]:
+    """The opaque colours of a sprite, most used first.
+
+    The anchor of a character's look. In the ROM a character *has* a palette --
+    ``SF2BattleSpriteManager`` stores one per sprite as 32 bytes -- so the game's
+    own format already treats it as an attribute of the character rather than of
+    each drawing. Doing the same is what makes consistency enforceable instead of
+    hoped for.
+    """
+    from PIL import Image
+
+    with Image.open(io.BytesIO(image)) as opened:
+        rgba = opened.convert("RGBA")
+    counts: dict[tuple[int, int, int], int] = {}
+    for pixel in rgba.getdata():
+        if pixel[3] > 127:
+            counts[pixel[:3]] = counts.get(pixel[:3], 0) + 1
+    return sorted(counts, key=counts.get, reverse=True)  # type: ignore[arg-type]
+
+
+def apply_palette(image: bytes, colours: list[tuple[int, int, int]]) -> Quantised:
+    """Map every pixel to its nearest colour in ``colours``.
+
+    Quantising each sprite on its own gives each its own sixteen colours, and
+    across a walk cycle and four facings that is sixteen slightly different
+    browns for the same hair. This forces one palette across every frame and
+    every direction of a character, which is the difference between "generated
+    from the same description" and actually consistent.
+
+    Nearest in plain RGB. Perceptual distance would be more correct in general
+    and is not here: the palette has already been snapped to the Genesis ladder,
+    so the candidates are far apart and the two metrics agree.
+    """
+    from PIL import Image
+
+    if not colours:
+        raise ValueError("apply_palette needs at least one colour")
+
+    with Image.open(io.BytesIO(image)) as opened:
+        source = opened.convert("RGBA")
+    alpha = source.getchannel("A").point(lambda a: 255 if a > 127 else 0)
+    before = len({p[:3] for p in source.getdata() if p[3] > 127})
+
+    reference = Image.new("P", (1, 1))
+    flat = [component for colour in colours for component in colour]
+    reference.putpalette((flat + [0, 0, 0] * 256)[:768])
+
+    flat_rgb = Image.new("RGB", source.size, colours[0])
+    flat_rgb.paste(source.convert("RGB"), mask=alpha)
+    mapped = flat_rgb.quantize(palette=reference, dither=Image.NONE).convert("RGBA")
+    mapped.putalpha(alpha)
+
+    after = len({p[:3] for p in mapped.getdata() if p[3] > 127})
+    buffer = io.BytesIO()
+    mapped.save(buffer, format="PNG")
+    return Quantised(buffer.getvalue(), before, after)
