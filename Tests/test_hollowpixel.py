@@ -361,3 +361,44 @@ class TestSharedPalette(unittest.TestCase):
         from hollowpixel import palette
         with self.assertRaises(ValueError):
             palette.apply_palette(self.solid([(1, 2, 3)]), [])
+
+
+class TestReferenceFitting(unittest.TestCase):
+    """A concept sheet is tall and a sprite frame is square."""
+
+    def setUp(self):
+        try:
+            from PIL import Image  # noqa: F401
+        except ImportError:  # pragma: no cover
+            self.skipTest("Pillow not installed")
+
+    def tall(self, width=64, height=256):
+        import io
+
+        from PIL import Image
+        buffer = io.BytesIO()
+        Image.new("RGBA", (width, height), (200, 40, 40, 255)).save(buffer, format="PNG")
+        return buffer.getvalue()
+
+    def test_a_tall_reference_keeps_its_proportions(self):
+        """Stretching one to a square produced a squat hunched figure at every
+        seeding strength, and the distortion was mine rather than the model's."""
+        import io
+
+        from PIL import Image
+        with Image.open(io.BytesIO(_match_size(self.tall(), 128))) as fitted:
+            self.assertEqual(fitted.size, (128, 128))
+            opaque = [(x, y) for y in range(128) for x in range(128)
+                      if fitted.convert("RGBA").getpixel((x, y))[3] > 0]
+        width = max(x for x, _ in opaque) - min(x for x, _ in opaque) + 1
+        height = max(y for _, y in opaque) - min(y for _, y in opaque) + 1
+        self.assertAlmostEqual(width / height, 64 / 256, places=1)
+
+    def test_the_fitted_reference_is_centred(self):
+        import io
+
+        from PIL import Image
+        with Image.open(io.BytesIO(_match_size(self.tall(), 128))) as fitted:
+            rgba = fitted.convert("RGBA")
+            columns = [x for x in range(128) if rgba.getpixel((x, 64))[3] > 0]
+        self.assertAlmostEqual((min(columns) + max(columns)) / 2, 63.5, delta=1.5)

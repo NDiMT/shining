@@ -203,6 +203,19 @@ def clip(name: str) -> tuple[Pose, Pose, Pose]:
     return CLIPS[name]
 
 
-def frames_for(skeleton: list[dict], name: str) -> list[list[dict]]:
+def scaled(pose: Pose, factor: float) -> Pose:
+    """The same pose, reaching further or less far.
+
+    Rotation magnitude and whole-body offset were conflated in the sweep that
+    settled this module: the winning variant had both gentler rotations *and* no
+    offset, and only the offset was ever shown to break identity. So magnitude is
+    a dial rather than a fixed number, and a clip can be pushed harder without
+    reintroducing the thing that actually caused ghost swords.
+    """
+    return Pose(pose.name, rotations={k: v * factor for k, v in pose.rotations.items()},
+                offset=pose.offset, lean=pose.lean * factor)
+
+
+def frames_for(skeleton: list[dict], name: str, *, intensity: float = 1.0) -> list[list[dict]]:
     """The three posed skeletons ``animate-with-skeleton`` wants for one clip."""
-    return [apply(skeleton, pose) for pose in clip(name)]
+    return [apply(skeleton, scaled(pose, intensity)) for pose in clip(name)]

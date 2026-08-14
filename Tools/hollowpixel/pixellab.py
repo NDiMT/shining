@@ -129,6 +129,8 @@ class Client:
         detail: str = "medium detail",
         style_image: bytes | None = None,
         style_strength: int = 50,
+        init_image: bytes | None = None,
+        init_image_strength: int = 300,
         no_background: bool = True,
         text_guidance_scale: float = 8.0,
         seed: int | None = None,
@@ -155,6 +157,15 @@ class Client:
         }
         if seed is not None:
             payload["seed"] = seed
+        if init_image is not None:
+            # Seeds the generation from an existing picture. This is how the
+            # director's concept sheet reaches the sprite: as an *init* image,
+            # never a style one. The sheet is anime line art, so styling to it
+            # would ask for anime line art in a 128px frame; seeding from it asks
+            # for this design, drawn in our style. Lower strength follows it more
+            # closely -- 300 is the API default and barely follows it at all.
+            payload["init_image"] = _encode(_match_size(init_image, size))
+            payload["init_image_strength"] = init_image_strength
 
         if style_image is None:
             return self._image(self._request("POST", "/generate-image-pixflux", payload))
@@ -327,9 +338,21 @@ def _match_size(image: bytes, size: int) -> bytes:
     with Image.open(io.BytesIO(image)) as opened:
         if opened.size == (size, size):
             return image
-        resized = opened.convert("RGBA").resize((size, size), Image.NEAREST)
+        source = opened.convert("RGBA")
+
+    # Fit, do not stretch. The first version resized straight to a square and
+    # that is fine for a sprite, which is already square, and wrong for a concept
+    # sheet: Rowan's side view is 282x966, and squashing it into 128x128 produced
+    # a squat hunched figure at every seeding strength I tried. The distortion
+    # looked like the model failing and was mine.
+    ratio = min(size / source.width, size / source.height)
+    width = max(1, round(source.width * ratio))
+    height = max(1, round(source.height * ratio))
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.paste(source.resize((width, height), Image.NEAREST),
+                 ((size - width) // 2, (size - height) // 2))
     buffer = io.BytesIO()
-    resized.save(buffer, format="PNG")
+    canvas.save(buffer, format="PNG")
     return buffer.getvalue()
 
 

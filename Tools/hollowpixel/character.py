@@ -82,8 +82,17 @@ def build(
     client: Client | None = None,
     region: str = "greenvale",
     log=print,
+    reference: bytes | None = None,
+    reference_strength: int = 200,
+    intensity: float = 1.0,
 ) -> CharacterSet:
-    """Generate the anchor, then everything else from it."""
+    """Generate the anchor, then everything else from it.
+
+    ``reference`` is the director's concept art, seeded into the anchor as an
+    init image. It goes in once, at the only point where a description is used,
+    so the whole set inherits the approved design through the same chain that
+    already carries the palette.
+    """
     client = client or Client()
     result = CharacterSet(asset_id=asset_id)
 
@@ -93,7 +102,8 @@ def build(
         prompt.description, size=style.BATTLE.size, negative=prompt.negative,
         view=style.BATTLE.view, direction=style.BATTLE.direction,
         outline=style.BATTLE.outline, shading=style.BATTLE.shading,
-        detail=style.BATTLE.detail, text_guidance_scale=10.0)
+        detail=style.BATTLE.detail, text_guidance_scale=10.0,
+        init_image=reference, init_image_strength=reference_strength)
     anchor = palette.quantise(anchor_raw)
     result.colours = palette.extract(anchor.image)
     log(f"  anchor: {anchor.colours_before} -> {anchor.colours_after} colours")
@@ -110,7 +120,8 @@ def build(
     for name, clip in BATTLE_CLIPS.items():
         try:
             frames = client.animate_skeleton(
-                anchor.image, skeleton_frames=poses.frames_for(skeleton, clip),
+                anchor.image,
+                skeleton_frames=poses.frames_for(skeleton, clip, intensity=intensity),
                 size=style.BATTLE.size, direction="east", view="side",
                 guidance_scale=8.0)
         except Exception as exc:  # noqa: BLE001 - one clip must not lose the set
@@ -158,7 +169,8 @@ def build(
         try:
             frames = client.animate_skeleton(
                 sprite,
-                skeleton_frames=poses.frames_for(client.estimate_skeleton(sprite), "walk"),
+                skeleton_frames=poses.frames_for(
+                    client.estimate_skeleton(sprite), "walk", intensity=intensity),
                 size=style.MAP.size, direction=facing, view=style.MAP.view,
                 guidance_scale=8.0)
         except Exception as exc:  # noqa: BLE001
