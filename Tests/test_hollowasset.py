@@ -440,12 +440,18 @@ class TestStyle(unittest.TestCase):
         it could have taken effect.
         """
         humanoid = {"hero", "npc", "enemy_humanoid"}
+        # The whole proportion statement, not just its opening. Written as three
+        # comma-separated clauses it packed as three tokens, and hero_rowan's long
+        # subject kept "five heads tall" while dropping the oversized hands and
+        # shoes -- which are what separate this build from a shrunken adult.
         for label, class_key, prompt in self.resolved_prompts():
             if class_key in humanoid:
-                self.assertIn("anime proportions", prompt.geometry, label)
+                self.assertIn("five heads tall with a big head", prompt.geometry, label)
+                self.assertIn("oversized hands", prompt.geometry, label)
 
         long_subject = style.build("young human swordsman in a blue tabard " * 8, "hero")
-        self.assertIn("anime proportions", long_subject.geometry)
+        self.assertIn("five heads tall with a big head", long_subject.geometry)
+        self.assertIn("oversized hands", long_subject.geometry)
 
     def test_no_third_party_ip_appears_in_any_prompt(self):
         """Brief-adjacent but commercially important: see docs/STYLE_GUIDE.md.

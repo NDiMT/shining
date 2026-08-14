@@ -36,12 +36,34 @@ rule rather than replacing it: painted detail yes, painted *shadow* no. A textur
 with baked lighting fights the cel shader and produces mud, which is the one
 failure mode that makes cel shading look cheap instead of deliberate.
 
-**4. Anime proportion, real height.**
-Heads are larger and features simpler; a hero is about six and a half heads tall
-rather than eight. Eyes are large and clean, hair is cut into a few solid angular
-clumps rather than strands, cloth falls in a few big folds. Heights do not
-change — a hero is still 1.7m, because the tactical grid, the movement costs and
-the camera all depend on it.
+**4. Small, chunky-limbed anime proportion.**
+Director's call, revised: the cast is *small*, in the mould of a Kingdom Hearts
+party rather than a realistic soldier. Concretely, and these numbers are the
+rule:
+
+| | Target |
+| --- | --- |
+| Head-to-body | **5 to 5.5 heads** — a realistic adult is 7.5 to 8 |
+| Standing height | **1.5 m** for heroes, NPCs and humanoid enemies |
+| Hands and feet | **Oversized.** Big simple shoes, chunky gloved hands |
+| Limbs | Slim between the joints, so the large extremities read |
+| Hair | One or two solid angular masses, never strands |
+| Face | Large clean eyes, small nose and mouth, no wrinkles or stubble |
+
+Tiles stay 2 m and props stay the size they are. That is the point: shrinking
+only the cast is what makes them read as small, because a 0.9 m barrel beside a
+1.5 m character is a different picture from the same barrel beside a 1.7 m one.
+
+This also serves brief section 89 rather than fighting it. A bigger head and
+bigger hands are more pixels on the parts a player reads a class from, at the one
+distance that matters.
+
+**Text-to-3d has failed this rule twice.** Both attempts put the proportion
+language in the prompt, verified it survived packing, and got back the same
+seven-and-a-half-head soldier. Treat the prompt path as worth one more try at
+these much more concrete numbers, and the concept-art path
+(`references` → image-to-3d, see ASSET_PIPELINE.md) as the one that is actually
+expected to work.
 
 **5. Saturated, separated hues.**
 Neighbouring materials get different *hues*, not different shades of one. Cel

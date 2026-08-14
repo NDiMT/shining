@@ -3,9 +3,9 @@
 Brief section 6 asks for "simple geometry, rich atmosphere" and section 89 asks
 for shapes that stay readable at tactical-camera distance. docs/ANIME_DIRECTION.md
 is the director's call on *how* that is achieved: two lighting bands with one hard
-edge, a dark outline on every silhouette, flat colour in the texture, anime
-proportion at real height, and saturated separated hues. This module encodes the
-part of that spec the generator is allowed to know about.
+edge, a dark outline on every silhouette, flat colour in the texture, small
+chunky-limbed anime proportion, and saturated separated hues. This module encodes
+the part of that spec the generator is allowed to know about.
 
 Three rules govern this file, and all three matter for a commercial Steam release:
 
@@ -132,17 +132,23 @@ TEXTURE_AVOID_TOKENS = [
 #: the deltas that give a class its identity at 30 metres on a tactical camera,
 #: which is the only distance that matters.
 #:
-#: Rule 4 is "anime proportion, *real height*", and both halves are here for the
-#: character classes: a larger head and simplified features buy the read, while
-#: "full adult height" and CLASS_AVOID's chibi token defend the 1.7m the grid,
-#: the movement costs and the camera all depend on. Hair as a few solid angular
-#: clumps and cloth in a few big folds are the same instruction as the rest of
-#: this file wearing anime clothes — they are large forms, which is what survives
-#: reduction, an outline pass and a 60-pixel-tall unit.
+#: Rule 4 is now "small, chunky-limbed anime proportion", and it is stated in
+#: numbers because the vaguer version failed twice: two characters generated with
+#: "anime proportions with a slightly enlarged head" came back as the same
+#: seven-and-a-half-head soldier. "five heads tall" is a ratio the generator can
+#: act on; "anime proportions" is not. The old chibi avoid token is gone with it
+#: — it was defending a 1.7m adult build that is no longer what we want.
+#:
+#: Oversized hands and feet do more work than they look like they should. They are
+#: what separates this from a shrunken adult, and they are large forms, which is
+#: what survives reduction, an outline pass and a 60-pixel-tall unit.
 #:
 #: Each entry is split on commas by _tokens, so a clause at a time is dropped when
-#: a subject is long. Proportion therefore comes first in every character entry:
-#: it is the clause that must survive.
+#: a subject is long, and only the *first* clause is protected. The whole
+#: proportion statement is therefore written without internal commas: as three
+#: clauses, hero_rowan's long subject kept "five heads tall, big head" and dropped
+#: the oversized hands and shoes, which are precisely what separates this build
+#: from a shrunken adult.
 #:
 #: Colour deliberately does not live here. It goes in CLASS_PALETTE and rides the
 #: texture prompt, which is both the correct place for it and the one with room
@@ -150,25 +156,25 @@ TEXTURE_AVOID_TOKENS = [
 #: and would otherwise push the palette rule out entirely.
 CLASS_STYLE: dict[str, str] = {
     "hero": (
-        "anime proportions about six and a half heads tall at full adult height, "
-        "large clean eyes and simplified features, hair in a few solid angular clumps, "
-        "strong cape or shoulder shape, iconic weapon"
+        "small anime hero five heads tall with a big head oversized hands and "
+        "large simple shoes, slim limbs, hair in one solid angular mass, "
+        "large clean eyes"
     ),
     "npc": (
-        "anime proportions with a slightly enlarged head at full adult height, "
-        "simplified features, cloth in a few big folds"
+        "small anime villager five heads tall with a big head oversized hands and "
+        "large simple shoes, slim limbs, cloth in a few big folds"
     ),
     "enemy_humanoid": (
-        "anime proportions with an oversized head and hands, crude asymmetric armour "
-        "plates, exaggerated weapon"
+        "small anime enemy five heads tall with a big head and oversized hands "
+        "and feet, slim limbs, crude asymmetric armour plates, exaggerated weapon"
     ),
     "monster_large": (
-        "oversized head on a heavy imposing mass, exaggerated dominant feature such as "
-        "jaws claws or horns, readable animal silhouette"
+        "oversized head and paws on a heavy mass, exaggerated dominant feature such "
+        "as jaws claws or horns, readable animal silhouette"
     ),
     "boss": (
-        "commanding scale and theatrical silhouette, large-form armour with few big "
-        "shapes, unmistakable profile"
+        "big head and oversized hands on a theatrical silhouette, large-form armour "
+        "with few big shapes, unmistakable profile"
     ),
     "weapon": (
         "oversized game-readable proportions, thick blade or shaft, "
@@ -224,19 +230,22 @@ CLASS_PALETTE: dict[str, str] = {
 
 #: Extra avoid-tokens per class, layered on top of BASE_AVOID.
 #:
-#: The chibi token is the other half of anime rule 4 and is deliberately *not* in
-#: BASE_AVOID: it is only meaningful for the humanoid classes, and the avoid clause
-#: is the scarcest space in the prompt — a prop paying characters for it would push
-#: real direction out, which is the failure recorded in docs/ASSET_PIPELINE.md.
+#: "realistic adult body proportions" is the other half of anime rule 4, and it
+#: replaces the chibi token that used to sit here — the direction reversed, so the
+#: thing to push away from is the realistic soldier the generator keeps returning,
+#: not the small build we now want. It is deliberately *not* in BASE_AVOID: it is
+#: only meaningful for the humanoid classes, and the avoid clause is the scarcest
+#: space in the prompt — a prop paying characters for it would push real direction
+#: out, which is the failure recorded in docs/ASSET_PIPELINE.md.
 #:
 #: The npc entry no longer says "armour, weapons". It contradicted half the class:
 #: npc_guard_greenvale's subject is a soldier "over mail with a conical helm, round
 #: shield and short sword", so the prompt was arguing with itself, and a prompt
 #: that argues with itself spends characters to buy nothing.
 CLASS_AVOID: dict[str, str] = {
-    "hero": "generic knight, chibi proportions, modern clothing",
-    "npc": "chibi proportions, heroic pose",
-    "enemy_humanoid": "chibi proportions",
+    "hero": "generic knight, realistic adult body proportions, modern clothing",
+    "npc": "realistic adult body proportions, heroic pose",
+    "enemy_humanoid": "realistic adult body proportions",
     # "metal shipping container" is gone. Meshy has no negative-prompt field, so
     # every avoid token is also a noun sitting in the positive prompt, and the one
     # asset that carried this token is prop_crate_a — which came back photoreal

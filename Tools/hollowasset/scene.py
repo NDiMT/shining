@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 
 from . import preview
 
-#: Metres per grid cell. A hero is 1.7 m (budgets.py) and stands on one tile, so
+#: Metres per grid cell. A hero is 1.5 m (budgets.py) and stands on one tile, so
 #: a 1 m cell is what makes a unit read as a person on a square rather than a
 #: figurine on a chessboard.
 TILE = 1.0
@@ -90,10 +90,10 @@ ACTIVE_EDGE = (255, 214, 92)
 #: them against.
 SKY = ((58, 82, 138), (150, 178, 196))
 
-#: Placeholder unit heights in metres. Heroes and NPCs are 1.7 m from
+#: Placeholder unit heights in metres. Heroes and NPCs are 1.5 m from
 #: budgets.py; the goblins are the catalog's "small hunched goblin ... low
 #: crouched profile", so they are drawn shorter on purpose.
-DEFAULT_UNIT_HEIGHT = 1.7
+DEFAULT_UNIT_HEIGHT = 1.5
 UNIT_HEIGHTS: dict[str, float] = {
     "goblin_raider": 1.35,
     "goblin_spearman": 1.4,

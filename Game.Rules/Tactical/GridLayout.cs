@@ -15,9 +15,11 @@ public readonly record struct WorldPoint(float X, float Y, float Z);
 /// <para>
 /// This lives in the rules layer for two reasons, neither of them presentation
 /// creep. First, ANIME_DIRECTION.md rule 4 fixes the relationship in the other
-/// direction — "heights do not change, a hero is still 1.7m, because the tactical
-/// grid, the movement costs and the camera all depend on it" — so the metre size
-/// of a tile is a rule about the game, not a rendering preference. Second, it is
+/// direction: a hero is 1.5m and the tile stays 2m. Only the cast shrank when the
+/// direction changed, and deliberately — a 0.9m barrel beside a 1.5m character is
+/// what makes the character read as small, where shrinking the whole world would
+/// have changed nothing. So the metre size of a tile is a rule about the game, not
+/// a rendering preference. Second, it is
 /// the one piece of the scene-building path that can be unit tested without an
 /// engine, and it is the piece most likely to be silently wrong: a mirrored map
 /// still looks like a plausible battlefield.
@@ -43,7 +45,7 @@ public sealed class GridLayout
 {
     /// <summary>Metres across one tile.</summary>
     /// <remarks>
-    /// 2 m. A hero is 1.7 m (ANIME_DIRECTION rule 4), so a 2 m tile leaves a unit
+    /// 2 m. A hero is 1.5 m (ANIME_DIRECTION rule 4), so a 2 m tile leaves a unit
     /// standing clear of its neighbours' shoulders at the tactical camera's angle,
     /// which is what keeps twelve units on screen readable per STYLE_GUIDE section 3.
     /// </remarks>
