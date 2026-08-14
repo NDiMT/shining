@@ -23,6 +23,11 @@ identity, frames that belong to each other.
 ``/v2/llms.txt`` exists and is written for exactly this purpose. It was there the
 whole time.
 
+Equipment is a **state**, not a regeneration. ``create_state`` applies one text
+edit across all eight rotations and keeps the result grouped with its source, so
+swapping Rowan's sword gives the same Rowan holding something else rather than a
+second hero who resembles him.
+
 Asynchronous. Generation endpoints return background job ids to poll, and the
 finished character is exported as a ZIP -- the rotation URLs in the JSON are
 signed for a different host and answer 403 to a bearer token, so the ZIP is the
@@ -209,6 +214,42 @@ class Client:
         body = self._request("POST", "/characters/animations", payload)
         log(f"  {clip}: {len(directions)} direction(s)")
         self._wait(body.get("background_job_ids", []), log=log)
+
+    def create_state(
+        self,
+        character: Character,
+        state_name: str,
+        edit: str,
+        *,
+        keep_palette: bool = True,
+        seed: int | None = None,
+        log=lambda _: None,
+    ) -> Character:
+        """A variant of a character -- a different weapon, armour, a wound.
+
+        This is how equipment reaches the sprite. Rowan will not carry the same
+        sword for thirty hours, and regenerating him per weapon would give a
+        different Rowan each time. A state applies one text edit across all eight
+        rotations at once and stays grouped with its source by ``group_id``, so
+        "Rowan with a steel sword" is the same character holding something else
+        rather than a second character who resembles him.
+
+        ``use_color_palette_from_reference`` is on by default for the same
+        reason: a new weapon should not restate the hero's colours.
+        """
+        body = self._request("POST", "/create-character-state", {
+            "character_id": character.id,
+            "edit_description": edit,
+            "state_name": state_name,
+            "use_color_palette_from_reference": keep_palette,
+            "no_background": True,
+            **({"seed": seed} if seed is not None else {}),
+        })
+        variant = Character(id=body["character_id"], name=f"{character.name}:{state_name}",
+                            size=character.size)
+        log(f"  state {state_name} -> {variant.id}")
+        self._wait([body["background_job_id"]], log=log)
+        return variant
 
     def export(self, character: Character, destination: str) -> list[str]:
         """Fetch the character as a ZIP and unpack it.
