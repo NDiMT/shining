@@ -1,30 +1,34 @@
-"""Two sprite tiers, and the house art direction for both.
+"""Two sprite tiers, measured off Shining Force II rather than guessed.
 
-Shining Force II draws every character twice, and Hollow Crown does the same
-because it is the right answer rather than an homage. Exploration shows a dozen
-units at once on a grid, so a map sprite has to read as a silhouette at a glance
-and nothing else. The attack screen shows one attacker and one defender filling
-the frame, so a battle sprite can carry a face, a weapon and cloth.
+The numbers below come from the Shining Force Central disassembly tooling, which
+states the game's own formats:
 
-    MAP      64x64   high top-down   compact, chunky, silhouette-first
-    BATTLE  128x128  side            detailed, full figure, animated
+* ``SF2MapSpriteManager`` lays map sprites out at **24x24 pixels**, and its
+  importer requires **"4BPP / 16 indexed colors, transparent color at index 0"**.
+* ``SF2BattleSpriteManager`` builds a battle frame as ``tilesPerRow * 8`` wide by
+  ``12 * 8`` tall, with ``tilesPerRow`` 12 for an ally and 16 for a monster --
+  **96x96 for a party member, 128x96 for an enemy** -- and stores each palette as
+  32 bytes, which is sixteen Genesis CRAM entries. Same 16 colours.
 
-Those numbers are not preferences. Three API limits fix them between them:
+    SF2 map sprite     24x24    16 colours
+    SF2 ally battle    96x96    16 colours
+    SF2 enemy battle  128x96    16 colours
 
-* ``animate-with-text`` accepts **64x64 only**.
-* ``animate-with-skeleton`` accepts **16, 32, 64, 128, 256** and nothing between.
-* ``bitforge`` -- the only endpoint that style-matches a reference -- caps at an
-  area of **200x200**.
+What was built before reading any of that: a 64x64 map sprite and a 128x128
+battle sprite, both "highly detailed" with "detailed shading" and full 24-bit
+colour. Roughly seven times the pixel area on the map tier, and thousands of
+colours where the reference has fifteen. Chasing *more* detail was the mistake --
+Shining Force II is a game of hard restraint, and the restraint is what reads.
 
-So 128 is the largest size that can be *both* style-matched to the rest of the
-cast *and* animated, which makes it the battle tier. 256 would be bigger and
-could not be style-matched, and a cast that drifts is the failure that cost the
-3D pipeline five generations on one guard. The map tier is 64, and that was measured rather than assumed. 32 is the
-compact-looking answer and it does not work: at 32 the figure came back as mush
-whatever the style strength, because the detail has nowhere to go. 64 keeps a
-readable head, a weapon and a silhouette, and it is also the only size
-``animate-with-text`` accepts -- so the compact tier animates the cheap way and
-the battle tier animates by skeleton.
+So both tiers now ask for flat shading and low detail, and every sprite is
+quantised to sixteen colours on the Genesis ladder by ``palette.py``. The count
+is a property of the file, not something a prompt can be trusted to honour.
+
+Sizes are the nearest the API supports. ``animate-with-skeleton`` takes 16, 32,
+64, 128 or 256 and nothing between; ``animate-with-text`` is 64 only; and
+``bitforge``, the only endpoint that style-matches, caps at an area of 200x200.
+So the map tier is 32 (nearest to 24) and the battle tier is 128 (nearest to 96
+that is both style-matchable and animatable).
 
 Art direction lives here and nowhere else, exactly as it did for the 3D pipeline:
 changing the game's look should be one edit in this file, not a sweep through
@@ -62,29 +66,31 @@ class Tier:
 
 #: Exploration. Read at a glance, twelve at a time, on a busy grid.
 #:
-#: "chunky" and "large head" are doing the same job the 3D direction's rule 4
-#: was after and never achieved: at this size a realistic figure is a smudge,
-#: and the head is the only part with room to carry identity.
+#: Super-deformed is not a stylistic flourish, it is what 24 pixels forces. At
+#: that size a realistic figure has about four pixels of head, which cannot carry
+#: a face or an identity. SF2 gives the head nearly half the sprite and draws the
+#: eyes as two dots. This is also, finally, the "small chunky proportion" the 3D
+#: direction asked for five times and never got.
 MAP = Tier(
     key="map",
-    size=64,
+    size=32,
     view="high top-down",
     direction="south",
     outline="single color black outline",
-    shading="basic shading",
+    shading="flat shading",
     detail="low detail",
     direction_tokens=(
-        "chunky compact game sprite",
-        "large head and small body",
-        "bold simple silhouette",
-        "few flat colours",
-        "no small details",
+        "super deformed chibi sprite",
+        "huge head, tiny body, two heads tall",
+        "dot eyes, no facial detail",
+        "no weapon drawn",
+        "solid flat colour blocks",
+        "16 colour Sega Genesis palette",
     ),
     facings=("south", "south-east", "east", "north-east", "north"),
     subdir="Characters",
-    notes="Mirror east to west and north-east to north-west at draw time. "
-          "style_strength 60 against the battle sprite: 25 loses the palette, "
-          "70 drags battle-tier detail down into a frame that cannot hold it.",
+    notes="24x24 in SF2; 32 is the nearest size the API supports. Mirror east "
+          "to west and north-east to north-west at draw time.",
 )
 
 #: The attack screen. One figure filling the frame, so detail earns its pixels.
@@ -94,26 +100,34 @@ BATTLE = Tier(
     view="side",
     direction="east",
     outline="single color black outline",
-    shading="detailed shading",
-    detail="highly detailed",
+    shading="flat shading",
+    detail="medium detail",
     direction_tokens=(
-        "full body battle sprite",
-        "dynamic combat stance",
-        "detailed face and weapon",
-        "readable cloth folds",
-        "rich shading",
+        "16 bit Sega Genesis JRPG battle sprite",
+        "four heads tall, large head",
+        "solid flat colour blocks, one highlight and one shadow tone",
+        "bold black outline, no anti-aliasing",
+        "16 colour palette",
     ),
     facings=("east",),
     subdir="Battle",
-    notes="Mirror east to west; the attack screen only ever shows two facings.",
+    notes="96x96 for an ally in SF2; 128 is the nearest size that is both "
+          "style-matchable and animatable. Mirror east to west -- the attack "
+          "screen only ever shows two facings.",
 )
 
 TIERS: dict[str, Tier] = {tier.key: tier for tier in (MAP, BATTLE)}
 
 #: Applied to every sprite in the game, both tiers. The house style.
+#:
+#: "limited palette" and "no gradients" are here rather than in one tier because
+#: they are the era, not the tier. palette.py enforces the count afterwards; this
+#: is about getting the generator to paint in blocks in the first place, so that
+#: quantising has flat areas to keep rather than ramps to destroy.
 HOUSE_TOKENS: tuple[str, ...] = (
-    "pixel art",
-    "saturated storybook fantasy palette",
+    "16 bit era pixel art",
+    "limited palette, no gradients, no dithering",
+    "saturated storybook fantasy colours",
     "clean hard pixel edges",
 )
 
@@ -123,8 +137,11 @@ HOUSE_TOKENS: tuple[str, ...] = (
 AVOID_TOKENS: tuple[str, ...] = (
     "blurry",
     "anti-aliased",
+    "soft gradients",
+    "dithering",
     "photographic",
     "3d render",
+    "modern high detail pixel art",
     "text or watermark",
 )
 

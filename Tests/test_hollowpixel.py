@@ -174,3 +174,115 @@ def _distance(a, b):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGenesisPalette(unittest.TestCase):
+    """The 16-colour limit is the constraint that makes a sprite read as SF2.
+
+    Taken from the Shining Force Central disassembly tooling, which states the
+    game's own format: 4BPP, 16 indexed colours, transparent at index 0.
+    """
+
+    def setUp(self):
+        try:
+            from PIL import Image  # noqa: F401
+        except ImportError:  # pragma: no cover
+            self.skipTest("Pillow not installed")
+
+    def noisy(self, size=64, colours=200):
+        """A sprite with far more colours than a Genesis palette can hold."""
+        import io
+
+        from PIL import Image
+        image = Image.new("RGBA", (size, size))
+        for y in range(size):
+            for x in range(size):
+                if (x - size // 2) ** 2 + (y - size // 2) ** 2 > (size // 2) ** 2:
+                    image.putpixel((x, y), (0, 0, 0, 0))
+                else:
+                    v = (x * 7 + y * 11) % colours
+                    image.putpixel((x, y), (v, (v * 3) % 256, (v * 5) % 256, 255))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return buffer.getvalue()
+
+    def test_quantising_reaches_the_palette_limit(self):
+        from hollowpixel import palette
+        result = palette.quantise(self.noisy())
+        self.assertGreater(result.colours_before, palette.PALETTE_SIZE)
+        self.assertLessEqual(result.colours_after, palette.PALETTE_SIZE - 1)
+        self.assertTrue(result.reduced)
+
+    def test_transparency_survives_and_stays_binary(self):
+        """Index 0 is transparent, so a pixel is fully in or fully out."""
+        import io
+
+        from PIL import Image
+        from hollowpixel import palette
+        with Image.open(io.BytesIO(palette.quantise(self.noisy()).image)) as out:
+            alphas = {p[3] for p in out.convert("RGBA").getdata()}
+        self.assertTrue(alphas <= {0, 255}, alphas)
+        self.assertIn(0, alphas)
+
+    def test_every_colour_lands_on_the_genesis_ladder(self):
+        """Three bits per channel. A colour off the ladder is one the hardware
+        could not display, which is what stops this reading as 16-bit era."""
+        import io
+
+        from PIL import Image
+        from hollowpixel import palette
+        with Image.open(io.BytesIO(palette.quantise(self.noisy()).image)) as out:
+            channels = {c for p in out.convert("RGBA").getdata() if p[3] > 127 for c in p[:3]}
+        self.assertTrue(channels <= set(palette.GENESIS_LEVELS), sorted(channels))
+
+    def test_the_ladder_can_be_turned_off(self):
+        from hollowpixel import palette
+        result = palette.quantise(self.noisy(), genesis_ladder=False)
+        self.assertLessEqual(result.colours_after, palette.PALETTE_SIZE - 1)
+
+    def test_quantising_an_already_small_palette_keeps_it(self):
+        import io
+
+        from PIL import Image
+        from hollowpixel import palette
+        image = Image.new("RGBA", (16, 16), (255, 0, 0, 255))
+        image.paste((0, 0, 255, 255), (0, 0, 8, 8))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        result = palette.quantise(buffer.getvalue())
+        self.assertLessEqual(result.colours_after, 2)
+
+    def test_count_colours_ignores_transparent_pixels(self):
+        import io
+
+        from PIL import Image
+        from hollowpixel import palette
+        image = Image.new("RGBA", (8, 8), (0, 0, 0, 0))
+        image.putpixel((0, 0), (255, 0, 0, 255))
+        image.putpixel((1, 1), (0, 255, 0, 255))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        self.assertEqual(palette.count_colours(buffer.getvalue()), 2)
+
+
+class TestTiersMatchTheReference(unittest.TestCase):
+    """SF2's own numbers, from the disassembly tooling, and the API sizes that
+    can actually be asked for."""
+
+    def test_sizes_are_supported_by_the_api(self):
+        from hollowpixel import style
+        from hollowpixel.pixellab import SPRITE_SIZES
+        for tier in style.TIERS.values():
+            self.assertIn(tier.size, SPRITE_SIZES, tier.key)
+
+    def test_the_map_tier_is_the_smaller_one(self):
+        from hollowpixel import style
+        self.assertLess(style.MAP.size, style.BATTLE.size)
+
+    def test_neither_tier_asks_for_the_detail_the_reference_cannot_hold(self):
+        """SF2 is 16 colours and flat blocks. Asking for detailed shading was
+        the mistake that made the first batch read as modern pixel art."""
+        from hollowpixel import style
+        for tier in style.TIERS.values():
+            self.assertEqual(tier.shading, "flat shading", tier.key)
+            self.assertNotEqual(tier.detail, "highly detailed", tier.key)
