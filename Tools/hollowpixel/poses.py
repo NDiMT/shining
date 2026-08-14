@@ -20,6 +20,21 @@ poses are written once here, and every character reuses them.
 Nothing in this module calls the API. Poses are geometry, so they are testable
 without spending anything, which is the whole reason they live apart from the
 client.
+
+**Two numbers here were measured, not chosen.** A five-way sweep of the same
+attack against the same reference sprite settled both:
+
+* **No whole-body offsets, and modest leans.** The first version shifted the
+  whole figure and leaned it hard, which displaced all eighteen keypoints in
+  every frame. The model then rebuilt the character rather than adjusting it:
+  ghost swords, a redrawn face, identity drifting frame to frame. Rotations that
+  move only the limb chain keep the character intact.
+* **``guidance_scale=8``**, not the API default of 4. At 4 the character still
+  drifts even with clean poses.
+
+Rotations are correspondingly gentle, around 30-40 degrees rather than 50-65.
+A bigger swing is built by chaining windows, not by asking one frame to travel
+further -- which is also how the attack screen reads: approach, strike, reaction.
 """
 
 from __future__ import annotations
@@ -64,6 +79,13 @@ class Pose:
     #: chain name -> degrees, positive anticlockwise on screen.
     rotations: dict[str, float] = field(default_factory=dict)
     #: Whole-body shift in normalised units. Positive x is screen-right.
+    #:
+    #: **Almost always leave this at zero.** Measured on a five-way sweep of the
+    #: same attack against the same reference: any non-zero offset displaces all
+    #: eighteen keypoints, the model stops recognising it as the same pose being
+    #: adjusted and rebuilds the character from scratch, and the frames come back
+    #: with a ghost of the old sword beside the new one and the face redrawn.
+    #: Moving a sprite across the screen is the scene's job, not the skeleton's.
     offset: tuple[float, float] = (0.0, 0.0)
     #: Torso lean about the hip midpoint, degrees.
     lean: float = 0.0
@@ -128,33 +150,28 @@ REST = Pose("rest")
 
 #: Weight back, sword arm cocked. The lean does most of the work: rotating only
 #: the arm reads as a character waving rather than winding up to hit something.
-WINDUP = Pose("windup", rotations={"right_arm": -52.0, "left_arm": 14.0},
-              lean=-7.0, offset=(-0.03, 0.0))
+WINDUP = Pose("windup", rotations={"right_arm": -31.0, "left_arm": 8.0}, lean=-3.5)
 
 #: Through the target. Arm past vertical, body committed forward.
-STRIKE = Pose("strike", rotations={"right_arm": 64.0, "left_arm": -18.0},
-              lean=11.0, offset=(0.05, 0.0))
+STRIKE = Pose("strike", rotations={"right_arm": 38.0, "left_arm": -11.0}, lean=5.5)
 
 #: Follow-through, before returning to rest.
-RECOVER = Pose("recover", rotations={"right_arm": 22.0}, lean=4.0, offset=(0.02, 0.0))
+RECOVER = Pose("recover", rotations={"right_arm": 13.0}, lean=2.0)
 
 #: Struck. Head back, arms loose, whole body driven backwards.
-HIT = Pose("hit", rotations={"right_arm": -26.0, "left_arm": -30.0, "head": -16.0},
-           lean=-15.0, offset=(-0.05, 0.0))
+HIT = Pose("hit", rotations={"right_arm": -16.0, "left_arm": -18.0, "head": -10.0}, lean=-7.5)
 
 #: Defeated. Collapsed toward the ground rather than rotated flat, which reads
 #: better at this size than a character lying rigidly on their side.
-DOWN = Pose("down", rotations={"right_arm": -70.0, "left_arm": -70.0,
-                               "right_leg": 34.0, "left_leg": 34.0, "head": -30.0},
-            lean=-38.0, offset=(-0.04, 0.12))
+DOWN = Pose("down", rotations={"right_arm": -42.0, "left_arm": -42.0,
+                               "right_leg": 20.0, "left_leg": 20.0, "head": -18.0},
+            lean=-19.0)
 
 #: Guarding. Both arms in, body square and low.
-BLOCK = Pose("block", rotations={"right_arm": -34.0, "left_arm": 40.0},
-             lean=6.0, offset=(-0.02, 0.02))
+BLOCK = Pose("block", rotations={"right_arm": -20.0, "left_arm": 24.0}, lean=3.0)
 
 #: Casting. Arms up and open, weight on the back foot.
-CAST = Pose("cast", rotations={"right_arm": -80.0, "left_arm": 80.0, "head": 8.0},
-            lean=-6.0)
+CAST = Pose("cast", rotations={"right_arm": -48.0, "left_arm": 48.0, "head": 5.0}, lean=-3.0)
 
 #: Mid-stride, for the approach the attack screen opens with.
 STEP_LEFT = Pose("step_left", rotations={"left_leg": 24.0, "right_leg": -20.0,
@@ -167,12 +184,12 @@ STEP_RIGHT = Pose("step_right", rotations={"left_leg": -20.0, "right_leg": 24.0,
 #: are chained windows, which is also how the attack screen is built: approach,
 #: strike, reaction are three separate calls whose results are played in order.
 CLIPS: dict[str, tuple[Pose, Pose, Pose]] = {
-    "idle": (REST, Pose("breathe", offset=(0.0, -0.012), lean=1.5), REST),
+    "idle": (REST, Pose("breathe", lean=1.0), REST),
     "walk": (STEP_LEFT, REST, STEP_RIGHT),
     "attack": (WINDUP, STRIKE, RECOVER),
     "block": (REST, BLOCK, BLOCK),
     "hit": (REST, HIT, HIT),
-    "death": (HIT, Pose("falling", lean=-24.0, offset=(-0.02, 0.06)), DOWN),
+    "death": (HIT, Pose("falling", lean=-12.0), DOWN),
     "cast": (REST, CAST, CAST),
 }
 
