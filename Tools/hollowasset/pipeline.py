@@ -16,7 +16,9 @@ failing halfway through with assets half-generated.
 
 from __future__ import annotations
 
+import base64
 import json
+import mimetypes
 import os
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -48,6 +50,10 @@ class Job:
     output_path: str
     region: str = "neutral"
     references: list[str] = field(default_factory=list)
+    #: What the catalog actually said, before paths became data URIs. The
+    #: provenance record keeps these: a row carrying a megabyte of base64
+    #: would destroy the readable-in-a-diff property the JSONL exists for.
+    reference_sources: list[str] = field(default_factory=list)
     enable_pbr: bool = False
     pose_mode: str = ""
     rig: bool = False
@@ -98,6 +104,36 @@ class Result:
     @property
     def ok(self) -> bool:
         return not self.error and (self.report is None or self.report.ok)
+
+
+#: Meshy accepts a data URI wherever it accepts an image URL, which is what lets
+#: concept art stay in the repository.
+#:
+#: The alternative is what the docs used to assume: the director uploads front,
+#: side and back views somewhere public and pastes the links in. That is friction
+#: on the one step brief section 68 deliberately keeps human, and worse, it puts
+#: unreleased character designs for a commercial game on a public URL to satisfy
+#: a file-transfer detail. A path under Content/References is version controlled,
+#: reviewable in a diff, and never leaves the repository except as request body.
+REFERENCE_LIMIT_BYTES = 6 * 1024 * 1024
+
+
+def resolve_reference(reference: str, *, root: str = ".") -> str:
+    """Pass a URL through; turn a repository path into a data URI."""
+    if reference.startswith(("http://", "https://", "data:")):
+        return reference
+    path = reference if os.path.isabs(reference) else os.path.join(root, reference)
+    if not os.path.isfile(path):
+        raise ValueError(f"reference {reference!r}: no such file")
+    size = os.path.getsize(path)
+    if size > REFERENCE_LIMIT_BYTES:
+        raise ValueError(
+            f"reference {reference!r}: {size / 1024 / 1024:.1f} MiB exceeds the "
+            f"{REFERENCE_LIMIT_BYTES // 1024 // 1024} MiB request limit; downscale it"
+        )
+    media = mimetypes.guess_type(path)[0] or "image/png"
+    with open(path, "rb") as handle:
+        return f"data:{media};base64," + base64.b64encode(handle.read()).decode("ascii")
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +200,13 @@ def load_catalog(path: str, *, content_root: str = "Content/Models") -> list[Job
                 budget=budget,
                 output_path=os.path.join(content_root, budget.subdir, f"{asset_id}.glb"),
                 region=region,
-                references=[str(u) for u in entry.get("references", [])],
+                references=[
+                    resolve_reference(str(u), root=os.path.dirname(path) or ".")
+                    if str(u).startswith(("./", "../"))
+                    else resolve_reference(str(u))
+                    for u in entry.get("references", [])
+                ],
+                reference_sources=[str(u) for u in entry.get("references", [])],
                 enable_pbr=bool(entry.get("enable_pbr", False)),
                 pose_mode=str(entry.get("pose", "t-pose" if budget.needs_skeleton else "")),
                 rig=rig,
@@ -489,7 +531,7 @@ def _record(job: Job, result: Result, provenance_path: str) -> None:
         tool_plan_license=provenance.DEFAULT_LICENSE_NOTE,
         prompt=job.prompt.geometry,
         texture_prompt=job.prompt.texture,
-        source_references=job.references,
+        source_references=job.reference_sources,
         task_ids=result.task_ids,
         consumed_credits=result.credits,
         triangles=info.triangles if info else 0,

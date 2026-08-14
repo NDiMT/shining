@@ -30,8 +30,8 @@
     {
       "id": "hero_rowan",
       "class": "hero",
-      "subject": "young human swordsman soldier in a light blue tabard over leather armour, short dark hair, a single asymmetric pauldron on the left shoulder, and a short travelling cape",
-      "extra": "cape and single pauldron carry the silhouette",
+      "subject": "young anime swordsman in a dark blue tunic with gold trim, spiky brown hair, a long red scarf over one shoulder, leather harness and belts, tall dark boots",
+      "extra": "red scarf and spiky hair carry the silhouette",
       "enable_pbr": false,
       "pose": "t-pose",
       "rig": true,
@@ -46,8 +46,12 @@
         "death",
         "victory"
       ],
-      "references": [],
-      "notes": "Protagonist. Needs run and victory for the escape sequence and battle results. Blockout until concept art is approved."
+      "references": [
+        "Content/References/hero_rowan_front.png",
+        "Content/References/hero_rowan_side.png",
+        "Content/References/hero_rowan_back.png"
+      ],
+      "notes": "Director-approved concept sheet, 2026-08-14. Front, side and back cropped from Content/References/hero_rowan_sheet.png; the name plate and the loose sword beside the figure were painted out, because image-to-3d treats everything in frame as part of the subject and a floating sword becomes geometry. Measured off the sheet the design is about 6.5 heads tall, not the 5 heads ANIME_DIRECTION rule 4 asks for -- flagged with the director rather than silently resolved."
     },
     {
       "id": "hero_maeve",
