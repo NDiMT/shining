@@ -106,14 +106,24 @@ class Client:
             BASE_URL + path, data=data, method=method,
             headers={"Authorization": f"Bearer {self.api_key}",
                      "Content-Type": "application/json"})
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                return response.read() if raw else json.load(response)
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", "replace")[:400]
-            raise PixelLabV2Error(f"HTTP {exc.code} on {method} {path}: {detail}") from None
-        except urllib.error.URLError as exc:
-            raise PixelLabV2Error(f"{method} {path} failed: {exc.reason}") from None
+        # Retry transport failures, never HTTP ones. A generation can take minutes
+        # and is polled for as long, so a single "connection reset by peer" used to
+        # abandon a run whose jobs were already paid for and still running
+        # server-side. An HTTP status is an answer and is not retried: repeating a
+        # POST that the server accepted would order the work twice.
+        last = ""
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                    return response.read() if raw else json.load(response)
+            except urllib.error.HTTPError as exc:
+                detail = exc.read().decode("utf-8", "replace")[:400]
+                raise PixelLabV2Error(f"HTTP {exc.code} on {method} {path}: {detail}") from None
+            except (urllib.error.URLError, OSError) as exc:
+                last = str(getattr(exc, "reason", exc))
+                if attempt < 3:
+                    time.sleep(2 ** attempt)
+        raise PixelLabV2Error(f"{method} {path} failed after 4 attempts: {last}")
 
     def balance(self) -> float:
         """Remaining US dollars.
