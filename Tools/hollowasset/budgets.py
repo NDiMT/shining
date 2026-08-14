@@ -86,12 +86,17 @@ BUDGETS: dict[str, Budget] = {
             key="hero",
             label="Main playable hero",
             tri_soft=(4_000, 10_000),
-            tri_hard=12_000,
+            tri_hard=13_000,
             texture_max=2048,
             height_m=1.5,
             needs_skeleton=True,
             subdir="Characters",
-            notes="Brief section 7: important heroes may reach ~12k if justified.",
+            notes="Brief section 7: 4-10k normally, ~12k for an important hero if "
+                  "justified -- ask for that per character with target_polycount "
+                  "rather than by widening the soft range. The hard cap is 13k "
+                  "rather than 12k so that request is expressible: a 12k ask "
+                  "measured 12,441, and a cap equal to the ask makes the maximum "
+                  "the brief allows unreachable in practice.",
         ),
         Budget(
             key="npc",

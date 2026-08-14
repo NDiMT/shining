@@ -272,6 +272,35 @@ reduction it tore the barrel apart. Island stripping first, remesh only after.
 
 ---
 
+## Remesh tears characters, at any ratio
+
+Off by default, and this is the evidence rather than a hunch.
+
+| Asset | Reduction | Result |
+| --- | --- | --- |
+| `prop_barrel_a` | 11x (6,392 -> 550) | Torn lump at every level tried |
+| `hero_rowan` | **1.13x** (12,441 -> 9,450) | Holes through the cheek and chin, hair in fragments, 1 island -> 8 |
+
+The barrel was easy to dismiss as an unreasonable ask. Rowan was not: a 13%
+reduction is the gentlest thing anyone would ever request, it was the difference
+between passing and failing a budget check, and it still opened holes in the
+face. **Do not remesh a character.** When a hero comes back over budget, ask for
+less next time or fix it in Blender.
+
+Two smaller findings from the same run, both worth knowing before someone spends
+credits chasing a phantom:
+
+- **Remesh returns a normal map.** The output has two images, `normal` at index 0
+  and `Baked_BaseColor` at index 1, and the material points at index 1. Anything
+  that assumes `images[0]` renders a lilac tangle that looks exactly like
+  catastrophic mesh damage. `preview.py` follows the material now.
+- **Ask below the cap, not at it.** A 12,000 request measured 12,441. The hero
+  hard cap is 13,000 rather than 12,000 for that reason: brief section 7 permits
+  "~12k if justified", and a cap equal to the ask makes the maximum the brief
+  allows unreachable.
+
+---
+
 ## Look before you rig
 
 A character's mesh costs a preview and a refine. Rigging it and baking a clip set

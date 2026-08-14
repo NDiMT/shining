@@ -61,6 +61,11 @@ class Job:
     #: Opt in to API decimation. Off by default; see _enforce_triangle_budget
     #: for the measurements behind that default.
     remesh: bool = False
+    #: Override the class triangle target for this asset alone. Brief section 7
+    #: allows an important hero ~12k "if justified", and justified is a
+    #: per-character decision, not a per-class one -- so it is a catalog field
+    #: rather than a budget change that would quietly raise every hero.
+    target_polycount: int | None = None
     #: How many mesh islands this asset legitimately has. None runs the safe
     #: automatic rule; a number switches on the manual override that can
     #: delete real parts. See strip.py before setting it.
@@ -78,6 +83,11 @@ class Job:
         the downscale cannot be quietly skipped.
         """
         return "2k"
+
+    @property
+    def triangle_target(self) -> int:
+        """What the generator is asked for: the catalog's number, or the class's."""
+        return self.target_polycount or self.budget.tri_target
 
     def estimate_credits(self) -> int:
         total = CREDIT_ESTIMATE["preview"] + CREDIT_ESTIMATE["refine"]
@@ -212,6 +222,7 @@ def load_catalog(path: str, *, content_root: str = "Content/Models") -> list[Job
                 rig=rig,
                 animations=anim.resolve_all(entry.get("animations", [])),
                 remesh=bool(entry.get("remesh", False)),
+                target_polycount=entry.get("target_polycount"),
                 keep_islands=entry.get("keep_islands"),
                 notes=str(entry.get("notes", "")),
             )
@@ -294,7 +305,7 @@ def _generate_mesh(
         log(f"  image-to-3d from {len(job.references)} reference(s)")
         task_id = client.image_to_3d(
             job.references,
-            target_polycount=job.budget.tri_target,
+            target_polycount=job.triangle_target,
             should_texture=True,
         )
         result.task_ids.append(task_id)
@@ -303,10 +314,10 @@ def _generate_mesh(
         )
         return _glb_url(task), task_id
 
-    log(f"  preview at {job.budget.tri_target:,} tris (lowpoly)")
+    log(f"  preview at {job.triangle_target:,} tris (lowpoly)")
     preview_id = client.text_to_3d_preview(
         job.prompt.geometry,
-        target_polycount=job.budget.tri_target,
+        target_polycount=job.triangle_target,
         pose_mode=job.pose_mode,
     )
     result.task_ids.append(preview_id)

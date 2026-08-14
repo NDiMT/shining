@@ -219,6 +219,39 @@ def _accessor(document, binary, index, numpy):
     return out
 
 
+def _base_colour_image(document, binary, numpy, Image):
+    """The material's base colour map, decoded, or None.
+
+    Follows material -> baseColorTexture -> texture -> image rather than taking
+    ``images[0]``. Taking the first image is right until something emits more than
+    one: a remesh came back with ``normal`` at index 0 and ``Baked_BaseColor`` at
+    index 1, and the character rendered as a lilac tangle that looked exactly like
+    the reduction had shredded him. It had not. The material had said index 1 all
+    along.
+    """
+    images = document.get("images", [])
+    if not images:
+        return None
+
+    source = 0
+    for material in document.get("materials", []):
+        entry = material.get("pbrMetallicRoughness", {}).get("baseColorTexture")
+        if entry is None:
+            continue
+        texture = document.get("textures", [])[int(entry["index"])]
+        source = int(texture.get("source", 0))
+        break
+
+    image = images[source] if source < len(images) else images[0]
+    if "bufferView" not in image:
+        return None
+    view = document["bufferViews"][image["bufferView"]]
+    start = view.get("byteOffset", 0)
+    payload = binary[start:start + view["byteLength"]]
+    return numpy.asarray(
+        Image.open(io.BytesIO(payload)).convert("RGB"), dtype=numpy.float64)
+
+
 def read_geometry(path: str) -> Geometry:
     """Gather world-space triangles, UVs and the base texture from a GLB."""
     numpy, Image, _ = _require()
@@ -273,14 +306,7 @@ def read_geometry(path: str) -> Geometry:
     for root in scenes[document.get("scene", 0)].get("nodes", []):
         visit(int(root), glb._IDENTITY)
 
-    texture = None
-    images = document.get("images", [])
-    if images and "bufferView" in images[0]:
-        view = document["bufferViews"][images[0]["bufferView"]]
-        start = view.get("byteOffset", 0)
-        payload = binary[start:start + view["byteLength"]]
-        texture = numpy.asarray(
-            Image.open(io.BytesIO(payload)).convert("RGB"), dtype=numpy.float64)
+    texture = _base_colour_image(document, binary, numpy, Image)
 
     return Geometry(numpy.array(triangles), numpy.array(uvs), texture,
                     normals=numpy.array(normals) if has_normals and normals else None)
