@@ -1,204 +1,136 @@
-"""Build one character's whole sprite set, from one anchor.
+"""Build one character's whole sprite set, on the v2 character API.
 
-Consistency is the requirement, so it is enforced structurally rather than asked
-for. Everything below derives from a single generated sprite:
+Shining Force draws every hero twice, and so does this: a compact figure for the
+map, where a dozen units share the screen, and a large one for the attack screen,
+where two fill it. They are two separate PixelLab characters, both anchored to
+the same reference so they are the same person.
 
-    battle stance (128, side)          <- generated once. The anchor.
-        |-- palette                    <- extracted; every file is mapped to it
-        |-- attack / block / hit / faint   <- animate-with-skeleton from it
-        `-- map sprite (64, top-down)  <- bitforge, styled by the anchor
-                |-- facings            <- rotate from the map sprite
-                `-- walk per facing    <- animate-with-skeleton from each facing
+    BATTLE  128px  side            8 rotations + attack, block, damage, faint, idle
+    MAP      48px  high top-down   8 rotations + walk
 
-Nothing is described twice. A second prompt for a second sprite is a second
-chance to drift, which is exactly how the 3D pipeline lost five generations to a
-single guard, so the only place a description appears is the anchor.
+Every clip is a **template** animation rather than an action description. The
+templates are skeleton-driven and professionally animated; free text invents
+motion, and the invented kind is what produced clips whose character changed
+between frames and whose sword vanished halfway through.
 
-The palette does the work no prompt can. Sixteen colours are extracted from the
-anchor and every other file is mapped onto them, so the hair is one brown across
-four facings and a walk cycle rather than sixteen near-identical browns. That
-mirrors the ROM: ``SF2BattleSpriteManager`` stores one palette per character, so
-the game's own format already treats colour as an attribute of the character.
+There is no sword-swing template -- the library is martial arts -- but the
+character is *holding* a sword, so the skeleton carries it: ``lead-jab`` reads as
+a thrust, ``cross-punch`` as a cut, and ``flying-kick`` as the leap into the blow
+that Shining Force's attacker makes.
 
-West is mirrored, never generated. A rotation costs about what a fresh sprite
-costs and cannot be as exact as a flip.
+This module used to compose v1's low-level endpoints by hand: generate, rotate,
+animate-with-skeleton, plus a hand-rolled pose library and a hand-rolled palette
+lock. All of that exists in v2 properly, and every hand-built version was worse
+than the thing it replaced. ``pixellab.py`` keeps the v1 surface for reference
+and is no longer the path anything should take.
 """
 
 from __future__ import annotations
 
-import io
 import os
 from dataclasses import dataclass, field
 
-from . import palette, poses, style
-from .pixellab import Client
+from .v2 import Character, Client
 
+#: Battle-screen clips mapped to templates that actually exist. Verified by
+#: sending an invalid id and reading the error, because the OpenAPI description
+#: truncates the list with an ellipsis *and* the body-level validator advertises
+#: a shorter, different set than the server returns once it knows which body
+#: template the character was built with.
+BATTLE_CLIPS: dict[str, str] = {
+    "attack": "lead-jab",
+    "attack_leap": "flying-kick",
+    "attack_cut": "cross-punch",
+    "block": "crouching",
+    "damage": "taking-punch",
+    "faint": "falling-back-death",
+    "idle": "fight-stance-idle-8-frames",
+}
 
-class _Anchor:
-    """Carries the anchor bytes under the name the rest of this module uses."""
+#: Exploration. One clip, four ways.
+MAP_CLIPS: dict[str, str] = {"walk": "walking-6-frames"}
 
-    def __init__(self, image: bytes) -> None:
-        self.image = image
+#: A tactical grid moves on four axes; the attack screen shows two facings, and
+#: the second is a mirror of the first.
+MAP_DIRECTIONS = ("south", "east", "north", "west")
+BATTLE_DIRECTIONS = ("east",)
 
-#: Facings generated for the map tier. West, south-west and north-west are
-#: mirrored from their opposites at write time.
-MAP_FACINGS = ("south", "south-east", "east", "north-east", "north")
-
-#: facing -> the facing it is mirrored from.
-MIRRORED = {"south-west": "south-east", "west": "east", "north-west": "north-east"}
-
-#: What the attack screen needs. "faint" is the game's word for it; the pose
-#: library calls the clip "death".
-BATTLE_CLIPS = {"attack": "attack", "block": "block", "damage": "hit", "faint": "death"}
+#: Enough for a unit to appear in a battle at all.
+MINIMAL = ("attack", "damage", "faint")
 
 
 @dataclass
-class CharacterSet:
+class Build:
     asset_id: str
-    files: dict[str, bytes] = field(default_factory=dict)
-    colours: list[tuple[int, int, int]] = field(default_factory=list)
+    battle: Character | None = None
+    map: Character | None = None
     spent: float = 0.0
     warnings: list[str] = field(default_factory=list)
-
-    def write(self, root: str = "Content/Sprites") -> list[str]:
-        written = []
-        for name, payload in sorted(self.files.items()):
-            path = os.path.join(root, name)
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "wb") as handle:
-                handle.write(payload)
-            written.append(path)
-        return written
-
-
-def mirror(image: bytes) -> bytes:
-    """Flip horizontally. Exact, free, and the reason west is never generated."""
-    from PIL import Image
-
-    with Image.open(io.BytesIO(image)) as opened:
-        flipped = opened.convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
-    buffer = io.BytesIO()
-    flipped.save(buffer, format="PNG")
-    return buffer.getvalue()
 
 
 def build(
     asset_id: str,
-    subject: str,
+    battle_description: str,
+    map_description: str,
     *,
-    client: Client | None = None,
-    region: str = "greenvale",
-    log=print,
     reference: bytes | None = None,
-    reference_strength: int = 300,
-    intensity: float = 1.0,
-    coverage: int = 90,
-) -> CharacterSet:
-    """Generate the anchor, then everything else from it.
+    client: Client | None = None,
+    battle_clips: tuple[str, ...] = tuple(BATTLE_CLIPS),
+    map_clips: tuple[str, ...] = tuple(MAP_CLIPS),
+    destination: str = "Content/Sprites",
+    log=print,
+) -> Build:
+    """Generate both tiers and export them.
 
-    ``reference`` is the director's concept art, seeded into the anchor as an
-    init image. It goes in once, at the only point where a description is used,
-    so the whole set inherits the approved design through the same chain that
-    already carries the palette.
+    ``reference`` anchors the battle character; the battle character's own south
+    rotation then anchors the map character. So the compact sprite is a smaller
+    drawing of the same hero rather than a second hero described in fewer words,
+    which is how the map tier drifted every time it was generated from scratch.
     """
     client = client or Client()
-    result = CharacterSet(asset_id=asset_id)
+    before = client.balance()
+    result = Build(asset_id=asset_id)
 
-    # 1. The anchor. The only call that works from a description.
-    prompt = style.build(subject, "battle", region=region)
-    anchor_raw = client.generate(
-        prompt.description, size=style.BATTLE.size, negative=prompt.negative,
-        view=style.BATTLE.view, direction=style.BATTLE.direction,
-        outline=style.BATTLE.outline, shading=style.BATTLE.shading,
-        detail=style.BATTLE.detail, text_guidance_scale=8.0,
-        coverage_percentage=coverage,
-        init_image=reference, init_image_strength=reference_strength)
+    log(f"{asset_id}: battle tier")
+    result.battle = client.create_character(
+        asset_id, battle_description, reference=reference, size=128,
+        view="side", detail="highly detailed", log=log)
+    _animate(client, result, result.battle, battle_clips, BATTLE_CLIPS,
+             BATTLE_DIRECTIONS, log)
+    battle_dir = os.path.join(destination, "Battle", asset_id)
+    client.export(result.battle, battle_dir)
 
-    # No quantising, and no forced shared palette. Both were mine and both made
-    # the sprites worse -- see palette.py. Consistency now comes from where it
-    # always should have: one anchor, and every other file derived from it by
-    # rotate, pose or mirror rather than by a second prompt.
-    anchor = _Anchor(anchor_raw)
-    result.colours = palette.extract(anchor_raw)
-    log(f"  anchor: {len(result.colours)} colours, kept as generated")
+    log(f"{asset_id}: map tier")
+    result.map = client.create_character(
+        f"{asset_id}_map", map_description, reference=south_rotation(battle_dir),
+        size=48, view="high top-down", detail="low detail", log=log)
+    _animate(client, result, result.map, map_clips, MAP_CLIPS, MAP_DIRECTIONS, log)
+    client.export(result.map, os.path.join(destination, "Characters", asset_id))
 
-    def fix(image: bytes) -> bytes:
-        return image
-
-    battle_dir = f"Battle/{asset_id}"
-    result.files[f"{battle_dir}/stance_east.png"] = anchor.image
-    result.files[f"{battle_dir}/stance_west.png"] = mirror(anchor.image)
-
-    # 2. Battle clips, posed from the anchor.
-    skeleton = client.estimate_skeleton(anchor.image)
-    for name, clip in BATTLE_CLIPS.items():
-        try:
-            frames = client.animate_skeleton(
-                anchor.image,
-                skeleton_frames=poses.frames_for(skeleton, clip, intensity=intensity),
-                size=style.BATTLE.size, direction="east", view="side",
-                guidance_scale=8.0)
-        except Exception as exc:  # noqa: BLE001 - one clip must not lose the set
-            result.warnings.append(f"battle clip {name}: {exc}")
-            log(f"  battle {name}: FAILED, {exc}")
-            continue
-        for index, frame in enumerate(frames):
-            payload = fix(frame)
-            result.files[f"{battle_dir}/{name}_east_{index}.png"] = payload
-            result.files[f"{battle_dir}/{name}_west_{index}.png"] = mirror(payload)
-        log(f"  battle {name}: {len(frames)} frames")
-
-    # 3. The map sprite, styled by the anchor rather than described again.
-    map_prompt = style.build(subject, "map", region=region)
-    map_south = client.generate(
-        map_prompt.description, size=style.MAP.size, negative=map_prompt.negative,
-        view=style.MAP.view, direction="south", outline=style.MAP.outline,
-        shading=style.MAP.shading, detail=style.MAP.detail,
-        style_image=anchor.image, style_strength=50,
-        coverage_percentage=coverage, text_guidance_scale=8.0)
-    log("  map sprite generated")
-
-    facings = {"south": map_south}
-    for facing in MAP_FACINGS[1:]:
-        try:
-            facings[facing] = fix(client.rotate(
-                map_south, to_direction=facing, from_direction="south",
-                size=style.MAP.size, view=style.MAP.view))
-            log(f"  map facing {facing}")
-        except Exception as exc:  # noqa: BLE001
-            result.warnings.append(f"map facing {facing}: {exc}")
-            log(f"  map facing {facing}: FAILED, {exc}")
-
-    # 4. Walk, per generated facing. The mirrored facings inherit their source's
-    #    frames flipped, so a walk cycle never disagrees with itself left to right.
-    map_dir = f"Characters/{asset_id}"
-    for facing, sprite in facings.items():
-        result.files[f"{map_dir}/idle_{facing}.png"] = sprite
-        # Skeleton animation, not animate-with-text, and not by choice: that
-        # endpoint is hardcoded to 64x64 and answers a 422 naming the mismatch
-        # ("reference_image is 32x32 but image_size is 64x64"). The map tier is
-        # 32, so the walk cycle uses the same mechanism the battle clips do --
-        # which is better anyway, because one animation path means one place
-        # where a clip can be wrong.
-        try:
-            frames = client.animate_skeleton(
-                sprite,
-                skeleton_frames=poses.frames_for(
-                    client.estimate_skeleton(sprite), "walk", intensity=intensity),
-                size=style.MAP.size, direction=facing, view=style.MAP.view,
-                guidance_scale=8.0)
-        except Exception as exc:  # noqa: BLE001
-            result.warnings.append(f"walk {facing}: {exc}")
-            log(f"  walk {facing}: FAILED, {exc}")
-            continue
-        for index, frame in enumerate(frames):
-            result.files[f"{map_dir}/walk_{facing}_{index}.png"] = fix(frame)
-        log(f"  walk {facing}: {len(frames)} frames")
-
-    for target, source in MIRRORED.items():
-        for name, payload in list(result.files.items()):
-            if f"_{source}" in name and name.startswith(map_dir):
-                result.files[name.replace(f"_{source}", f"_{target}")] = mirror(payload)
-
-    result.spent = client.spent
+    result.spent = before - client.balance()
+    log(f"{asset_id}: ${result.spent:.4f}")
     return result
+
+
+def south_rotation(directory: str) -> bytes | None:
+    """The south-facing rotation from an exported character, if it is there."""
+    for root, _, files in os.walk(directory):
+        if os.path.basename(root) == "rotations" and "south.png" in files:
+            with open(os.path.join(root, "south.png"), "rb") as handle:
+                return handle.read()
+    return None
+
+
+def _animate(client, result, character, wanted, table, directions, log) -> None:
+    for clip in wanted:
+        template = table.get(clip)
+        if template is None:
+            result.warnings.append(f"{clip}: no template for it")
+            log(f"  {clip}: no template, skipped")
+            continue
+        try:
+            client.animate_template(character, clip, template,
+                                    directions=directions, log=log)
+        except Exception as exc:  # noqa: BLE001 - one clip must not lose the set
+            result.warnings.append(f"{clip}: {exc}")
+            log(f"  {clip}: FAILED, {exc}")

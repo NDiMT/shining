@@ -225,6 +225,43 @@ class Client:
         log(f"  {clip}: {len(directions)} direction(s)")
         self._wait(body.get("background_job_ids", []), log=log)
 
+    def animate_template(
+        self,
+        character: Character,
+        clip: str,
+        template_animation_id: str,
+        *,
+        directions: tuple[str, ...] = DIRECTIONS,
+        log=lambda _: None,
+    ) -> None:
+        """Add a template animation -- the good path.
+
+        Templates are skeleton-driven and professionally animated, and cost one
+        generation per direction. The alternative, ``animate`` with an action
+        description, invents the motion, and invented motion is what produced
+        clips whose character was redrawn between frames.
+
+        The available ids are **not** discoverable from the OpenAPI description,
+        which truncates them, and the body-level validator advertises a shorter,
+        different list than the server returns once it knows the character's body
+        template. Sending a deliberately invalid id and reading that second error
+        is the only way to see the real set. For ``mannequin`` it is 49 long, and
+        contains no sword swing -- ``lead-jab``, ``cross-punch`` and
+        ``flying-kick`` stand in, because a character holding a sword swings it
+        when the arm moves.
+        """
+        body = self._request("POST", "/characters/animations", {
+            "character_id": character.id,
+            "animation_name": clip,
+            "mode": "template",
+            "template_animation_id": template_animation_id,
+            "directions": list(directions),
+            "keep_first_frame": True,
+            "force_colors": True,
+        })
+        log(f"  {clip} <- {template_animation_id} ({len(directions)} direction(s))")
+        self._wait(body.get("background_job_ids", []), log=log)
+
     def create_state(
         self,
         character: Character,
