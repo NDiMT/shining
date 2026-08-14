@@ -426,6 +426,22 @@ def build(
     #    before — an eighteen-token avoid list — and the tree grew individual
     #    leaves. Losing the class signature has cost us a generation twice now, so
     #    it stops being optional.
+    #    Style and proportion lead; the subject follows. The order is the whole
+    #    point and it was learned twice, the second time expensively.
+    #
+    #    On the texture prompt, a crate whose prompt opened "square wooden
+    #    shipping crate" came back photoreal with real grain and stencilled
+    #    lettering despite "photorealistic" sitting in the avoid list. Putting
+    #    "hand-painted stylized game texture, not photographic" in front of the
+    #    subject fixed it in one generation.
+    #
+    #    The geometry prompt kept the old order, and it failed the same way three
+    #    times. As sent, the guard's prompt opened with 200 characters of "human
+    #    Greenvale soldier in a green tabard over mail with a conical helm, round
+    #    shield and short sword" — an unambiguously realistic adult — and only
+    #    then mentioned five heads. A realistic noun phrase in front carries an
+    #    overwhelming prior, exactly as "shipping crate" did, and the proportion
+    #    clause was arguing with it from fifth place instead of setting the frame.
     core_text = ", ".join(CORE_STYLE_TOKENS)
     class_clauses = _tokens(CLASS_STYLE.get(class_key, ""))
     signature = class_clauses[0] if class_clauses else ""
@@ -433,7 +449,7 @@ def build(
     subject_text = ", ".join(_tokens(subject, extra))
     room_for_subject = PROMPT_LIMIT - AVOID_RESERVE - len(fixed_text) - 2
     subject_text = _truncate(subject_text, room_for_subject)
-    required_text = f"{subject_text}, {fixed_text}" if subject_text else fixed_text
+    required_text = f"{fixed_text}, {subject_text}" if subject_text else fixed_text
 
     # 2. The avoid clause gets whatever space is left rather than a fixed slice:
     #    a short subject should get the full avoid list, not an arbitrarily
