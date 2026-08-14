@@ -445,12 +445,15 @@ def build(
     core_text = ", ".join(CORE_STYLE_TOKENS)
     class_clauses = _tokens(CLASS_STYLE.get(class_key, ""))
     signature = class_clauses[0] if class_clauses else ""
-    # Proportion ahead of even the core tokens. Moving the subject out of first
-    # place moved a guard from a seven-and-a-half-head soldier to roughly six
-    # heads with oversized hands and chunky boots -- the first movement in four
-    # attempts -- so first place is demonstrably the position that decides the
-    # build, and the rule that keeps failing is the one that should hold it.
-    fixed_text = f"{signature}, {core_text}" if signature else core_text
+    #    Order settled by experiment and then left alone. Style tokens, then the
+    #    class signature, then the subject. Pushing the signature ahead of the
+    #    core tokens as well was tried and came back a tall thin figure in a long
+    #    tunic, worse than this order on every count -- but that is one sample
+    #    against a generator measured at 31-41% variance on repeat runs of an
+    #    identical prompt, so it is not evidence that first place is harmful. It
+    #    is only a reason to keep the arrangement that produced the best result
+    #    and stop spending 30 credits a time on orderings we cannot tell apart.
+    fixed_text = f"{core_text}, {signature}" if signature else core_text
     subject_text = ", ".join(_tokens(subject, extra))
     room_for_subject = PROMPT_LIMIT - AVOID_RESERVE - len(fixed_text) - 2
     subject_text = _truncate(subject_text, room_for_subject)
