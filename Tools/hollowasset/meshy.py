@@ -194,8 +194,10 @@ class Client:
         side and back concept art, and the mesh follows the approved design
         rather than whatever the text prompt happens to evoke that day.
         """
+        if not image_urls:
+            raise MeshyError("image_to_3d needs at least one reference image")
+
         payload: dict[str, Any] = {
-            "image_urls": image_urls,
             "ai_model": ai_model,
             "should_remesh": should_remesh,
             "should_texture": should_texture,
@@ -205,7 +207,17 @@ class Client:
             "target_formats": ["glb"],
             "moderation": True,
         }
-        return self._create("/openapi/v1/image-to-3d", payload)
+
+        # One image and several images are different endpoints with differently
+        # named fields, and getting it wrong is not a soft failure: posting
+        # "image_urls" to the single endpoint returns
+        # "Either image_url or input_task_id must be provided", which reads like
+        # a missing-argument bug rather than a wrong-endpoint one.
+        if len(image_urls) == 1:
+            payload["image_url"] = image_urls[0]
+            return self._create("/openapi/v1/image-to-3d", payload)
+        payload["image_urls"] = image_urls
+        return self._create("/openapi/v1/multi-image-to-3d", payload)
 
     def remesh(
         self,
