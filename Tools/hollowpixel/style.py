@@ -57,6 +57,12 @@ class Tier:
     #: their opposites rather than generated, because a rotation costs about what
     #: a fresh sprite costs and a mirrored sprite is exact.
     facings: tuple[str, ...] = ()
+    #: Comma clauses of the subject this tier keeps. A prompt has to shrink with
+    #: the pixel budget: at 32 pixels a fifteen-clause description of belts and
+    #: trim is not detail the sprite can hold, it is noise competing for the same
+    #: four hundred pixels, and it came back as mush. Three clauses -- who it is,
+    #: the dominant colour, the one accent -- is what 24x24 can actually carry.
+    subject_clauses: int | None = None
     subdir: str = ""
     notes: str = ""
 
@@ -88,6 +94,7 @@ MAP = Tier(
         "16 colour Sega Genesis palette",
     ),
     facings=("south", "south-east", "east", "north-east", "north"),
+    subject_clauses=3,
     subdir="Characters",
     notes="24x24 in SF2; 32 is the nearest size the API supports. Mirror east "
           "to west and north-east to north-west at draw time.",
@@ -178,7 +185,10 @@ def build(subject: str, tier_key: str, *, region: str = "neutral",
     if region not in REGIONS:
         raise KeyError(f"unknown region {region!r}; known: {', '.join(sorted(REGIONS))}")
 
-    parts = [subject, *tier.direction_tokens, *HOUSE_TOKENS]
+    clauses = [c.strip() for c in subject.split(",") if c.strip()]
+    if tier.subject_clauses:
+        clauses = clauses[: tier.subject_clauses]
+    parts = [", ".join(clauses), *tier.direction_tokens, *HOUSE_TOKENS]
     if REGIONS[region]:
         parts.append(REGIONS[region])
     if extra:
