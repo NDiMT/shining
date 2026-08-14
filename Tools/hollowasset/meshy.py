@@ -13,6 +13,7 @@ validate.py.
 Endpoints confirmed live against the API on 2026-08-13:
     POST/GET  /openapi/v2/text-to-3d      preview and refine
     POST/GET  /openapi/v1/image-to-3d
+    POST/GET  /openapi/v1/retexture
     POST/GET  /openapi/v1/remesh
     POST/GET  /openapi/v1/rigging
     POST/GET  /openapi/v1/animations
@@ -219,6 +220,52 @@ class Client:
         payload["image_urls"] = image_urls
         return self._create("/openapi/v1/multi-image-to-3d", payload)
 
+    def retexture(
+        self,
+        *,
+        input_task_id: str = "",
+        model_url: str = "",
+        text_style_prompt: str = "",
+        multiview_image_urls: list[str] | None = None,
+        enable_pbr: bool = False,
+        texture_resolution: str = "2k",
+    ) -> str:
+        """Repaint an existing mesh without regenerating it.
+
+        The reason this exists is anime rule 3. image-to-3d builds its texture by
+        projecting the reference views onto the mesh, and projection carries
+        whatever lighting the drawing had: Rowan arrived with the hair's shadow
+        baked across his cheek and seams where the projections met, which read as
+        smears on the face. Rule 3 bans baked lighting outright -- it double-shades
+        under the toon ramp -- so repainting is the rule being enforced rather than
+        a patch over a bad result.
+
+        Cheaper than regenerating, and it keeps the mesh: the geometry came from
+        approved concept art and there is no reason to roll the dice on it again.
+
+        Give it ``text_style_prompt`` to repaint from a description, or
+        ``multiview_image_urls`` to re-project from the same reference views.
+        """
+        payload: dict[str, Any] = {
+            "enable_pbr": enable_pbr,
+            "texture_resolution": texture_resolution,
+            "ai_model": "latest",
+        }
+        if input_task_id:
+            payload["input_task_id"] = input_task_id
+        elif model_url:
+            payload["model_url"] = model_url
+        else:
+            raise MeshyError("retexture needs input_task_id or model_url")
+
+        if text_style_prompt:
+            payload["text_style_prompt"] = text_style_prompt
+        elif multiview_image_urls:
+            payload["multiview_image_urls"] = multiview_image_urls
+        else:
+            raise MeshyError("retexture needs text_style_prompt or multiview_image_urls")
+        return self._create("/openapi/v1/retexture", payload)
+
     def remesh(
         self,
         input_task_id: str,
@@ -341,3 +388,4 @@ IMAGE_TO_3D = "/openapi/v1/image-to-3d"
 REMESH = "/openapi/v1/remesh"
 RIGGING = "/openapi/v1/rigging"
 ANIMATIONS = "/openapi/v1/animations"
+RETEXTURE = "/openapi/v1/retexture"

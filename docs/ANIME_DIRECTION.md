@@ -37,13 +37,14 @@ with baked lighting fights the cel shader and produces mud, which is the one
 failure mode that makes cel shading look cheap instead of deliberate.
 
 **4. Small, chunky-limbed anime proportion.**
-Director's call, revised: the cast is *small*, in the mould of a Kingdom Hearts
-party rather than a realistic soldier. Concretely, and these numbers are the
-rule:
+Director's call, and settled against a drawing rather than a description: the
+approved Rowan sheet measures about 6.5 heads, and the director confirmed that
+sheet is the target. Five heads was the earlier number and it is superseded --
+the art is the specification, not the paragraph that preceded it.
 
 | | Target |
 | --- | --- |
-| Head-to-body | **5 to 5.5 heads** — a realistic adult is 7.5 to 8 |
+| Head-to-body | **6.5 heads** — a realistic adult is 7.5 to 8 |
 | Standing height | **1.5 m** for heroes, NPCs and humanoid enemies |
 | Hands and feet | **Oversized.** Big simple shoes, chunky gloved hands |
 | Limbs | Slim between the joints, so the large extremities read |
@@ -58,12 +59,12 @@ This also serves brief section 89 rather than fighting it. A bigger head and
 bigger hands are more pixels on the parts a player reads a class from, at the one
 distance that matters.
 
-**Text-to-3d has failed this rule twice.** Both attempts put the proportion
-language in the prompt, verified it survived packing, and got back the same
-seven-and-a-half-head soldier. Treat the prompt path as worth one more try at
-these much more concrete numbers, and the concept-art path
-(`references` → image-to-3d, see ASSET_PIPELINE.md) as the one that is actually
-expected to work.
+**Text-to-3d failed this rule five times and concept art passed it first try.**
+Five guard generations missed on proportion and every one blew its triangle cap;
+Rowan came from the approved sheet at 7,186 triangles inside a 4,000-10,000
+budget, one island, correct height. Do not spend credits arguing with a text
+prompt about proportion. Draw it, put it in `Content/References`, and reference
+it from the catalog -- see ASSET_PIPELINE.md.
 
 **5. Saturated, separated hues.**
 Neighbouring materials get different *hues*, not different shades of one. Cel

@@ -112,6 +112,15 @@ class Geometry:
     texture_index: object | None = None
     #: Several base colour textures, for a scene composed of several assets.
     textures: list | None = None
+    #: Per-corner vertex normals, (n, 3, 3), or None to shade flat.
+    #:
+    #: Without these every smooth surface renders faceted, and on a face that
+    #: is not a small loss: Rowan's cheeks and chin came back covered in hard
+    #: triangular breaks that survived a full retexture unchanged -- which is
+    #: what gave it away, because a texture defect cannot survive being
+    #: repainted. The GLB had carried NORMAL all along and this module read
+    #: POSITION, TEXCOORD_0 and nothing else.
+    normals: object | None = None
 
     def materials(self, numpy, textured: bool):
         """Resolve the texture list, per-triangle index and per-triangle colour."""
@@ -218,6 +227,8 @@ def read_geometry(path: str) -> Geometry:
     scenes = document.get("scenes", [{}])
     triangles: list = []
     uvs: list = []
+    normals: list = []
+    has_normals = True
 
     def visit(index: int, parent):
         node = nodes[index]
@@ -232,6 +243,20 @@ def read_geometry(path: str) -> Geometry:
                 uv = (_accessor(document, binary, attributes["TEXCOORD_0"], numpy)
                       if "TEXCOORD_0" in attributes
                       else numpy.zeros((len(positions), 2)))
+                if "NORMAL" in attributes:
+                    raw = _accessor(document, binary, attributes["NORMAL"], numpy)
+                    # A normal is a direction, so the node's translation must not
+                    # apply. Transforming the origin and subtracting removes it and
+                    # leaves the rotation and scale; renormalising undoes the scale.
+                    zero = numpy.array(glb._transform_point(world, (0.0, 0.0, 0.0)))
+                    world_normals = numpy.array(
+                        [glb._transform_point(world, tuple(n)) for n in raw]) - zero
+                    lengths = numpy.linalg.norm(world_normals, axis=1)
+                    safe = lengths > 0
+                    world_normals[safe] /= lengths[safe, None]
+                else:
+                    has_normals = False
+                    world_normals = numpy.zeros((len(positions), 3))
                 indices = (_accessor(document, binary, primitive["indices"], numpy)
                            .astype(int).ravel()
                            if "indices" in primitive else numpy.arange(len(positions)))
@@ -241,6 +266,7 @@ def read_geometry(path: str) -> Geometry:
                     a, b, c = indices[i], indices[i + 1], indices[i + 2]
                     triangles.append((world_positions[a], world_positions[b], world_positions[c]))
                     uvs.append((uv[a], uv[b], uv[c]))
+                    normals.append((world_normals[a], world_normals[b], world_normals[c]))
         for child in node.get("children", []):
             visit(int(child), world)
 
@@ -256,7 +282,8 @@ def read_geometry(path: str) -> Geometry:
         texture = numpy.asarray(
             Image.open(io.BytesIO(payload)).convert("RGB"), dtype=numpy.float64)
 
-    return Geometry(numpy.array(triangles), numpy.array(uvs), texture)
+    return Geometry(numpy.array(triangles), numpy.array(uvs), texture,
+                    normals=numpy.array(normals) if has_normals and normals else None)
 
 
 def _shade(normals, numpy, *, toon: bool):
@@ -418,6 +445,18 @@ def render(
     front = usable & (normals[:, 2] <= 0)       # back faces point along +z
     shades = _shade(normals, numpy, toon=toon)
 
+    # Vertex normals, in view space, for per-pixel shading. Culling still uses
+    # the geometric normal above: a vertex normal can point away from the camera
+    # on a silhouette triangle and would cull a face that is genuinely visible.
+    #
+    # The ramp has to be applied *after* interpolation, not blended between three
+    # corner shades, or the hard terminator rule 1 asks for turns into a gradient
+    # across every triangle it crosses -- which is the smooth shading this whole
+    # module exists to avoid.
+    vertex_normals = None
+    if geometry.normals is not None and len(geometry.normals) == len(view):
+        vertex_normals = camera.view(numpy.asarray(geometry.normals, dtype=float))
+
     low_x = numpy.clip(numpy.floor(screen_x.min(axis=1)), 0, size).astype(int)
     high_x = numpy.clip(numpy.ceil(screen_x.max(axis=1)) + 1, 0, size).astype(int)
     low_y = numpy.clip(numpy.floor(screen_y.min(axis=1)), 0, frame_height).astype(int)
@@ -460,7 +499,17 @@ def render(
         else:
             source = flat_colours[t]
 
-        tinted = numpy.clip(source * shades[t], 0, 255)
+        if vertex_normals is None:
+            shade = shades[t]
+        else:
+            n = (w0[..., None] * vertex_normals[t, 0]
+                 + w1[..., None] * vertex_normals[t, 1]
+                 + w2[..., None] * vertex_normals[t, 2])
+            lengths = numpy.linalg.norm(n, axis=-1)
+            n = numpy.divide(n, lengths[..., None], out=n, where=lengths[..., None] > 0)
+            shade = _shade(n.reshape(-1, 3), numpy, toon=toon).reshape(w0.shape)[..., None]
+
+        tinted = numpy.clip(source * shade, 0, 255)
         block = colour[window]
         block[closer] = tinted[closer] if tinted.ndim == 3 else tinted
         colour[window] = block

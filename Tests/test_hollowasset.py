@@ -860,6 +860,20 @@ NORTH_MEADOW = "Content/Data/Battles/battle_north_meadow.json"
 THE_BREACH = "Content/Data/Battles/battle_the_breach.json"
 
 
+def _resolved_model(unit):
+    """What scene._add_units will actually load for this unit, or None.
+
+    Mirrors the module's own two-step lookup -- the declared path, then a search
+    by asset id -- so a test can count placeholders without hard-coding which
+    assets happen to exist today.
+    """
+    if unit.model and os.path.exists(unit.model):
+        return unit.model
+    if unit.model:
+        return scene.find_model(os.path.splitext(os.path.basename(unit.model))[0])
+    return None
+
+
 class TestScene(unittest.TestCase):
     """The offline battle renderer.
 
@@ -1041,21 +1055,28 @@ class TestScene(unittest.TestCase):
         self.assertGreater(len(planted.triangles), len(empty.triangles) + 20_000)
 
     def test_units_with_no_model_are_drawn_as_placeholders(self):
+        """A unit whose GLB is missing gets a stand-in, never a hole.
+
+        Both counts are derived from the battle rather than written down. The
+        first version asserted literal 10 and 4, read off whichever assets
+        happened to exist that day, and both broke the moment hero_rowan.glb
+        was generated -- a test failing because the project made progress.
+        """
         battle = scene.load_battle(NORTH_MEADOW)
         geometry, placeholders = scene.build(battle)
-        # Only npc_guard_greenvale.glb has been generated, and battle 01 uses
-        # none of it, so every unit is a placeholder -- and none is skipped.
-        self.assertEqual(placeholders, len(battle.units))
-        self.assertTrue(any("placeholder" in warning for warning in battle.warnings))
+        expected = sum(1 for unit in battle.units if _resolved_model(unit) is None)
+        self.assertEqual(placeholders, expected)
         self.assertGreater(len(geometry.triangles), 0)
+        if expected:
+            self.assertTrue(any("placeholder" in w for w in battle.warnings))
 
     def test_a_generated_character_model_is_used_when_it_exists(self):
+        """Whatever has been generated must be drawn rather than stood in for."""
         battle = scene.load_battle(THE_BREACH)
         _, placeholders = scene.build(battle)
-        # The five hesitant soldiers and two injured guards all share
-        # npc_guard_greenvale.glb, which exists; the three heroes and Varric
-        # do not have models yet.
-        self.assertEqual(placeholders, 4)
+        modelled = [u for u in battle.units if _resolved_model(u) is not None]
+        self.assertTrue(modelled, "the breach should resolve at least one real model")
+        self.assertEqual(placeholders, len(battle.units) - len(modelled))
 
     def test_a_unit_stands_on_its_own_tile(self):
         grid = scene.Grid.parse(["gg", "gg"], self.terrain)
