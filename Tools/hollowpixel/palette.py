@@ -14,9 +14,17 @@ sprite that has not been through here is not Shining Force II-shaped no matter
 what the prompt asked for. Asking the model for "16 colours" does not work; the
 count is a property of the file, so it is enforced on the file.
 
-Quantising is also the cheapest quality lever in the pipeline. It costs nothing,
-it is deterministic, and it collapses exactly the thing that reads as wrong:
-dozens of near-identical shading steps that a Genesis sprite could never hold.
+**Do not run this on PixelLab output.** That was the plan and it was wrong.
+Measured on a four-way comparison of the same subject, the raw sprites were
+visibly better than the quantised ones every time: the blue tunic washed out, the
+red cape went dull, faces flattened. PixelLab already produces disciplined pixel
+art, and its 100-200 colours are its shading ramps rather than photographic
+noise. Collapsing them to fifteen does not make the sprite more Genesis, it makes
+it muddier.
+
+What this module is still for: a genuine ROM export, where 4BPP is the file
+format and not a stylistic choice, and inspecting a sprite's colour count. It is
+opt-in, and the pipeline no longer calls it.
 """
 
 from __future__ import annotations

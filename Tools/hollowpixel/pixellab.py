@@ -131,6 +131,7 @@ class Client:
         style_strength: int = 50,
         init_image: bytes | None = None,
         init_image_strength: int = 300,
+        coverage_percentage: int | None = None,
         no_background: bool = True,
         text_guidance_scale: float = 8.0,
         seed: int | None = None,
@@ -157,6 +158,11 @@ class Client:
         }
         if seed is not None:
             payload["seed"] = seed
+        if coverage_percentage is not None:
+            # How much of the canvas the figure fills. Never used for most of
+            # this pipeline's life, which is why a 128px battle sprite sat in the
+            # middle of its frame using half its pixels.
+            payload["coverage_percentage"] = coverage_percentage
         if init_image is not None:
             # Seeds the generation from an existing picture. This is how the
             # director's concept sheet reaches the sprite: as an *init* image,

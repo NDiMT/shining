@@ -279,13 +279,13 @@ class TestTiersMatchTheReference(unittest.TestCase):
         from hollowpixel import style
         self.assertLess(style.MAP.size, style.BATTLE.size)
 
-    def test_neither_tier_asks_for_the_detail_the_reference_cannot_hold(self):
-        """SF2 is 16 colours and flat blocks. Asking for detailed shading was
-        the mistake that made the first batch read as modern pixel art."""
+    def test_the_battle_tier_asks_for_real_shading(self):
+        """Reversed on measurement. Flat shading plus a 16-colour quantiser was
+        the "authentic" answer and it produced washed-out, muddy sprites; the
+        generator's own shading beat it on the same subject four ways."""
         from hollowpixel import style
-        for tier in style.TIERS.values():
-            self.assertEqual(tier.shading, "flat shading", tier.key)
-            self.assertNotEqual(tier.detail, "highly detailed", tier.key)
+        self.assertIn(style.BATTLE.shading, ("medium shading", "detailed shading"))
+        self.assertEqual(style.BATTLE.detail, "highly detailed")
 
 
 class TestSharedPalette(unittest.TestCase):

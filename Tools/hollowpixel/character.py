@@ -33,6 +33,13 @@ from dataclasses import dataclass, field
 from . import palette, poses, style
 from .pixellab import Client
 
+
+class _Anchor:
+    """Carries the anchor bytes under the name the rest of this module uses."""
+
+    def __init__(self, image: bytes) -> None:
+        self.image = image
+
 #: Facings generated for the map tier. West, south-west and north-west are
 #: mirrored from their opposites at write time.
 MAP_FACINGS = ("south", "south-east", "east", "north-east", "north")
@@ -83,8 +90,9 @@ def build(
     region: str = "greenvale",
     log=print,
     reference: bytes | None = None,
-    reference_strength: int = 200,
+    reference_strength: int = 300,
     intensity: float = 1.0,
+    coverage: int = 90,
 ) -> CharacterSet:
     """Generate the anchor, then everything else from it.
 
@@ -102,14 +110,20 @@ def build(
         prompt.description, size=style.BATTLE.size, negative=prompt.negative,
         view=style.BATTLE.view, direction=style.BATTLE.direction,
         outline=style.BATTLE.outline, shading=style.BATTLE.shading,
-        detail=style.BATTLE.detail, text_guidance_scale=10.0,
+        detail=style.BATTLE.detail, text_guidance_scale=8.0,
+        coverage_percentage=coverage,
         init_image=reference, init_image_strength=reference_strength)
-    anchor = palette.quantise(anchor_raw)
-    result.colours = palette.extract(anchor.image)
-    log(f"  anchor: {anchor.colours_before} -> {anchor.colours_after} colours")
+
+    # No quantising, and no forced shared palette. Both were mine and both made
+    # the sprites worse -- see palette.py. Consistency now comes from where it
+    # always should have: one anchor, and every other file derived from it by
+    # rotate, pose or mirror rather than by a second prompt.
+    anchor = _Anchor(anchor_raw)
+    result.colours = palette.extract(anchor_raw)
+    log(f"  anchor: {len(result.colours)} colours, kept as generated")
 
     def fix(image: bytes) -> bytes:
-        return palette.apply_palette(image, result.colours).image
+        return image
 
     battle_dir = f"Battle/{asset_id}"
     result.files[f"{battle_dir}/stance_east.png"] = anchor.image
@@ -136,12 +150,12 @@ def build(
 
     # 3. The map sprite, styled by the anchor rather than described again.
     map_prompt = style.build(subject, "map", region=region)
-    map_south = fix(palette.quantise(client.generate(
+    map_south = client.generate(
         map_prompt.description, size=style.MAP.size, negative=map_prompt.negative,
         view=style.MAP.view, direction="south", outline=style.MAP.outline,
         shading=style.MAP.shading, detail=style.MAP.detail,
-        style_image=anchor.image, style_strength=45,
-        text_guidance_scale=10.0)).image)
+        style_image=anchor.image, style_strength=50,
+        coverage_percentage=coverage, text_guidance_scale=8.0)
     log("  map sprite generated")
 
     facings = {"south": map_south}

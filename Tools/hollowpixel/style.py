@@ -20,9 +20,13 @@ colour. Roughly seven times the pixel area on the map tier, and thousands of
 colours where the reference has fifteen. Chasing *more* detail was the mistake --
 Shining Force II is a game of hard restraint, and the restraint is what reads.
 
-So both tiers now ask for flat shading and low detail, and every sprite is
-quantised to sixteen colours on the Genesis ladder by ``palette.py``. The count
-is a property of the file, not something a prompt can be trusted to honour.
+Both of those corrections then went too far. Forcing flat shading and quantising
+to sixteen colours was measured against the raw output on the same subject four
+ways, and the raw sprites won every time: the tunic washed out, the cape went
+dull, faces flattened. PixelLab already produces disciplined pixel art, and its
+hundred-odd colours are shading ramps rather than photographic noise. So the
+tiers ask for real shading again, quantising is opt-in and off, and the Genesis
+palette is kept for a ROM export where 4BPP is a file format rather than taste.
 
 Sizes are the nearest the API supports. ``animate-with-skeleton`` takes 16, 32,
 64, 128 or 256 and nothing between; ``animate-with-text`` is 64 only; and
@@ -79,12 +83,12 @@ class Tier:
 #: direction asked for five times and never got.
 MAP = Tier(
     key="map",
-    size=32,
+    size=64,
     view="high top-down",
     direction="south",
     outline="single color black outline",
     shading="flat shading",
-    detail="low detail",
+    detail="medium detail",
     direction_tokens=(
         "super deformed chibi sprite",
         "huge head, tiny body, two heads tall",
@@ -96,8 +100,8 @@ MAP = Tier(
     facings=("south", "south-east", "east", "north-east", "north"),
     subject_clauses=3,
     subdir="Characters",
-    notes="24x24 in SF2; 32 is the nearest size the API supports. Mirror east "
-          "to west and north-east to north-west at draw time.",
+    notes="24x24 in SF2, but 32 produced noise on four separate attempts and "
+          "64 does not. Mirror east to west and north-east to north-west.",
 )
 
 #: The attack screen. One figure filling the frame, so detail earns its pixels.
@@ -107,8 +111,8 @@ BATTLE = Tier(
     view="side",
     direction="east",
     outline="single color black outline",
-    shading="flat shading",
-    detail="medium detail",
+    shading="medium shading",
+    detail="highly detailed",
     direction_tokens=(
         "16 bit Sega Genesis JRPG battle sprite",
         "four heads tall, large head",
