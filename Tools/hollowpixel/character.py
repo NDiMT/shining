@@ -8,15 +8,26 @@ the same reference so they are the same person.
     BATTLE  128px  side            8 rotations + attack, block, damage, faint, idle
     MAP      48px  high top-down   8 rotations + walk
 
-Every clip is a **template** animation rather than an action description. The
-templates are skeleton-driven and professionally animated; free text invents
-motion, and the invented kind is what produced clips whose character changed
-between frames and whose sword vanished halfway through.
+The two tiers animate by different means, because they want different things.
 
-There is no sword-swing template -- the library is martial arts -- but the
-character is *holding* a sword, so the skeleton carries it: ``lead-jab`` reads as
-a thrust, ``cross-punch`` as a cut, and ``flying-kick`` as the leap into the blow
-that Shining Force's attacker makes.
+The map tier uses **templates**: skeleton-driven, professionally animated, one
+generation per direction, and a walk cycle is a solved problem no generator
+should be reinventing four times.
+
+The battle tier uses **pro** custom animation. There is no sword-swing template
+-- the ``mannequin`` library is 49 martial-arts clips, and the ``attack`` ids in
+the API's own list belong to the quadruped skeletons -- and the martial-arts
+stand-ins were a bad trade: ``cross-punch`` and ``flying-kick`` make the
+character drop the blade, and ``lead-jab`` keeps it for three frames of a punch.
+The cheap custom mode, ``v3``, was worse still: it redraws the character in place
+so the body never commits to the blow, and it papers over the missing motion with
+an invented white impact flash. ``pro`` costs twenty to forty generations per
+direction and is the only one that produced a swing -- weight onto the front
+foot, shoulders turning through the cut, cape following, no effects.
+
+At roughly $0.10 a direction that is real money across a roster. It is also the
+difference between an attack screen and a slideshow, and the attack screen is the
+thing the player looks at most.
 
 This module used to compose v1's low-level endpoints by hand: generate, rotate,
 animate-with-skeleton, plus a hand-rolled pose library and a hand-rolled palette
@@ -32,22 +43,37 @@ from dataclasses import dataclass, field
 
 from .v2 import Character, Client
 
-#: Battle-screen clips mapped to templates that actually exist. Verified by
-#: sending an invalid id and reading the error, because the OpenAPI description
-#: truncates the list with an ellipsis *and* the body-level validator advertises
-#: a shorter, different set than the server returns once it knows which body
-#: template the character was built with.
+#: Battle-screen clips as motion, for pro custom animation.
+#:
+#: Written as weight and shoulders rather than as arm positions. "Swings the
+#: sword" gave a rotating sword on a statue; naming the step, the turn and the
+#: finish gave a body that moves through the blow. Every one of them ends
+#: somewhere specific, because a clip with no stated end pose drifts back to idle
+#: and reads as nothing having happened.
 BATTLE_CLIPS: dict[str, str] = {
-    "attack": "lead-jab",
-    "attack_leap": "flying-kick",
-    "attack_cut": "cross-punch",
-    "block": "crouching",
-    "damage": "taking-punch",
-    "faint": "falling-back-death",
-    "idle": "fight-stance-idle-8-frames",
+    "attack": (
+        "steps forward onto the front foot, raises the sword high overhead with "
+        "both shoulders turning, then swings it down and across in one committed "
+        "diagonal cut, ending crouched low with the blade held out to the side"),
+    "block": (
+        "plants both feet and turns the shoulder forward, bringing the sword up "
+        "across the chest to guard, head tucked behind the blade"),
+    "damage": (
+        "snaps backwards from the impact, head thrown back and arms flung wide, "
+        "staggering off the back foot"),
+    "faint": (
+        "buckles at the knees and falls backwards to the ground, sword slipping "
+        "from the hand, ending flat on the back"),
+    "idle": (
+        "breathes in a ready stance, sword held low, weight shifting gently from "
+        "foot to foot"),
 }
 
-#: Exploration. One clip, four ways.
+#: Exploration. One clip, four ways -- and a template, because a walk cycle is
+#: solved. Verified by sending an invalid id and reading the error, because the
+#: OpenAPI description truncates the list with an ellipsis *and* the body-level
+#: validator advertises a shorter, different set than the server returns once it
+#: knows which body template the character was built with.
 MAP_CLIPS: dict[str, str] = {"walk": "walking-6-frames"}
 
 #: A tactical grid moves on four axes; the attack screen shows two facings, and
@@ -95,9 +121,13 @@ def build(
     result.battle = client.create_character(
         asset_id, battle_description, reference=reference, size=128,
         view="side", detail="highly detailed", log=log)
-    _animate(client, result, result.battle, battle_clips, BATTLE_CLIPS,
-             BATTLE_DIRECTIONS, log)
     battle_dir = os.path.join(destination, "Battle", asset_id)
+    # Export first: the rotations are what lock the palette on every clip, and
+    # force_colors without a colour image is the no-op this pipeline shipped for
+    # weeks. Nothing to pass means nothing is forced.
+    client.export(result.battle, battle_dir)
+    _battle_clips(client, result, result.battle, battle_clips,
+                  east_rotation(battle_dir), battle_description, log)
     client.export(result.battle, battle_dir)
 
     log(f"{asset_id}: map tier")
@@ -112,13 +142,41 @@ def build(
     return result
 
 
-def south_rotation(directory: str) -> bytes | None:
-    """The south-facing rotation from an exported character, if it is there."""
+def rotation(directory: str, facing: str) -> bytes | None:
+    """One facing from an exported character, if it is there."""
+    name = f"{facing}.png"
     for root, _, files in os.walk(directory):
-        if os.path.basename(root) == "rotations" and "south.png" in files:
-            with open(os.path.join(root, "south.png"), "rb") as handle:
+        if os.path.basename(root) == "rotations" and name in files:
+            with open(os.path.join(root, name), "rb") as handle:
                 return handle.read()
     return None
+
+
+def south_rotation(directory: str) -> bytes | None:
+    """The south-facing rotation -- what v3 wants as a rotation reference."""
+    return rotation(directory, "south")
+
+
+def east_rotation(directory: str) -> bytes | None:
+    """The east-facing rotation -- the battle facing, and its own palette."""
+    return rotation(directory, "east")
+
+
+def _battle_clips(client, result, character, wanted, palette, description, log) -> None:
+    """Pro custom animation, one clip at a time, one failure never losing the set."""
+    for clip in wanted:
+        action = BATTLE_CLIPS.get(clip)
+        if action is None:
+            result.warnings.append(f"{clip}: no motion written for it")
+            log(f"  {clip}: unknown clip, skipped")
+            continue
+        try:
+            client.animate(character, clip, action=action, description=description,
+                           mode="pro", palette=palette,
+                           directions=BATTLE_DIRECTIONS, log=log)
+        except Exception as exc:  # noqa: BLE001 - one clip must not lose the set
+            result.warnings.append(f"{clip}: {exc}")
+            log(f"  {clip}: FAILED, {exc}")
 
 
 def _animate(client, result, character, wanted, table, directions, log) -> None:

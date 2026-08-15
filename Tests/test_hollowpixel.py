@@ -427,3 +427,81 @@ class TestPalettePaddingCannotLeak(unittest.TestCase):
         with Image.open(io.BytesIO(result.image)) as out:
             used = {p[:3] for p in out.convert("RGBA").getdata() if p[3] > 127}
         self.assertTrue(used <= set(anchor), used - set(anchor))
+
+
+class TestAnimationRequestShape(unittest.TestCase):
+    """The parameters that were being sent into modes that ignore them.
+
+    Every one of these was a silent failure: the API accepts the field, charges
+    for the job, and returns a normal-looking animation with the parameter
+    discarded. Nothing in the response says which knobs were live, so the only
+    place the knowledge can live is a test that reads the request.
+    """
+
+    def client(self):
+        from hollowpixel.v2 import Client
+
+        sent = []
+        client = Client(api_key="test-key")
+        client._request = lambda method, path, payload=None, **kw: (
+            sent.append((method, path, payload)) or {"background_job_ids": []})
+        client._wait = lambda ids, **kw: []
+        return client, sent
+
+    def payload(self, **kwargs):
+        from hollowpixel.v2 import Character
+
+        client, sent = self.client()
+        client.animate(Character(id="c1", name="rowan"), "attack", **kwargs)
+        return sent[-1][2]
+
+    def test_pro_is_the_default_mode(self):
+        # v3 is the API default and the cheap one; it redraws the character in
+        # place, so a swing came back as a statue holding a rotating sword.
+        self.assertEqual(self.payload()["mode"], "pro")
+
+    def test_forcing_colours_without_an_image_is_never_sent(self):
+        # force_colors forces the colours *from* color_image. Sent alone -- as
+        # this client did on every call for weeks -- it does nothing at all, and
+        # the palette lock the docstring advertised did not exist.
+        body = self.payload()
+        self.assertNotIn("force_colors", body)
+        self.assertNotIn("color_image", body)
+
+    def test_a_palette_turns_the_flag_on_together_with_its_image(self):
+        body = self.payload(palette=b"\x89PNG-pretend")
+        self.assertTrue(body["force_colors"])
+        self.assertIn("base64", body["color_image"])
+
+    def test_frame_count_is_only_sent_in_the_mode_that_reads_it(self):
+        # Documented v3-only. Pro picks its own count and returned four.
+        self.assertNotIn("frame_count", self.payload(mode="pro"))
+        self.assertEqual(self.payload(mode="v3", frames=8)["frame_count"], 8)
+
+    def test_text_guidance_scale_is_not_sent_at_all(self):
+        # Template mode only, per the schema, and this client only ever set it
+        # on custom animations -- where it was read by nothing.
+        for mode in ("pro", "v3"):
+            self.assertNotIn("text_guidance_scale", self.payload(mode=mode))
+
+
+class TestBattleClipsDescribeMotion(unittest.TestCase):
+    def test_every_battle_clip_is_prose_not_a_template_id(self):
+        from hollowpixel.character import BATTLE_CLIPS
+
+        for clip, action in BATTLE_CLIPS.items():
+            with self.subTest(clip=clip):
+                # A template id is a slug; these have to be motion the model can
+                # act on. "swings the sword" moved the sword and nothing else.
+                self.assertNotIn("-", action.split(" ")[0])
+                self.assertGreater(len(action.split()), 12, clip)
+
+    def test_no_clip_asks_for_an_effect(self):
+        from hollowpixel.character import BATTLE_CLIPS
+
+        # The white impact burst came from the model filling in motion it had not
+        # been given. Naming effects here would ask for it on purpose.
+        banned = ("glow", "flash", "burst", "spark", "magic", "energy", "trail")
+        for clip, action in BATTLE_CLIPS.items():
+            for word in banned:
+                self.assertNotIn(word, action.lower(), f"{clip} mentions {word}")

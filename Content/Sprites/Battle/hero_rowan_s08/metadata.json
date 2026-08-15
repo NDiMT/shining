@@ -1,0 +1,58 @@
+{
+  "group_id": "3cdbc601-b6eb-4832-9bcc-7ee8b1bbf836",
+  "states": [
+    {
+      "character": {
+        "id": "3fb195c4-fe83-4e6a-8141-4d196bdf4c3c",
+        "name": "Idle",
+        "prompt": "young swordsman hero, blue tunic, red scarf, brown hair, holding a sword, bright cheerful storybook pixel art, pastel palette, rounded shapes, four heads tall",
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-08-15T01:19:05.558994+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "attack": {
+            "east": [
+              "Idle/animations/attack/east/frame_000.png",
+              "Idle/animations/attack/east/frame_001.png",
+              "Idle/animations/attack/east/frame_002.png",
+              "Idle/animations/attack/east/frame_003.png",
+              "Idle/animations/attack/east/frame_004.png",
+              "Idle/animations/attack/east/frame_005.png",
+              "Idle/animations/attack/east/frame_006.png",
+              "Idle/animations/attack/east/frame_007.png",
+              "Idle/animations/attack/east/frame_008.png"
+            ]
+          },
+          "attack_pro": {
+            "east": [
+              "Idle/animations/attack_pro/east/frame_000.png",
+              "Idle/animations/attack_pro/east/frame_001.png",
+              "Idle/animations/attack_pro/east/frame_002.png",
+              "Idle/animations/attack_pro/east/frame_003.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-08-15T01:30:45.017433"
+}

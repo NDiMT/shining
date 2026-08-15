@@ -20,8 +20,28 @@ frames, because each frame is independently redrawn from a pose hint rather than
 animated. ``/characters/animations`` animates a *character*: one entity, one
 identity, frames that belong to each other.
 
-``/v2/llms.txt`` exists and is written for exactly this purpose. It was there the
-whole time.
+``/v2/llms.txt`` is only a link index; the thing worth reading is
+``/v2/openapi.json``, whose per-field descriptions say which mode each parameter
+belongs to. Three of this client's calls were sending parameters into modes that
+ignore them, and nothing in the response says so:
+
+===========================  ==================================================
+Assumed                      Actually
+===========================  ==================================================
+``force_colors: true``       forces colours *from* ``color_image``; alone, a
+                             no-op, so the palette lock never existed
+``text_guidance_scale``      template mode only, ignored on every v3 call
+``frame_count``              v3 only; pro picks its own (four, on the swing)
+default animation mode       ``v3``, the cheap one. ``pro`` is the good one.
+===========================  ==================================================
+
+Two further levers this project spent weeks approximating with prompt wording:
+``proportions`` on ``/create-character-with-8-directions`` takes a preset
+(``chibi``, ``cartoon``, ``stylized``, ``heroic``) or per-part multipliers with
+``head_size`` up to 1.7 -- the small-headed-to-chibi dial that was being asked
+for in adjectives; and ``/create-character-pro`` with
+``method=create_from_concept`` accepts a concept sketch directly, which is what
+a character sheet is for.
 
 Equipment is a **state**, not a regeneration. ``create_state`` applies one text
 edit across all eight rotations and keeps the result grouped with its source, so
@@ -199,30 +219,54 @@ class Client:
         clip: str,
         *,
         action: str = "",
-        frames: int = 6,
+        description: str = "",
+        frames: int = 8,
         directions: tuple[str, ...] = DIRECTIONS,
-        text_guidance_scale: float = 8.0,
+        mode: str = "pro",
+        palette: bytes | None = None,
         log=lambda _: None,
     ) -> None:
         """Add one animation to a character, across the directions asked for.
 
-        ``keep_first_frame`` and ``force_colors`` are always on. The first pins
-        every clip to the character's own idle frame so a swing starts from the
-        pose the player was just looking at; the second locks the palette, which
-        this project previously implemented by hand and got wrong twice.
+        ``mode`` defaults to **pro**, and the difference is not subtle. ``v3``
+        costs one generation per direction and redraws the character in place:
+        the body stays where it was and only the limb the text mentions moves,
+        so a sword swing came back as a static figure with a rotating sword, and
+        the model filled the missing motion with an invented white impact burst.
+        ``pro`` costs 20-40 generations per direction and builds the directions
+        sequentially, each one referencing the sides already finished. On the
+        same character and the same text it produced a step forward, shoulders
+        turning through the swing, a cape that follows, and no effects at all,
+        for $0.095 on one direction.
+
+        ``palette`` is the fix to a flag that was doing nothing. ``force_colors``
+        forces the colours *from ``color_image``*, so setting it alone -- which
+        this client did on every call -- was a no-op, and the palette lock the
+        code claimed to have never existed. Pass the character's own rotation.
+
+        ``frame_count`` is v3-only; pro decides its own frame count and returned
+        four. So is ``text_guidance_scale``, despite reading like a global knob:
+        the schema marks it template mode only, and it was ignored on every v3
+        call this project made.
         """
-        payload = {
+        payload: dict[str, Any] = {
             "character_id": character.id,
             "animation_name": clip,
             "action_description": action or CLIPS.get(clip, clip),
-            "frame_count": frames,
+            "mode": mode,
             "directions": list(directions),
             "keep_first_frame": True,
-            "force_colors": True,
-            "text_guidance_scale": text_guidance_scale,
         }
+        if description:
+            payload["description"] = description
+        if mode == "v3":
+            payload["frame_count"] = frames
+        if palette is not None:
+            payload["color_image"] = {
+                "type": "base64", "base64": base64.b64encode(palette).decode("ascii")}
+            payload["force_colors"] = True
         body = self._request("POST", "/characters/animations", payload)
-        log(f"  {clip}: {len(directions)} direction(s)")
+        log(f"  {clip}: {mode}, {len(directions)} direction(s)")
         self._wait(body.get("background_job_ids", []), log=log)
 
     def animate_template(
@@ -245,10 +289,18 @@ class Client:
         which truncates them, and the body-level validator advertises a shorter,
         different list than the server returns once it knows the character's body
         template. Sending a deliberately invalid id and reading that second error
-        is the only way to see the real set. For ``mannequin`` it is 49 long, and
-        contains no sword swing -- ``lead-jab``, ``cross-punch`` and
-        ``flying-kick`` stand in, because a character holding a sword swings it
-        when the arm moves.
+        is the only way to see the real set.
+
+        The truncated list begins ``angry, attack, attack-back, attack-left,
+        attack-right, backflip, ...``, which reads like a sword swing was there
+        all along. It is not: those belong to the quadruped templates, and the
+        ``mannequin`` set is 49 martial-arts clips with nothing that swings.
+        ``lead-jab`` is the only one that keeps the blade in hand -- the kicks
+        and the cross drop it -- and it is three frames of a punch.
+
+        Which is why battle clips should use :meth:`animate` in ``pro`` mode
+        instead. Templates remain right for locomotion, where ``walking-6-frames``
+        is a real walk cycle and nothing invents anything.
         """
         body = self._request("POST", "/characters/animations", {
             "character_id": character.id,
