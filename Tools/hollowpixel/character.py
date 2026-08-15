@@ -50,11 +50,16 @@ from .v2 import Character, Client
 #: finish gave a body that moves through the blow. Every one of them ends
 #: somewhere specific, because a clip with no stated end pose drifts back to idle
 #: and reads as nothing having happened.
+#: Every clip is staged against a target that stands **in front of and away from
+#: the viewer**, because the camera is behind the acting unit. Without saying so,
+#: the model swings across the frame -- correct for a profile sprite, and wrong
+#: here, where across the frame is past the enemy rather than into them.
 BATTLE_CLIPS: dict[str, str] = {
     "attack": (
-        "steps forward onto the front foot, raises the sword high overhead with "
-        "both shoulders turning, then swings it down and across in one committed "
-        "diagonal cut, ending crouched low with the blade held out to the side"),
+        "lunges forward away from the viewer at the enemy standing ahead, raising "
+        "the sword high overhead with both shoulders turning, then driving it down "
+        "and forward into the target in one committed cut, ending low over the "
+        "front foot with the blade extended forward"),
     "block": (
         "plants both feet and turns the shoulder forward, bringing the sword up "
         "across the chest to guard, head tucked behind the blade"),
@@ -76,10 +81,21 @@ BATTLE_CLIPS: dict[str, str] = {
 #: knows which body template the character was built with.
 MAP_CLIPS: dict[str, str] = {"walk": "walking-6-frames"}
 
-#: A tactical grid moves on four axes; the attack screen shows two facings, and
-#: the second is a mirror of the first.
+#: A tactical grid moves on four axes.
 MAP_DIRECTIONS = ("south", "east", "north", "west")
-BATTLE_DIRECTIONS = ("east",)
+
+#: The attack screen shows the acting unit in **three-quarter back view**, not in
+#: profile. Shining Force stages the blow over the attacker's shoulder: the ally
+#: is turned away from the viewer, the target faces the camera, and the camera
+#: sits behind the person the player is controlling. A profile sprite reads as
+#: two figures hitting each other sideways in front of an audience; a
+#: three-quarter back reads as the player's own unit going in.
+#:
+#: North-east rather than north, because a straight back hides the sword arm at
+#: exactly the moment the swing matters, and the cape ends up covering the blade.
+#: At three-quarters the arm, the blade and the face in profile all stay visible
+#: while the body is still clearly turned away.
+BATTLE_DIRECTIONS = ("north-east",)
 
 #: Enough for a unit to appear in a battle at all.
 MINIMAL = ("attack", "damage", "faint")

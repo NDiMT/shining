@@ -28,6 +28,20 @@
           "south-west": "Idle/rotations/south-west.png"
         },
         "animations": {
+          "attack_back": {
+            "north": [
+              "Idle/animations/attack_back/north/frame_000.png",
+              "Idle/animations/attack_back/north/frame_001.png",
+              "Idle/animations/attack_back/north/frame_002.png",
+              "Idle/animations/attack_back/north/frame_003.png"
+            ],
+            "north-east": [
+              "Idle/animations/attack_back/north-east/frame_000.png",
+              "Idle/animations/attack_back/north-east/frame_001.png",
+              "Idle/animations/attack_back/north-east/frame_002.png",
+              "Idle/animations/attack_back/north-east/frame_003.png"
+            ]
+          },
           "attack": {
             "east": [
               "Idle/animations/attack/east/frame_000.png",
@@ -35,11 +49,31 @@
               "Idle/animations/attack/east/frame_002.png",
               "Idle/animations/attack/east/frame_003.png"
             ]
+          },
+          "attack_34": {
+            "north-east": [
+              "Idle/animations/attack_34/north-east/frame_000.png",
+              "Idle/animations/attack_34/north-east/frame_001.png",
+              "Idle/animations/attack_34/north-east/frame_002.png",
+              "Idle/animations/attack_34/north-east/frame_003.png"
+            ]
+          },
+          "attack_tween": {
+            "north-east": [
+              "Idle/animations/attack_tween/north-east/frame_000.png",
+              "Idle/animations/attack_tween/north-east/frame_001.png",
+              "Idle/animations/attack_tween/north-east/frame_002.png",
+              "Idle/animations/attack_tween/north-east/frame_003.png",
+              "Idle/animations/attack_tween/north-east/frame_004.png",
+              "Idle/animations/attack_tween/north-east/frame_005.png",
+              "Idle/animations/attack_tween/north-east/frame_006.png",
+              "Idle/animations/attack_tween/north-east/frame_007.png"
+            ]
           }
         }
       }
     }
   ],
   "export_version": "3.1",
-  "export_date": "2026-08-15T08:03:34.022472"
+  "export_date": "2026-08-15T15:54:12.120181"
 }
