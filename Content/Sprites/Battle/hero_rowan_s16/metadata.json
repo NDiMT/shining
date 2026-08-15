@@ -1,0 +1,45 @@
+{
+  "group_id": "bb060e0d-8833-4cb0-8a83-cb57b44c1885",
+  "states": [
+    {
+      "character": {
+        "id": "76fa8cce-ad86-44cd-b91f-eebb36b32231",
+        "name": "Idle",
+        "prompt": "young hero knight, short brown hair, blue tunic with gold trim, red cape, brown leather boots and belt, holding a plain steel sword with a gold crossguard, four heads tall",
+        "size": {
+          "width": 168,
+          "height": 168
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-08-15T07:55:24.956003+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "attack": {
+            "east": [
+              "Idle/animations/attack/east/frame_000.png",
+              "Idle/animations/attack/east/frame_001.png",
+              "Idle/animations/attack/east/frame_002.png",
+              "Idle/animations/attack/east/frame_003.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-08-15T08:03:34.022472"
+}

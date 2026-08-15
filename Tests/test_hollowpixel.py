@@ -505,3 +505,81 @@ class TestBattleClipsDescribeMotion(unittest.TestCase):
         for clip, action in BATTLE_CLIPS.items():
             for word in banned:
                 self.assertNotIn(word, action.lower(), f"{clip} mentions {word}")
+
+
+class TestFloatingDebrisRemoval(unittest.TestCase):
+    """Two of eight pro rotations came back with a piece of the character
+    parked in empty space. The figure was intact in both, so the fix is a
+    deletion rather than a regeneration -- a re-roll risks the identity, which
+    was the part that cost money."""
+
+    def sprite(self, blobs, size=64):
+        from PIL import Image
+
+        image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        pixels = image.load()
+        for (left, top, right, bottom), colour in blobs:
+            for x in range(left, right):
+                for y in range(top, bottom):
+                    pixels[x, y] = colour
+        return image
+
+    def opaque(self, image):
+        return sum(1 for p in image.convert("RGBA").getdata() if p[3] > 127)
+
+    def test_a_clean_sprite_is_returned_untouched(self):
+        from hollowpixel.islands import strip_debris
+
+        image = self.sprite([((20, 10, 40, 50), (0, 80, 200, 255))])
+        out, removed = strip_debris(image)
+        self.assertEqual(removed, 0)
+        self.assertEqual(self.opaque(out), self.opaque(image))
+
+    def test_a_detached_fragment_is_removed(self):
+        from hollowpixel.islands import strip_debris
+
+        image = self.sprite([((24, 8, 44, 56), (0, 80, 200, 255)),     # body
+                             ((2, 20, 10, 32), (90, 60, 30, 255))])    # stray boot
+        out, removed = strip_debris(image)
+        self.assertEqual(removed, 8 * 12)
+        self.assertEqual(self.opaque(out), 20 * 48)
+
+    def test_a_blade_split_from_the_hand_survives(self):
+        from hollowpixel.islands import strip_debris
+
+        # The whole reason the rule is not "keep the largest region": an
+        # occluding hand cuts the blade off the body, one or two pixels clear.
+        image = self.sprite([((24, 8, 44, 56), (0, 80, 200, 255)),
+                             ((46, 24, 60, 27), (200, 200, 210, 255))])  # 2px gap
+        out, removed = strip_debris(image)
+        self.assertEqual(removed, 0)
+        self.assertEqual(self.opaque(out), 20 * 48 + 14 * 3)
+
+    def test_containment_in_the_bounding_box_does_not_save_a_fragment(self):
+        from hollowpixel.islands import strip_debris
+
+        # The first version of this rule kept anything inside the body's box,
+        # and a figure holding a sword out to the side has a box wide enough to
+        # swallow the debris. Rowan's west rotation failed exactly here.
+        image = self.sprite([((30, 8, 40, 56), (0, 80, 200, 255)),      # torso
+                             ((40, 30, 62, 33), (200, 200, 210, 255)),  # held blade
+                             ((44, 44, 52, 52), (120, 60, 60, 255))])   # debris, inside box
+        out, removed = strip_debris(image)
+        self.assertEqual(removed, 8 * 8)
+        self.assertEqual(self.opaque(out), 10 * 48 + 22 * 3)
+
+    def test_an_empty_frame_does_not_raise(self):
+        from hollowpixel.islands import strip_debris
+
+        out, removed = strip_debris(self.sprite([]))
+        self.assertEqual(removed, 0)
+        self.assertEqual(self.opaque(out), 0)
+
+    def test_diagonal_pixels_count_as_one_region(self):
+        from hollowpixel.islands import regions
+
+        # 4-way connectivity would read a one-pixel diagonal blade as a dotted
+        # line of separate regions and delete most of it.
+        image = self.sprite([((i, i, i + 1, i + 1), (255, 255, 255, 255))
+                             for i in range(10, 30)])
+        self.assertEqual(len(regions(image)), 1)
