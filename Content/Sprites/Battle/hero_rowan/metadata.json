@@ -1,0 +1,45 @@
+{
+  "group_id": "ce8e3b50-dead-4e00-96cf-9d57fefae550",
+  "states": [
+    {
+      "character": {
+        "id": "49cad9ca-21a3-4d51-9104-a0c5c7eaba64",
+        "name": "Idle",
+        "prompt": "young hero knight standing with both arms down at his sides and bare open hands, short brown hair, blue tunic with gold trim, red cape, brown leather bracers boots and belt, four heads tall",
+        "size": {
+          "width": 168,
+          "height": 168
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-08-16T21:36:37.448427+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {
+          "swing": {
+            "east": [
+              "Idle/animations/swing/east/frame_000.png",
+              "Idle/animations/swing/east/frame_001.png",
+              "Idle/animations/swing/east/frame_002.png",
+              "Idle/animations/swing/east/frame_003.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-08-16T22:55:21.978139"
+}

@@ -32,6 +32,19 @@ weapon is a layer rather than paint, changing what the character is holding is a
 different file and not a different character -- which is what this project needs
 anyway, since Rowan will not carry one sword for thirty hours.
 
+One more thing byte 0 gives away, and it is the reason the generated clips were
+built the wrong shape entirely. ``$0F`` means *keep the battle sprite frame from
+the previous animation frame*: the body holds still while the weapon carries on
+through its own frames. So an SF2 attack is a handful of body poses with the
+sword moving between them, not a fresh drawing of the whole character every
+frame -- which is exactly what this pipeline had been paying for.
+
+Producing a body that can take a weapon layer needs the body generated unarmed
+**from the start**. `create-character-state` will not take a sword away; see
+:meth:`v2.Client.create_state`. Generating the swing with no weapon anywhere in
+the text gives poses with closed fists exactly where a grip belongs, and the
+blade drops into them.
+
 This module is the data model and the compositor. It does not generate anything.
 """
 
