@@ -28,6 +28,38 @@
           "south-west": "Idle/rotations/south-west.png"
         },
         "animations": {
+          "nw_after": {
+            "north-west": [
+              "Idle/animations/nw_after/north-west/frame_000.png",
+              "Idle/animations/nw_after/north-west/frame_001.png",
+              "Idle/animations/nw_after/north-west/frame_002.png",
+              "Idle/animations/nw_after/north-west/frame_003.png",
+              "Idle/animations/nw_after/north-west/frame_004.png",
+              "Idle/animations/nw_after/north-west/frame_005.png"
+            ]
+          },
+          "attack_nw": {
+            "north-west": [
+              "Idle/animations/attack_nw/north-west/frame_000.png",
+              "Idle/animations/attack_nw/north-west/frame_001.png",
+              "Idle/animations/attack_nw/north-west/frame_002.png",
+              "Idle/animations/attack_nw/north-west/frame_003.png"
+            ]
+          },
+          "nw_cut2": {
+            "north-west": [
+              "Idle/animations/nw_cut2/north-west/frame_000.png",
+              "Idle/animations/nw_cut2/north-west/frame_001.png",
+              "Idle/animations/nw_cut2/north-west/frame_002.png",
+              "Idle/animations/nw_cut2/north-west/frame_003.png",
+              "Idle/animations/nw_cut2/north-west/frame_004.png",
+              "Idle/animations/nw_cut2/north-west/frame_005.png",
+              "Idle/animations/nw_cut2/north-west/frame_006.png",
+              "Idle/animations/nw_cut2/north-west/frame_007.png",
+              "Idle/animations/nw_cut2/north-west/frame_008.png",
+              "Idle/animations/nw_cut2/north-west/frame_009.png"
+            ]
+          },
           "attack_back": {
             "north": [
               "Idle/animations/attack_back/north/frame_000.png",
@@ -42,6 +74,38 @@
               "Idle/animations/attack_back/north-east/frame_003.png"
             ]
           },
+          "attack_fwd": {
+            "north-east": [
+              "Idle/animations/attack_fwd/north-east/frame_000.png",
+              "Idle/animations/attack_fwd/north-east/frame_001.png",
+              "Idle/animations/attack_fwd/north-east/frame_002.png",
+              "Idle/animations/attack_fwd/north-east/frame_003.png"
+            ]
+          },
+          "nw_wind": {
+            "north-west": [
+              "Idle/animations/nw_wind/north-west/frame_000.png",
+              "Idle/animations/nw_wind/north-west/frame_001.png",
+              "Idle/animations/nw_wind/north-west/frame_002.png",
+              "Idle/animations/nw_wind/north-west/frame_003.png",
+              "Idle/animations/nw_wind/north-west/frame_004.png",
+              "Idle/animations/nw_wind/north-west/frame_005.png",
+              "Idle/animations/nw_wind/north-west/frame_006.png",
+              "Idle/animations/nw_wind/north-west/frame_007.png"
+            ]
+          },
+          "attack_arc": {
+            "north-east": [
+              "Idle/animations/attack_arc/north-east/frame_000.png",
+              "Idle/animations/attack_arc/north-east/frame_001.png",
+              "Idle/animations/attack_arc/north-east/frame_002.png",
+              "Idle/animations/attack_arc/north-east/frame_003.png",
+              "Idle/animations/attack_arc/north-east/frame_004.png",
+              "Idle/animations/attack_arc/north-east/frame_005.png",
+              "Idle/animations/attack_arc/north-east/frame_006.png",
+              "Idle/animations/attack_arc/north-east/frame_007.png"
+            ]
+          },
           "attack": {
             "east": [
               "Idle/animations/attack/east/frame_000.png",
@@ -50,12 +114,34 @@
               "Idle/animations/attack/east/frame_003.png"
             ]
           },
+          "nw_wind2": {
+            "north-west": [
+              "Idle/animations/nw_wind2/north-west/frame_000.png",
+              "Idle/animations/nw_wind2/north-west/frame_001.png",
+              "Idle/animations/nw_wind2/north-west/frame_002.png",
+              "Idle/animations/nw_wind2/north-west/frame_003.png",
+              "Idle/animations/nw_wind2/north-west/frame_004.png",
+              "Idle/animations/nw_wind2/north-west/frame_005.png",
+              "Idle/animations/nw_wind2/north-west/frame_006.png",
+              "Idle/animations/nw_wind2/north-west/frame_007.png"
+            ]
+          },
           "attack_34": {
             "north-east": [
               "Idle/animations/attack_34/north-east/frame_000.png",
               "Idle/animations/attack_34/north-east/frame_001.png",
               "Idle/animations/attack_34/north-east/frame_002.png",
               "Idle/animations/attack_34/north-east/frame_003.png"
+            ]
+          },
+          "nw_after2": {
+            "north-west": [
+              "Idle/animations/nw_after2/north-west/frame_000.png",
+              "Idle/animations/nw_after2/north-west/frame_001.png",
+              "Idle/animations/nw_after2/north-west/frame_002.png",
+              "Idle/animations/nw_after2/north-west/frame_003.png",
+              "Idle/animations/nw_after2/north-west/frame_004.png",
+              "Idle/animations/nw_after2/north-west/frame_005.png"
             ]
           },
           "attack_tween": {
@@ -69,11 +155,25 @@
               "Idle/animations/attack_tween/north-east/frame_006.png",
               "Idle/animations/attack_tween/north-east/frame_007.png"
             ]
+          },
+          "nw_cut": {
+            "north-west": [
+              "Idle/animations/nw_cut/north-west/frame_000.png",
+              "Idle/animations/nw_cut/north-west/frame_001.png",
+              "Idle/animations/nw_cut/north-west/frame_002.png",
+              "Idle/animations/nw_cut/north-west/frame_003.png",
+              "Idle/animations/nw_cut/north-west/frame_004.png",
+              "Idle/animations/nw_cut/north-west/frame_005.png",
+              "Idle/animations/nw_cut/north-west/frame_006.png",
+              "Idle/animations/nw_cut/north-west/frame_007.png",
+              "Idle/animations/nw_cut/north-west/frame_008.png",
+              "Idle/animations/nw_cut/north-west/frame_009.png"
+            ]
           }
         }
       }
     }
   ],
   "export_version": "3.1",
-  "export_date": "2026-08-15T15:54:12.120181"
+  "export_date": "2026-08-16T18:55:59.769086"
 }

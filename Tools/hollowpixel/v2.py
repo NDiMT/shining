@@ -269,6 +269,64 @@ class Client:
         log(f"  {clip}: {mode}, {len(directions)} direction(s)")
         self._wait(body.get("background_job_ids", []), log=log)
 
+    def interpolate(
+        self,
+        character: Character,
+        clip: str,
+        start: bytes,
+        end: bytes,
+        *,
+        action: str,
+        description: str = "",
+        frames: int = 8,
+        direction: str = "north-east",
+        log=lambda _: None,
+    ) -> None:
+        """Fill the motion between two poses you already have.
+
+        Pro picks its own keyframes and picks four of them, which is enough for a
+        step or a stagger and not enough for a sword. On Rowan's attack it spent
+        two frames winding up and one recovering, so the cut itself happened
+        entirely in the gap between two pictures: the blade is drawn back, and
+        then it is already through. Nothing is wrong with any single frame, and
+        the swing is still unreadable.
+
+        Interpolation fixes what pro cannot be argued into. Both extremes are
+        given rather than invented, so the model's whole job is the arc between
+        them, and the blade is forced through every position on the way. Eight
+        inbetweens cost $0.015 against $0.125 for the pro keyframes -- the
+        expensive call establishes the poses, the cheap one makes them move.
+
+        ``description`` matters more here than anywhere else, and omitting it is
+        not neutral. Left to itself the interpolator decorated the swing: green
+        energy trailing off the blade in two frames, white speed streaks in two
+        more. They are drawn touching the sword, so :mod:`islands` cannot remove
+        them -- it only takes what is detached, and these are attached on
+        purpose. The description is the only place to say the blade is ordinary
+        metal.
+
+        Exactly one direction, per the API, and the two frames must be the same
+        size. The result comes back on a **larger canvas** than the frames handed
+        in, so it cannot simply be appended to the pro clip; see
+        :func:`clips.align`.
+        """
+        body = self._request("POST", "/characters/animations", {
+            "character_id": character.id,
+            "animation_name": clip,
+            "mode": "v3",
+            "action_description": action,
+            **({"description": description} if description else {}),
+            "custom_start_frame": {
+                "type": "base64", "base64": base64.b64encode(start).decode("ascii")},
+            "end_frame": {
+                "type": "base64", "base64": base64.b64encode(end).decode("ascii")},
+            "frame_count": frames,
+            "directions": [direction],
+            "keep_first_frame": False,
+        })
+        log(f"  {clip}: {frames} inbetweens, {direction}")
+        self._wait(body.get("background_job_ids", []), log=log)
+
     def animate_template(
         self,
         character: Character,

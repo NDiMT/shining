@@ -583,3 +583,176 @@ class TestFloatingDebrisRemoval(unittest.TestCase):
         image = self.sprite([((i, i, i + 1, i + 1), (255, 255, 255, 255))
                              for i in range(10, 30)])
         self.assertEqual(len(regions(image)), 1)
+
+
+class TestClipAssembly(unittest.TestCase):
+    """Pro keyframes and interpolated inbetweens arrive on different canvases,
+    and stacking them without correcting for it makes the character jump
+    sideways at the seam."""
+
+    def frame(self, size, box, colour=(0, 90, 200, 255)):
+        from PIL import Image
+
+        image = Image.new("RGBA", size, (0, 0, 0, 0))
+        pixels = image.load()
+        for x in range(box[0], box[2]):
+            for y in range(box[1], box[3]):
+                pixels[x, y] = colour
+        return image
+
+    def test_the_padding_offset_is_recovered_from_the_silhouette(self):
+        from hollowpixel.clips import find_offset
+
+        original = self.frame((40, 40), (10, 5, 30, 35))
+        padded = self.frame((80, 70), (10 + 17, 5 + 12, 30 + 17, 35 + 12))
+        self.assertEqual(find_offset(padded, original), (17, 12))
+
+    def test_a_redrawn_first_frame_still_locates(self):
+        from hollowpixel.clips import find_offset
+
+        # The interpolator redraws rather than copies its start frame, so the
+        # colours differ. Matching on alpha is what survives that.
+        original = self.frame((40, 40), (10, 5, 30, 35), colour=(0, 90, 200, 255))
+        padded = self.frame((80, 70), (27, 17, 47, 47), colour=(220, 40, 40, 255))
+        self.assertEqual(find_offset(padded, original), (17, 12))
+
+    def test_an_oversized_original_is_refused(self):
+        from hollowpixel.clips import find_offset
+
+        with self.assertRaises(ValueError):
+            find_offset(self.frame((20, 20), (0, 0, 5, 5)),
+                        self.frame((40, 40), (0, 0, 5, 5)))
+
+    def test_aligning_puts_every_frame_on_one_canvas(self):
+        from hollowpixel.clips import align
+
+        frames = [self.frame((20, 20), (0, 0, 10, 10)) for _ in range(3)]
+        out = align(frames, [(0, 0), (5, 5), (10, 10)], (40, 40))
+        self.assertEqual({f.size for f in out}, {(40, 40)})
+        self.assertEqual(out[1].getpixel((7, 7))[3], 255)
+        self.assertEqual(out[1].getpixel((2, 2))[3], 0)
+
+    def test_align_refuses_a_mismatched_offset_count(self):
+        from hollowpixel.clips import align
+
+        with self.assertRaises(ValueError):
+            align([self.frame((8, 8), (0, 0, 4, 4))], [(0, 0), (1, 1)], (16, 16))
+
+    def test_the_swing_holds_the_ends_and_runs_the_cut(self):
+        from hollowpixel.clips import swing
+
+        beats = swing(8)
+        cut = [b for b in beats if 2 <= b.frame <= 8][:7]
+        self.assertEqual({b.ms for b in cut}, {60}, "the cut must not stutter")
+        self.assertGreater(beats[0].ms, 4 * 60, "the stance has to settle")
+        self.assertGreater(max(b.ms for b in beats if b.frame == 9), 4 * 60,
+                           "contact has to be held or the blow does not land")
+
+    def test_the_swing_returns_to_the_pose_it_started_from(self):
+        from hollowpixel.clips import swing
+
+        beats = swing(8)
+        self.assertEqual(beats[-1].frame, beats[0].frame)
+
+
+class TestClipAssembly(unittest.TestCase):
+    """Pro keyframes and interpolated inbetweens arrive on different canvases,
+    padded by an amount the API does not report. Stacking them without
+    correcting for it makes the character jump sideways at the seam."""
+
+    def frame(self, size, box, colour=(0, 90, 200, 255)):
+        from PIL import Image
+
+        image = Image.new("RGBA", size, (0, 0, 0, 0))
+        pixels = image.load()
+        for x in range(box[0], box[2]):
+            for y in range(box[1], box[3]):
+                pixels[x, y] = colour
+        return image
+
+    def test_the_padding_offset_is_recovered_from_the_silhouette(self):
+        from hollowpixel.clips import find_offset
+
+        original = self.frame((40, 40), (10, 5, 30, 35))
+        padded = self.frame((80, 70), (27, 17, 47, 47))
+        self.assertEqual(find_offset(padded, original), (17, 12))
+
+    def test_a_redrawn_first_frame_still_locates(self):
+        from hollowpixel.clips import find_offset
+
+        # The interpolator redraws its start frame rather than copying it, so
+        # the colours differ. Matching on alpha is what survives that.
+        original = self.frame((40, 40), (10, 5, 30, 35), colour=(0, 90, 200, 255))
+        padded = self.frame((80, 70), (27, 17, 47, 47), colour=(220, 40, 40, 255))
+        self.assertEqual(find_offset(padded, original), (17, 12))
+
+    def test_an_oversized_original_is_refused(self):
+        from hollowpixel.clips import find_offset
+
+        with self.assertRaises(ValueError):
+            find_offset(self.frame((20, 20), (0, 0, 5, 5)),
+                        self.frame((40, 40), (0, 0, 5, 5)))
+
+    def test_aligning_puts_every_frame_on_one_canvas(self):
+        from hollowpixel.clips import align
+
+        frames = [self.frame((20, 20), (0, 0, 10, 10)) for _ in range(3)]
+        out = align(frames, [(0, 0), (5, 5), (10, 10)], (40, 40))
+        self.assertEqual({f.size for f in out}, {(40, 40)})
+        self.assertEqual(out[1].getpixel((7, 7))[3], 255)
+        self.assertEqual(out[1].getpixel((2, 2))[3], 0)
+
+    def test_align_refuses_a_mismatched_offset_count(self):
+        from hollowpixel.clips import align
+
+        with self.assertRaises(ValueError):
+            align([self.frame((8, 8), (0, 0, 4, 4))], [(0, 0), (1, 1)], (16, 16))
+
+    def test_the_swing_holds_the_ends_and_runs_the_cut(self):
+        from hollowpixel.clips import swing
+
+        beats = swing(8)
+        cut = [b for b in beats if 2 <= b.frame <= 8][:7]
+        self.assertEqual({b.ms for b in cut}, {60}, "the cut must not stutter")
+        self.assertGreater(beats[0].ms, 4 * 60, "the stance has to settle")
+        self.assertGreater(max(b.ms for b in beats if b.frame == 9), 4 * 60,
+                           "contact has to be held or the blow does not land")
+
+    def test_the_swing_returns_to_the_pose_it_started_from(self):
+        from hollowpixel.clips import swing
+
+        beats = swing(8)
+        self.assertEqual(beats[-1].frame, beats[0].frame)
+
+
+class TestInterpolationRequestShape(unittest.TestCase):
+    def payload(self, **kwargs):
+        from hollowpixel.v2 import Character, Client
+
+        sent = []
+        client = Client(api_key="test-key")
+        client._request = lambda m, p, body=None, **kw: (
+            sent.append(body) or {"background_job_ids": []})
+        client._wait = lambda ids, **kw: []
+        client.interpolate(Character(id="c1", name="r"), "cut", b"start", b"end",
+                           action="swings down", **kwargs)
+        return sent[-1]
+
+    def test_the_reference_frame_is_stripped_so_the_count_is_what_was_asked(self):
+        # keep_first_frame would prepend the start pose, which is already the
+        # last frame of the segment before it -- a duplicate at every seam.
+        self.assertFalse(self.payload()["keep_first_frame"])
+
+    def test_interpolation_runs_in_v3_because_pro_cannot_do_it(self):
+        body = self.payload()
+        self.assertEqual(body["mode"], "v3")
+        self.assertIn("custom_start_frame", body)
+        self.assertIn("end_frame", body)
+
+    def test_a_description_is_forwarded_when_given(self):
+        # Omitting it let the interpolator decorate the blade with invented
+        # energy. Forwarding it does not fully stop that, but not sending it
+        # leaves no way to ask at all.
+        self.assertNotIn("description", self.payload())
+        self.assertEqual(self.payload(description="plain steel")["description"],
+                         "plain steel")
