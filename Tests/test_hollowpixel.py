@@ -756,3 +756,97 @@ class TestInterpolationRequestShape(unittest.TestCase):
         self.assertNotIn("description", self.payload())
         self.assertEqual(self.payload(description="plain steel")["description"],
                          "plain steel")
+
+
+class TestWeaponLayer(unittest.TestCase):
+    """Shining Force II keeps the weapon out of the character sprite and
+    composites it per frame with its own offset and draw order. Byte 5 of its
+    eight-byte animation frame is the z-index: 1 under the character, 2 over.
+    That byte is why its heroes never had a blade sticking out of their back,
+    and why a single baked image cannot avoid one."""
+
+    def sprites(self):
+        from PIL import Image
+
+        body = Image.new("RGBA", (20, 40), (0, 90, 200, 255))
+        blades = []
+        for i in range(4):
+            blade = Image.new("RGBA", (24, 6), (0, 0, 0, 0))
+            for x in range(24):
+                blade.putpixel((x, i), (200, 200, 210, 255))
+            blades.append(blade)
+        return [body], blades
+
+    def test_under_puts_the_body_on_top(self):
+        from hollowpixel.weapon import Frame, Pose, UNDER, compose
+
+        bodies, blades = self.sprites()
+        out = compose(Frame(body=0, ms=60, weapon=Pose(0, x=4, y=10, z=UNDER)),
+                      bodies, blades, (40, 50))
+        # The blade runs through where the body is; the body must win there.
+        self.assertEqual(out.getpixel((10, 10))[:3], (0, 90, 200))
+
+    def test_over_puts_the_weapon_on_top(self):
+        from hollowpixel.weapon import Frame, Pose, OVER, compose
+
+        bodies, blades = self.sprites()
+        out = compose(Frame(body=0, ms=60, weapon=Pose(0, x=4, y=10, z=OVER)),
+                      bodies, blades, (40, 50))
+        self.assertEqual(out.getpixel((10, 10))[:3], (200, 200, 210))
+
+    def test_the_same_frame_reads_both_ways_from_one_byte(self):
+        from hollowpixel.weapon import Frame, Pose, OVER, UNDER, compose
+
+        bodies, blades = self.sprites()
+        seen = {z: compose(Frame(body=0, ms=60, weapon=Pose(0, x=4, y=10, z=z)),
+                           bodies, blades, (40, 50)).getpixel((10, 10))[:3]
+                for z in (UNDER, OVER)}
+        self.assertNotEqual(seen[UNDER], seen[OVER],
+                            "if draw order changed nothing, the layer buys nothing")
+
+    def test_a_frame_without_a_weapon_is_just_the_body(self):
+        from hollowpixel.weapon import Frame, compose
+
+        bodies, blades = self.sprites()
+        out = compose(Frame(body=0, ms=60), bodies, blades, (40, 50))
+        self.assertEqual(out.getpixel((10, 10))[:3], (0, 90, 200))
+        self.assertEqual(out.getpixel((35, 45))[3], 0)
+
+    def test_the_sf2_frame_byte_round_trips(self):
+        from hollowpixel.weapon import OVER, Pose
+
+        # 0x10 flips horizontally, 0x20 vertically, low bits are the rotation.
+        pose = Pose.from_byte(0x32, z=OVER, x=3, y=-4)
+        self.assertEqual(pose.orientation, 2)
+        self.assertTrue(pose.flip_x)
+        self.assertTrue(pose.flip_y)
+        self.assertEqual(pose.to_byte(), 0x32)
+
+    def test_four_drawings_plus_flips_cover_sixteen_orientations(self):
+        from hollowpixel.weapon import ORIENTATIONS, Pose
+
+        combos = {Pose(o, flip_x=fx, flip_y=fy).to_byte()
+                  for o in range(len(ORIENTATIONS))
+                  for fx in (False, True) for fy in (False, True)}
+        self.assertEqual(len(combos), 16)
+
+    def test_an_impossible_z_or_orientation_is_refused(self):
+        from hollowpixel.weapon import Pose
+
+        with self.assertRaises(ValueError):
+            Pose(orientation=4)
+        with self.assertRaises(ValueError):
+            Pose(orientation=0, z=3)
+
+    def test_flipping_moves_the_blade_to_the_mirrored_row(self):
+        from hollowpixel.weapon import Frame, Pose, OVER, compose
+
+        bodies, blades = self.sprites()
+        plain = compose(Frame(body=0, ms=60, weapon=Pose(1, x=20, y=0, z=OVER)),
+                        bodies, blades, (50, 50))
+        flipped = compose(Frame(body=0, ms=60, weapon=Pose(1, x=20, y=0, z=OVER,
+                                                          flip_y=True)),
+                          bodies, blades, (50, 50))
+        self.assertEqual(plain.getpixel((30, 1))[3], 255)
+        self.assertEqual(flipped.getpixel((30, 1))[3], 0)
+        self.assertEqual(flipped.getpixel((30, 4))[3], 255)
