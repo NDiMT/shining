@@ -35,11 +35,19 @@
               "Idle/animations/swing/east/frame_002.png",
               "Idle/animations/swing/east/frame_003.png"
             ]
+          },
+          "swing_sf2": {
+            "north-west": [
+              "Idle/animations/swing_sf2/north-west/frame_000.png",
+              "Idle/animations/swing_sf2/north-west/frame_001.png",
+              "Idle/animations/swing_sf2/north-west/frame_002.png",
+              "Idle/animations/swing_sf2/north-west/frame_003.png"
+            ]
           }
         }
       }
     }
   ],
   "export_version": "3.1",
-  "export_date": "2026-08-16T22:55:21.978139"
+  "export_date": "2026-08-17T07:18:55.801867"
 }
