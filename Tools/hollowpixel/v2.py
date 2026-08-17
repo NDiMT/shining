@@ -305,6 +305,15 @@ class Client:
         purpose. The description is the only place to say the blade is ordinary
         metal.
 
+        Saying it is not enough on its own, though, and what actually fixed it
+        was taking the sword out of the frames. Interpolating an **armed** body
+        left 279 to 1887 pixels per frame in the green-to-cyan band the character
+        has no colours in; interpolating the same motion on an unarmed body left
+        between 0 and 13. The effects were never really about the prompt: the
+        model was decorating a blade, and with no blade in the picture there is
+        nothing to decorate. Composite the weapon afterwards -- see
+        :mod:`weapon` -- and this becomes the cheap, reliable way to fill an arc.
+
         Exactly one direction, per the API, and the two frames must be the same
         size. The result comes back on a **larger canvas** than the frames handed
         in, so it cannot simply be appended to the pro clip; see

@@ -28,6 +28,26 @@
           "south-west": "Idle/rotations/south-west.png"
         },
         "animations": {
+          "cut_tween": {
+            "north-west": [
+              "Idle/animations/cut_tween/north-west/frame_000.png",
+              "Idle/animations/cut_tween/north-west/frame_001.png",
+              "Idle/animations/cut_tween/north-west/frame_002.png",
+              "Idle/animations/cut_tween/north-west/frame_003.png",
+              "Idle/animations/cut_tween/north-west/frame_004.png",
+              "Idle/animations/cut_tween/north-west/frame_005.png",
+              "Idle/animations/cut_tween/north-west/frame_006.png",
+              "Idle/animations/cut_tween/north-west/frame_007.png"
+            ]
+          },
+          "windup": {
+            "north-west": [
+              "Idle/animations/windup/north-west/frame_000.png",
+              "Idle/animations/windup/north-west/frame_001.png",
+              "Idle/animations/windup/north-west/frame_002.png",
+              "Idle/animations/windup/north-west/frame_003.png"
+            ]
+          },
           "swing": {
             "east": [
               "Idle/animations/swing/east/frame_000.png",
@@ -49,5 +69,5 @@
     }
   ],
   "export_version": "3.1",
-  "export_date": "2026-08-17T07:18:55.801867"
+  "export_date": "2026-08-17T20:31:08.794855"
 }
