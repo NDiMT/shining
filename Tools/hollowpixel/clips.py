@@ -79,6 +79,42 @@ def find_offset(padded: "Image.Image", original: "Image.Image") -> tuple[int, in
     return best[1], best[2]
 
 
+def footing(image: "Image.Image", rows: int = 6) -> tuple[int, int]:
+    """Where the figure meets the ground: (x of the feet, y of the lowest pixel).
+
+    Generated frames are each centred in their own canvas, and the figure is not
+    centred the same way twice -- a crouch sits low and narrow, a raised pose
+    tall and wide. Composited on canvas centres, the character jumps around
+    between frames while the animation plays, which reads as the frames having
+    been dropped in at random rather than as motion.
+
+    Shining Force II spends two of its eight animation bytes on exactly this,
+    giving every frame an explicit sprite offset. Nothing here reports one, so
+    it has to be measured, and the ground contact is the thing to measure: feet
+    stay on the floor through a whole swing while heads, capes and blades do not.
+
+    ``rows`` is how much of the bottom counts as feet. Six pixels of a 168-tall
+    sprite is about one boot sole -- enough to average both feet when they are
+    apart, little enough to ignore the knees.
+    """
+    alpha = image.convert("RGBA").getchannel("A")
+    box = alpha.point(lambda a: 255 if a > 127 else 0).getbbox()
+    if box is None:
+        return image.width // 2, image.height - 1
+    bottom = box[3] - 1
+    pixels = alpha.load()
+    xs = [x for y in range(max(box[1], bottom - rows + 1), bottom + 1)
+          for x in range(box[0], box[2]) if pixels[x, y] > 127]
+    return (sum(xs) // len(xs) if xs else (box[0] + box[2]) // 2), bottom
+
+
+def ground_offsets(frames: list["Image.Image"], anchor: tuple[int, int],
+                   rows: int = 6) -> list[tuple[int, int]]:
+    """Offsets that put every frame's feet on the same spot."""
+    return [(anchor[0] - fx, anchor[1] - fy)
+            for fx, fy in (footing(f, rows) for f in frames)]
+
+
 def align(frames: list["Image.Image"], offsets: list[tuple[int, int]],
           size: tuple[int, int]) -> list["Image.Image"]:
     """Place every frame on one canvas at its own offset."""

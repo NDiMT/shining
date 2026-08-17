@@ -850,3 +850,118 @@ class TestWeaponLayer(unittest.TestCase):
         self.assertEqual(plain.getpixel((30, 1))[3], 255)
         self.assertEqual(flipped.getpixel((30, 1))[3], 0)
         self.assertEqual(flipped.getpixel((30, 4))[3], 255)
+
+
+class TestGroundAnchoring(unittest.TestCase):
+    """Every generated frame is centred in its own canvas, and the figure is not
+    centred the same way twice -- a crouch sits low and narrow, an overhead raise
+    tall. Composited on canvas centres the character hops about while the clip
+    plays, which reads as frames dropped in at random rather than as motion.
+
+    Bowie's sheet settles what to anchor on. Across one row of six poses the
+    content bottoms measure 75, 75, 74, 75, 76, 76 while the tops range from 0
+    to 13: feet on a line, heads wherever the pose puts them. SF2 spends two of
+    its eight animation bytes on exactly this."""
+
+    def figure(self, size, feet_x, bottom, height, width=10):
+        from PIL import Image
+
+        image = Image.new("RGBA", size, (0, 0, 0, 0))
+        pixels = image.load()
+        for x in range(feet_x - width // 2, feet_x + width // 2):
+            for y in range(bottom - height, bottom + 1):
+                pixels[x, y] = (0, 90, 200, 255)
+        return image
+
+    def test_footing_reports_the_feet_not_the_centre(self):
+        from hollowpixel.clips import footing
+
+        image = self.figure((60, 60), feet_x=20, bottom=50, height=30)
+        self.assertEqual(footing(image), (19, 50))
+
+    def test_footing_averages_two_feet_apart(self):
+        from PIL import Image
+
+        from hollowpixel.clips import footing
+
+        image = Image.new("RGBA", (60, 60), (0, 0, 0, 0))
+        pixels = image.load()
+        for x in list(range(10, 16)) + list(range(30, 36)):
+            for y in range(44, 51):
+                pixels[x, y] = (90, 60, 40, 255)
+        x, y = footing(image)
+        self.assertEqual(y, 50)
+        self.assertTrue(20 <= x <= 26, x)
+
+    def test_footing_ignores_a_head_that_moved(self):
+        from hollowpixel.clips import footing
+
+        low = self.figure((60, 60), feet_x=20, bottom=50, height=20)
+        tall = self.figure((60, 60), feet_x=20, bottom=50, height=44)
+        self.assertEqual(footing(low), footing(tall))
+
+    def test_offsets_put_every_frame_on_one_floor(self):
+        from hollowpixel.clips import align, footing, ground_offsets
+
+        frames = [self.figure((60, 60), 20, 50, 30),
+                  self.figure((60, 60), 34, 44, 18),
+                  self.figure((60, 60), 12, 55, 40)]
+        anchor = (40, 70)
+        placed = align(frames, ground_offsets(frames, anchor), (80, 80))
+        self.assertEqual({footing(f) for f in placed}, {anchor})
+
+    def test_an_empty_frame_reports_something_usable(self):
+        from PIL import Image
+
+        from hollowpixel.clips import footing
+
+        x, y = footing(Image.new("RGBA", (40, 30), (0, 0, 0, 0)))
+        self.assertEqual((x, y), (20, 29))
+
+
+class TestFindingTheGrip(unittest.TestCase):
+    def scene(self, hand, cape=None):
+        from PIL import Image
+
+        image = Image.new("RGBA", (80, 80), (0, 0, 0, 0))
+        pixels = image.load()
+        for x in range(34, 46):                      # torso
+            for y in range(20, 60):
+                pixels[x, y] = (40, 70, 140, 255)
+        for x in range(hand[0] - 3, hand[0] + 4):    # fist
+            for y in range(hand[1] - 3, hand[1] + 4):
+                pixels[x, y] = (120, 78, 58, 255)
+        if cape:
+            for x in range(cape[0], cape[0] + 20):   # cloth, flung wide
+                for y in range(cape[1], cape[1] + 24):
+                    pixels[x, y] = (135, 20, 35, 255)
+        return image
+
+    def test_the_hand_is_found_at_the_named_extremity(self):
+        from hollowpixel.weapon import find_hand
+
+        x, y = find_hand(self.scene(hand=(16, 40)), "left")
+        self.assertLessEqual(abs(x - 13), 2)
+        self.assertLessEqual(abs(y - 40), 3)
+
+    def test_the_cape_does_not_pass_for_a_fist(self):
+        from hollowpixel.weapon import find_hand
+
+        # The cloth reaches further right than the arm ever does; a sword hung
+        # off it floats in mid-air, which is what this excludes.
+        scene = self.scene(hand=(62, 40), cape=(58, 18))
+        x, _ = find_hand(scene, "right")
+        self.assertLessEqual(x, 66, "the cape won the extremity test")
+
+    def test_an_overhead_raise_is_found_at_the_top(self):
+        from hollowpixel.weapon import find_hand
+
+        x, y = find_hand(self.scene(hand=(40, 10)), "top")
+        self.assertLessEqual(abs(x - 40), 3)
+        self.assertLessEqual(abs(y - 7), 2)
+
+    def test_an_unknown_extremity_is_refused(self):
+        from hollowpixel.weapon import find_hand
+
+        with self.assertRaises(ValueError):
+            find_hand(self.scene(hand=(20, 40)), "sideways")

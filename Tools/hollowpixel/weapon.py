@@ -104,6 +104,74 @@ class Frame:
     y: int = 0
 
 
+#: Hues the cape occupies, so it can be ignored when looking for a hand. It is
+#: the thing that flies furthest from the body, which makes it the one part
+#: guaranteed to be mistaken for an outstretched arm.
+#:
+#: Measured off the sprite rather than guessed, because guessing it got the range
+#: wrong in a way that quietly broke the detector. The cape and its shadows sit
+#: at hue 332 to 356 -- the magenta side of red -- while every piece of leather,
+#: every boot and all the skin sit between 2 and 25, on the orange side. A band
+#: written as "below 20 or above 340", which is the intuitive way to say "red",
+#: swallows the gloves along with the cloth, and the fist it was looking for
+#: with it.
+CAPE_HUE = (330.0, 360.0)
+
+#: Below this the pixel is too grey to be cape whatever its hue says: the darkest
+#: cape shadow measured 0.24, and the outline black underneath everything is
+#: nearly colourless.
+CAPE_MIN_SATURATION = 0.20
+
+
+def find_hand(image: "Image.Image", where: str) -> tuple[int, int]:
+    """The grip point for one pose, measured off the silhouette.
+
+    SF2 stores this per frame as bytes 6 and 7, hand-authored. Nothing here
+    reports it, so it is measured -- and it can be, because in every pose of a
+    swing the hand is the extremity of the figure in a known direction: down and
+    back on the ready frames, straight up on the overhead raise, out in front on
+    the follow-through. ``where`` names which extremity this pose puts it at.
+
+    The cape is excluded first. It streams further from the body than any limb,
+    so on a follow-through frame the rightmost opaque pixel is a corner of cloth
+    rather than a fist, and a sword hung from it floats in mid-air.
+    """
+    import colorsys
+
+    if where not in ("left", "right", "top", "bottom"):
+        raise ValueError("where must be left, right, top or bottom")
+
+    px = image.convert("RGBA").load()
+    points = []
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, a = px[x, y]
+            if a < OPAQUE_ALPHA:
+                continue
+            hue, light, sat = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+            hue *= 360
+            if sat > CAPE_MIN_SATURATION and light > 0.10 \
+                    and CAPE_HUE[0] <= hue < CAPE_HUE[1]:
+                continue
+            points.append((x, y))
+    if not points:
+        raise ValueError("no non-cape pixels in this frame")
+
+    if where in ("left", "right"):
+        edge = (min if where == "left" else max)(p[0] for p in points)
+        band = [p[1] for p in points if abs(p[0] - edge) <= 3]
+        return edge, sum(band) // len(band)
+    edge = (min if where == "top" else max)(p[1] for p in points)
+    band = [p[0] for p in points if abs(p[1] - edge) <= 3]
+    return sum(band) // len(band), edge
+
+
+#: Alpha at or above which a pixel counts as the character rather than the gap
+#: around it. Shared with :mod:`islands`, which sorts the same question out for
+#: whole regions rather than single pixels.
+OPAQUE_ALPHA = 128
+
+
 def compose(frame: Frame, bodies: list["Image.Image"],
             weapons: list["Image.Image"], size: tuple[int, int]) -> "Image.Image":
     """Draw one frame: body, weapon, in the order the frame asks for.
