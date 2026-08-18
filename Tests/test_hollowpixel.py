@@ -965,3 +965,131 @@ class TestFindingTheGrip(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             find_hand(self.scene(hand=(20, 40)), "sideways")
+
+
+class TestCutOutRig(unittest.TestCase):
+    """Generated frames redraw the whole character, so consecutive frames overlap
+    0.64 at best (pro) and 0.50 (templates), against 0.75 and up for hand-drawn
+    work. Moving parts of one sprite puts it at 0.94, because the torso is the
+    same pixels every frame rather than the same character drawn again."""
+
+    def sprite(self, size=(40, 60)):
+        from PIL import Image
+
+        image = Image.new("RGBA", size, (0, 0, 0, 0))
+        pixels = image.load()
+        for x in range(14, 26):                     # torso
+            for y in range(10, 45):
+                pixels[x, y] = (40, 70, 140, 255)
+        for x in range(10, 16):                     # arm, over the torso's left edge
+            for y in range(16, 38):
+                pixels[x, y] = (120, 78, 58, 255)
+        return image
+
+    def blade(self):
+        from PIL import Image
+
+        image = Image.new("RGBA", (12, 12), (0, 0, 0, 0))
+        pixels = image.load()
+        for i in range(12):
+            pixels[i, 11 - i] = (200, 200, 210, 255)
+        return image
+
+    def test_a_part_reports_its_pivot_in_its_own_coordinates(self):
+        from hollowpixel.rig import cut
+
+        part = cut(self.sprite(), (10, 16, 16, 38), pivot=(12, 18), attach=(12, 36))
+        self.assertEqual(part.local_pivot, (2, 2))
+        self.assertEqual(part.image.size, (6, 22))
+
+    def test_a_pivot_outside_the_rect_is_refused(self):
+        from hollowpixel.rig import cut
+
+        with self.assertRaises(ValueError):
+            cut(self.sprite(), (10, 16, 16, 38), pivot=(30, 18))
+
+    def test_a_rect_outside_the_sprite_is_refused(self):
+        from hollowpixel.rig import cut
+
+        with self.assertRaises(ValueError):
+            cut(self.sprite(), (10, 16, 500, 38), pivot=(12, 18))
+
+    def test_the_hole_is_filled_from_the_surface_beside_it(self):
+        from hollowpixel.rig import patch_hole
+
+        # Leaving the arm in leaves a ghost of it wherever it swings away; cutting
+        # it out leaves a hole. The patch takes the torso's own colour per row.
+        patched = patch_hole(self.sprite(), (10, 16, 16, 38))
+        self.assertEqual(patched.getpixel((14, 20))[:3], (40, 70, 140))
+        self.assertEqual(patched.getpixel((11, 20))[:3], (40, 70, 140),
+                         "the arm's colour survived the patch")
+
+    def test_patching_leaves_transparent_pixels_alone(self):
+        from hollowpixel.rig import patch_hole
+
+        patched = patch_hole(self.sprite(), (0, 0, 10, 10))
+        self.assertEqual(patched.getpixel((2, 2))[3], 0)
+
+    def test_a_point_swung_about_a_pivot_keeps_its_distance(self):
+        import math
+
+        from hollowpixel.rig import swing_point
+
+        pivot, fist = (10.0, 10.0), (10.0, 30.0)
+        for deg in (0, 30, 90, 180, -45):
+            x, y = swing_point(pivot, fist, deg)
+            r = math.hypot(x - pivot[0], y - pivot[1])
+            self.assertAlmostEqual(r, 20.0, places=6,
+                                   msg="the fist left the end of the arm")
+
+    def test_a_quarter_turn_puts_the_fist_where_it_belongs(self):
+        from hollowpixel.rig import swing_point
+
+        x, y = swing_point((10.0, 10.0), (10.0, 30.0), 90)
+        self.assertAlmostEqual(x, 30.0, places=6)
+        self.assertAlmostEqual(y, 10.0, places=6)
+
+    def test_rotating_reports_where_the_pivot_went(self):
+        from hollowpixel.rig import rotate_about
+
+        part = self.sprite()
+        out, pivot = rotate_about(part, (5.0, 5.0), 0)
+        self.assertEqual(out.size, part.size)
+        self.assertAlmostEqual(pivot[0], 5.0, places=6)
+        self.assertAlmostEqual(pivot[1], 5.0, places=6)
+
+    def test_the_body_is_identical_in_every_frame(self):
+        from hollowpixel.rig import Pose, Rig, cut, patch_hole
+
+        base = self.sprite()
+        arm = cut(base, (10, 16, 16, 38), pivot=(12, 18), attach=(12, 36))
+        r = Rig(body=patch_hole(base, arm.rect), arm=arm, weapon=self.blade(),
+                size=(90, 90), offset=(20, 20), shadow=False)
+        frames = r.render([Pose(arm=a, blade=-a) for a in (0, -30, -60, 20)])
+
+        # Compare a torso column no part ever covers: identical means identical.
+        column = lambda f: [f.getpixel((20 + 22, 20 + y)) for y in range(12, 44)]
+        first = column(frames[0])
+        for i, f in enumerate(frames[1:], 1):
+            self.assertEqual(column(f), first, f"the torso changed by frame {i}")
+
+    def test_draw_order_decides_whether_the_blade_shows(self):
+        from hollowpixel.rig import Pose, Rig, cut, patch_hole
+
+        base = self.sprite()
+        arm = cut(base, (10, 16, 16, 38), pivot=(12, 18), attach=(12, 36))
+        r = Rig(body=patch_hole(base, arm.rect), arm=arm, weapon=self.blade(),
+                size=(90, 90), offset=(20, 20), shadow=False)
+        over, under = r.frame(Pose(over=True)), r.frame(Pose(over=False))
+        self.assertNotEqual(list(over.getdata()), list(under.getdata()),
+                            "if draw order changed nothing, the layer buys nothing")
+
+    def test_an_arm_with_no_attachment_draws_no_weapon(self):
+        from hollowpixel.rig import Pose, Rig, cut, patch_hole
+
+        base = self.sprite()
+        arm = cut(base, (10, 16, 16, 38), pivot=(12, 18))     # no attach
+        r = Rig(body=patch_hole(base, arm.rect), arm=arm, weapon=self.blade(),
+                size=(90, 90), offset=(20, 20), shadow=False)
+        steel = sum(1 for p in r.frame(Pose()).getdata() if p[:3] == (200, 200, 210))
+        self.assertEqual(steel, 0)
