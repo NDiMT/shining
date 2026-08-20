@@ -1,19 +1,19 @@
 {
-  "group_id": "bb060e0d-8833-4cb0-8a83-cb57b44c1885",
+  "group_id": "3be5a046-cb11-4479-bf28-cd5b7786d965",
   "states": [
     {
       "character": {
-        "id": "76fa8cce-ad86-44cd-b91f-eebb36b32231",
+        "id": "2a03b955-5d81-4fae-8173-048697381f6a",
         "name": "Idle",
-        "prompt": "young hero knight, short brown hair, blue tunic with gold trim, red cape, brown leather boots and belt, holding a plain steel sword with a gold crossguard, four heads tall",
+        "prompt": "young hero knight, short brown hair, blue tunic with gold trim, red cape with a gold emblem, brown leather bracers boots and belt, gripping a plain steel sword with a gold crossguard, 16 bit Sega Genesis JRPG battle sprite, seen from behind at three quarters, four heads tall, large head, the figure fills nine tenths of the frame height, 16 colour palette, no gradients, weapon held in the hand nearest the viewer, the whole blade silhouetted against the background, never behind the body, feet flat on the ground, 16 bit era pixel art, limited palette, no gradients, no dithering, saturated storybook fantasy colours, clean hard pixel edges",
         "size": {
-          "width": 168,
-          "height": 168
+          "width": 96,
+          "height": 96
         },
         "template_id": "mannequin",
         "directions": 8,
         "view": "side",
-        "created_at": "2026-08-15T07:55:24.956003+00:00"
+        "created_at": "2026-08-20T00:27:50.911504+00:00"
       },
       "folder": "Idle",
       "frames": {
@@ -28,250 +28,26 @@
           "south-west": "Idle/rotations/south-west.png"
         },
         "animations": {
-          "nw_after": {
+          "sf2_cut": {
             "north-west": [
-              "Idle/animations/nw_after/north-west/frame_000.png",
-              "Idle/animations/nw_after/north-west/frame_001.png",
-              "Idle/animations/nw_after/north-west/frame_002.png",
-              "Idle/animations/nw_after/north-west/frame_003.png",
-              "Idle/animations/nw_after/north-west/frame_004.png",
-              "Idle/animations/nw_after/north-west/frame_005.png"
+              "Idle/animations/sf2_cut/north-west/frame_000.png",
+              "Idle/animations/sf2_cut/north-west/frame_001.png",
+              "Idle/animations/sf2_cut/north-west/frame_002.png",
+              "Idle/animations/sf2_cut/north-west/frame_003.png"
             ]
           },
-          "attack_nw": {
+          "sf2_wind": {
             "north-west": [
-              "Idle/animations/attack_nw/north-west/frame_000.png",
-              "Idle/animations/attack_nw/north-west/frame_001.png",
-              "Idle/animations/attack_nw/north-west/frame_002.png",
-              "Idle/animations/attack_nw/north-west/frame_003.png"
-            ]
-          },
-          "near_cut": {
-            "north-west": [
-              "Idle/animations/near_cut/north-west/frame_000.png",
-              "Idle/animations/near_cut/north-west/frame_001.png",
-              "Idle/animations/near_cut/north-west/frame_002.png",
-              "Idle/animations/near_cut/north-west/frame_003.png"
-            ]
-          },
-          "nw_cut2": {
-            "north-west": [
-              "Idle/animations/nw_cut2/north-west/frame_000.png",
-              "Idle/animations/nw_cut2/north-west/frame_001.png",
-              "Idle/animations/nw_cut2/north-west/frame_002.png",
-              "Idle/animations/nw_cut2/north-west/frame_003.png",
-              "Idle/animations/nw_cut2/north-west/frame_004.png",
-              "Idle/animations/nw_cut2/north-west/frame_005.png",
-              "Idle/animations/nw_cut2/north-west/frame_006.png",
-              "Idle/animations/nw_cut2/north-west/frame_007.png",
-              "Idle/animations/nw_cut2/north-west/frame_008.png",
-              "Idle/animations/nw_cut2/north-west/frame_009.png"
-            ]
-          },
-          "attack_back": {
-            "north": [
-              "Idle/animations/attack_back/north/frame_000.png",
-              "Idle/animations/attack_back/north/frame_001.png",
-              "Idle/animations/attack_back/north/frame_002.png",
-              "Idle/animations/attack_back/north/frame_003.png"
-            ],
-            "north-east": [
-              "Idle/animations/attack_back/north-east/frame_000.png",
-              "Idle/animations/attack_back/north-east/frame_001.png",
-              "Idle/animations/attack_back/north-east/frame_002.png",
-              "Idle/animations/attack_back/north-east/frame_003.png"
-            ]
-          },
-          "attack_fwd": {
-            "north-east": [
-              "Idle/animations/attack_fwd/north-east/frame_000.png",
-              "Idle/animations/attack_fwd/north-east/frame_001.png",
-              "Idle/animations/attack_fwd/north-east/frame_002.png",
-              "Idle/animations/attack_fwd/north-east/frame_003.png"
-            ]
-          },
-          "near_ready": {
-            "north-west": [
-              "Idle/animations/near_ready/north-west/frame_000.png",
-              "Idle/animations/near_ready/north-west/frame_001.png",
-              "Idle/animations/near_ready/north-west/frame_002.png",
-              "Idle/animations/near_ready/north-west/frame_003.png"
-            ]
-          },
-          "arm_cut": {
-            "north-west": [
-              "Idle/animations/arm_cut/north-west/frame_000.png",
-              "Idle/animations/arm_cut/north-west/frame_001.png",
-              "Idle/animations/arm_cut/north-west/frame_002.png",
-              "Idle/animations/arm_cut/north-west/frame_003.png"
-            ]
-          },
-          "nw_wind": {
-            "north-west": [
-              "Idle/animations/nw_wind/north-west/frame_000.png",
-              "Idle/animations/nw_wind/north-west/frame_001.png",
-              "Idle/animations/nw_wind/north-west/frame_002.png",
-              "Idle/animations/nw_wind/north-west/frame_003.png",
-              "Idle/animations/nw_wind/north-west/frame_004.png",
-              "Idle/animations/nw_wind/north-west/frame_005.png",
-              "Idle/animations/nw_wind/north-west/frame_006.png",
-              "Idle/animations/nw_wind/north-west/frame_007.png"
-            ]
-          },
-          "attack_arc": {
-            "north-east": [
-              "Idle/animations/attack_arc/north-east/frame_000.png",
-              "Idle/animations/attack_arc/north-east/frame_001.png",
-              "Idle/animations/attack_arc/north-east/frame_002.png",
-              "Idle/animations/attack_arc/north-east/frame_003.png",
-              "Idle/animations/attack_arc/north-east/frame_004.png",
-              "Idle/animations/attack_arc/north-east/frame_005.png",
-              "Idle/animations/attack_arc/north-east/frame_006.png",
-              "Idle/animations/attack_arc/north-east/frame_007.png"
-            ]
-          },
-          "attack": {
-            "east": [
-              "Idle/animations/attack/east/frame_000.png",
-              "Idle/animations/attack/east/frame_001.png",
-              "Idle/animations/attack/east/frame_002.png",
-              "Idle/animations/attack/east/frame_003.png"
-            ]
-          },
-          "near_raise": {
-            "north-west": [
-              "Idle/animations/near_raise/north-west/frame_000.png",
-              "Idle/animations/near_raise/north-west/frame_001.png",
-              "Idle/animations/near_raise/north-west/frame_002.png",
-              "Idle/animations/near_raise/north-west/frame_003.png"
-            ]
-          },
-          "nw_wind2": {
-            "north-west": [
-              "Idle/animations/nw_wind2/north-west/frame_000.png",
-              "Idle/animations/nw_wind2/north-west/frame_001.png",
-              "Idle/animations/nw_wind2/north-west/frame_002.png",
-              "Idle/animations/nw_wind2/north-west/frame_003.png",
-              "Idle/animations/nw_wind2/north-west/frame_004.png",
-              "Idle/animations/nw_wind2/north-west/frame_005.png",
-              "Idle/animations/nw_wind2/north-west/frame_006.png",
-              "Idle/animations/nw_wind2/north-west/frame_007.png"
-            ]
-          },
-          "attack_34": {
-            "north-east": [
-              "Idle/animations/attack_34/north-east/frame_000.png",
-              "Idle/animations/attack_34/north-east/frame_001.png",
-              "Idle/animations/attack_34/north-east/frame_002.png",
-              "Idle/animations/attack_34/north-east/frame_003.png"
-            ]
-          },
-          "arm_wind": {
-            "north-west": [
-              "Idle/animations/arm_wind/north-west/frame_000.png",
-              "Idle/animations/arm_wind/north-west/frame_001.png",
-              "Idle/animations/arm_wind/north-west/frame_002.png",
-              "Idle/animations/arm_wind/north-west/frame_003.png"
-            ]
-          },
-          "nw_after2": {
-            "north-west": [
-              "Idle/animations/nw_after2/north-west/frame_000.png",
-              "Idle/animations/nw_after2/north-west/frame_001.png",
-              "Idle/animations/nw_after2/north-west/frame_002.png",
-              "Idle/animations/nw_after2/north-west/frame_003.png",
-              "Idle/animations/nw_after2/north-west/frame_004.png",
-              "Idle/animations/nw_after2/north-west/frame_005.png"
-            ]
-          },
-          "attack_tween": {
-            "north-east": [
-              "Idle/animations/attack_tween/north-east/frame_000.png",
-              "Idle/animations/attack_tween/north-east/frame_001.png",
-              "Idle/animations/attack_tween/north-east/frame_002.png",
-              "Idle/animations/attack_tween/north-east/frame_003.png",
-              "Idle/animations/attack_tween/north-east/frame_004.png",
-              "Idle/animations/attack_tween/north-east/frame_005.png",
-              "Idle/animations/attack_tween/north-east/frame_006.png",
-              "Idle/animations/attack_tween/north-east/frame_007.png"
-            ]
-          },
-          "nw_cut": {
-            "north-west": [
-              "Idle/animations/nw_cut/north-west/frame_000.png",
-              "Idle/animations/nw_cut/north-west/frame_001.png",
-              "Idle/animations/nw_cut/north-west/frame_002.png",
-              "Idle/animations/nw_cut/north-west/frame_003.png",
-              "Idle/animations/nw_cut/north-west/frame_004.png",
-              "Idle/animations/nw_cut/north-west/frame_005.png",
-              "Idle/animations/nw_cut/north-west/frame_006.png",
-              "Idle/animations/nw_cut/north-west/frame_007.png",
-              "Idle/animations/nw_cut/north-west/frame_008.png",
-              "Idle/animations/nw_cut/north-west/frame_009.png"
+              "Idle/animations/sf2_wind/north-west/frame_000.png",
+              "Idle/animations/sf2_wind/north-west/frame_001.png",
+              "Idle/animations/sf2_wind/north-west/frame_002.png",
+              "Idle/animations/sf2_wind/north-west/frame_003.png"
             ]
           }
         }
       }
-    },
-    {
-      "character": {
-        "id": "6d0ee03b-1336-4d70-8ce0-63f3236ceb7b",
-        "name": "unarmed",
-        "prompt": "young hero knight, short brown hair, blue tunic with gold trim, red cape, brown leather boots and belt, holding a plain steel sword with a gold crossguard, four heads tall",
-        "size": {
-          "width": 168,
-          "height": 168
-        },
-        "template_id": "mannequin",
-        "directions": 8,
-        "view": "side",
-        "created_at": "2026-08-16T19:38:24.363565+00:00"
-      },
-      "folder": "unarmed",
-      "frames": {
-        "rotations": {
-          "south": "unarmed/rotations/south.png",
-          "south-east": "unarmed/rotations/south-east.png",
-          "east": "unarmed/rotations/east.png",
-          "north-east": "unarmed/rotations/north-east.png",
-          "north": "unarmed/rotations/north.png",
-          "north-west": "unarmed/rotations/north-west.png",
-          "west": "unarmed/rotations/west.png",
-          "south-west": "unarmed/rotations/south-west.png"
-        },
-        "animations": {}
-      }
-    },
-    {
-      "character": {
-        "id": "79569589-1a99-4c16-b278-7415f0b2c96e",
-        "name": "unarmed2",
-        "prompt": "young hero knight, short brown hair, blue tunic with gold trim, red cape, brown leather boots and belt, holding a plain steel sword with a gold crossguard, four heads tall",
-        "size": {
-          "width": 168,
-          "height": 168
-        },
-        "template_id": "mannequin",
-        "directions": 8,
-        "view": "side",
-        "created_at": "2026-08-16T19:42:18.507612+00:00"
-      },
-      "folder": "unarmed2",
-      "frames": {
-        "rotations": {
-          "south": "unarmed2/rotations/south.png",
-          "south-east": "unarmed2/rotations/south-east.png",
-          "east": "unarmed2/rotations/east.png",
-          "north-east": "unarmed2/rotations/north-east.png",
-          "north": "unarmed2/rotations/north.png",
-          "north-west": "unarmed2/rotations/north-west.png",
-          "west": "unarmed2/rotations/west.png",
-          "south-west": "unarmed2/rotations/south-west.png"
-        },
-        "animations": {}
-      }
     }
   ],
   "export_version": "3.1",
-  "export_date": "2026-08-18T07:07:16.137981"
+  "export_date": "2026-08-20T00:34:16.730037"
 }

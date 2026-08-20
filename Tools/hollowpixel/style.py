@@ -104,27 +104,70 @@ MAP = Tier(
           "64 does not. Mirror east to west and north-east to north-west.",
 )
 
+#: Everything measured off a real Shining Force II ally sheet, so the numbers in
+#: the tier below are quoted rather than chosen. Sources: the SF2DISASM
+#: disassembly for the formats, and the sheet itself for what the art does with
+#: them.
+#:
+#: ===============================  =========================================
+#: ally battle frame                96x96, 4BPP, 16 indexed colours
+#: figure inside that frame         62 to 90 px tall, so 65% to 94% fill
+#: poses per animation row          6, reused across every animation
+#: colours across the battle rows   20 in the rip, 16 per palette in the ROM
+#: content bottoms across a row     75, 75, 74, 75, 76, 76 -- feet on a line
+#: content tops across a row        0 to 13 -- heads wherever the pose puts them
+#: silhouette width across a row    82, 81, 52, 54, 75, 85 -- narrow in the middle
+#: weapon                           one drawing, diagonal, blade up and right
+#: weapon length                    45% to 65% of body height
+#: weapon ink per unit length       5.3 to 7.9
+#: weapon hand                      the hand nearest the viewer, always
+#: ground                           a flat black ellipse under the feet
+#: ===============================  =========================================
+#:
+#: The width figures are the rhythm of the swing written as silhouette: wide
+#: crouches at both ends, a narrow upright pair in the middle where the character
+#: stands up to wind up. The bottoms being level while the tops are not is why
+#: frames anchor on the feet.
+SF2 = {
+    "frame": 96,
+    "fill": (0.65, 0.94),
+    "poses": 6,
+    "colours": 16,
+    "weapon_length": (0.45, 0.65),
+    "weapon_ink_per_length": (5.3, 7.9),
+}
+
 #: The attack screen. One figure filling the frame, so detail earns its pixels.
+#:
+#: 96 rather than 128 because that is the number, and the pro endpoint takes
+#: anything from 32 to 168 so there is nothing to round to. The tokens state the
+#: reference's own constraints as constraints: how much of the frame to fill,
+#: how many colours, which hand holds the weapon, and that the blade stays
+#: silhouetted -- that last one because a flat frame cannot say which side of a
+#: torso a sword is on, and the generator guesses wrong about half the time.
 BATTLE = Tier(
     key="battle",
-    size=128,
+    size=96,
     view="side",
     direction="east",
-    outline="single color black outline",
-    shading="medium shading",
+    outline="selective outline",
+    shading="highly detailed shading",
     detail="highly detailed",
     direction_tokens=(
         "16 bit Sega Genesis JRPG battle sprite",
+        "seen from behind at three quarters",
         "four heads tall, large head",
-        "solid flat colour blocks, one highlight and one shadow tone",
-        "bold black outline, no anti-aliasing",
-        "16 colour palette",
+        "the figure fills nine tenths of the frame height",
+        "16 colour palette, no gradients",
+        "weapon held in the hand nearest the viewer",
+        "the whole blade silhouetted against the background, never behind the body",
+        "feet flat on the ground",
     ),
-    facings=("east",),
+    facings=("north-west",),
     subdir="Battle",
-    notes="96x96 for an ally in SF2; 128 is the nearest size that is both "
-          "style-matchable and animatable. Mirror east to west -- the attack "
-          "screen only ever shows two facings.",
+    notes="96x96 is SF2's real ally frame size, measured. Six poses per "
+          "animation, feet on a common line, weapon composited or drawn in the "
+          "near hand. Mirror north-west to north-east.",
 )
 
 TIERS: dict[str, Tier] = {tier.key: tier for tier in (MAP, BATTLE)}
