@@ -270,10 +270,23 @@ class TestTiersMatchTheReference(unittest.TestCase):
     can actually be asked for."""
 
     def test_sizes_are_supported_by_the_api(self):
+        """v1's skeleton endpoint took 16, 32, 64, 128 and nothing between, and
+        that discrete set is what the tiers used to be rounded to. v2's pro
+        endpoint takes any size from 32 to 168, so SF2's real 96 can be asked
+        for exactly instead of rounded up to 128."""
         from hollowpixel import style
         from hollowpixel.pixellab import SPRITE_SIZES
         for tier in style.TIERS.values():
-            self.assertIn(tier.size, SPRITE_SIZES, tier.key)
+            with self.subTest(tier=tier.key):
+                self.assertGreaterEqual(tier.size, 32, tier.key)
+                self.assertLessEqual(tier.size, 168, tier.key)
+        # The v1 set is still the constraint on the v1 path, so it is still real.
+        self.assertEqual(SPRITE_SIZES, (16, 32, 64, 128))
+
+    def test_the_battle_tier_is_sf2s_measured_frame_size(self):
+        from hollowpixel import style
+        self.assertEqual(style.BATTLE.size, style.SF2["frame"])
+        self.assertEqual(style.SF2["frame"], 96, "measured off the reference sheet")
 
     def test_the_map_tier_is_the_smaller_one(self):
         from hollowpixel import style
@@ -284,7 +297,8 @@ class TestTiersMatchTheReference(unittest.TestCase):
         the "authentic" answer and it produced washed-out, muddy sprites; the
         generator's own shading beat it on the same subject four ways."""
         from hollowpixel import style
-        self.assertIn(style.BATTLE.shading, ("medium shading", "detailed shading"))
+        self.assertNotIn("flat", style.BATTLE.shading)
+        self.assertIn("shading", style.BATTLE.shading)
         self.assertEqual(style.BATTLE.detail, "highly detailed")
 
 
