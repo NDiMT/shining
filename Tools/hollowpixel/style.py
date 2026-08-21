@@ -128,6 +128,31 @@ MAP = Tier(
 #: crouches at both ends, a narrow upright pair in the middle where the character
 #: stands up to wind up. The bottoms being level while the tops are not is why
 #: frames anchor on the feet.
+#: The rendering language, measured off one Bowie battle sprite. This is the part
+#: that was being guessed at while the formats were being quoted, and guessing it
+#: produced a modern indie look wearing SF2's dimensions:
+#:
+#: ==============================  ========  ========
+#:                                 SF2       what we had
+#: ==============================  ========  ========
+#: distinct colours in one sprite  13        29
+#: mean saturation, by pixel       0.79      0.48
+#: colours at saturation >= 0.70   11 of 13  3 of 29
+#: near-black colours              1         5
+#: that black's share of the art   37%       23%
+#: pure white present              yes       yes
+#: darkest / lightest              0.00/1.00 0.00/0.97
+#: ==============================  ========  ========
+#:
+#: Eleven of thirteen colours are at saturation 0.71 or above -- (222,0,57),
+#: (0,109,198), (0,182,66), (255,219,123) -- with exactly one black doing every
+#: outline and every interior separation, and one pure white doing every
+#: highlight. Nothing is muddy and nothing is a soft dark ramp.
+#:
+#: So "warm rim light and cool shadow, painterly detail" was working directly
+#: against the reference. That phrasing buys a soft five-step dark ramp and
+#: desaturated mid-tones, which is the opposite of one hard black against
+#: saturated fills.
 SF2 = {
     "frame": 96,
     "fill": (0.65, 0.94),
@@ -135,6 +160,9 @@ SF2 = {
     "colours": 16,
     "weapon_length": (0.45, 0.65),
     "weapon_ink_per_length": (5.3, 7.9),
+    "mean_saturation": 0.79,
+    "saturated_share": 11 / 13,
+    "black_share": 0.37,
 }
 
 #: The attack screen. One figure filling the frame, so detail earns its pixels.
@@ -150,15 +178,21 @@ BATTLE = Tier(
     size=96,
     view="side",
     direction="east",
-    outline="selective outline",
-    shading="highly detailed shading",
-    detail="highly detailed",
+    outline="single color black outline",
+    shading="basic shading",
+    detail="medium detail",
     direction_tokens=(
         "16 bit Sega Genesis JRPG battle sprite",
         "seen from behind at three quarters",
         "four heads tall, large head",
         "the figure fills nine tenths of the frame height",
-        "16 colour palette, no gradients",
+        "thick pure black outline around the whole silhouette",
+        "one single pure black for every outline and every interior line",
+        "fully saturated bright primary colours, high chroma",
+        "one pure white for every highlight",
+        "hard cel shading, two flat tones per material",
+        "no desaturated tones, no muddy browns, no soft dark ramp",
+        "13 colour palette",
         "weapon held in the hand nearest the viewer",
         "the whole blade silhouetted against the background, never behind the body",
         "feet flat on the ground",
@@ -180,8 +214,8 @@ TIERS: dict[str, Tier] = {tier.key: tier for tier in (MAP, BATTLE)}
 #: quantising has flat areas to keep rather than ramps to destroy.
 HOUSE_TOKENS: tuple[str, ...] = (
     "16 bit era pixel art",
-    "limited palette, no gradients, no dithering",
-    "saturated storybook fantasy colours",
+    "limited palette, no gradients",
+    "vivid fully saturated colours, nothing washed out",
     "clean hard pixel edges",
 )
 
@@ -189,6 +223,10 @@ HOUSE_TOKENS: tuple[str, ...] = (
 #: grammar learned the expensive way is that space spent saying what we want
 #: beats space spent saying what we don't.
 AVOID_TOKENS: tuple[str, ...] = (
+    "desaturated",
+    "muted colours",
+    "rim light",
+    "painterly",
     "blurry",
     "anti-aliased",
     "soft gradients",

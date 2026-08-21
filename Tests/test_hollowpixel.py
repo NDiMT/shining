@@ -292,14 +292,43 @@ class TestTiersMatchTheReference(unittest.TestCase):
         from hollowpixel import style
         self.assertLess(style.MAP.size, style.BATTLE.size)
 
-    def test_the_battle_tier_asks_for_real_shading(self):
-        """Reversed on measurement. Flat shading plus a 16-colour quantiser was
-        the "authentic" answer and it produced washed-out, muddy sprites; the
-        generator's own shading beat it on the same subject four ways."""
+    def test_the_battle_tier_does_not_ask_for_flat_shading(self):
+        """Two measurements point opposite ways here, so both are recorded.
+
+        The earlier one: flat shading plus a 16-colour quantiser was the
+        "authentic" answer, and on the same subject four ways it lost to the
+        generator's own shading -- washed-out tunic, dull cape, flattened face.
+        That is why "flat shading" stays excluded.
+
+        The later one: a real SF2 sprite has 13 colours at mean saturation 0.79
+        with one black doing every line, and asking for "highly detailed" got 29
+        colours at 0.48 -- a soft dark ramp and muddy mid-tones, which is a
+        modern indie look wearing SF2's dimensions. So the tier asks for basic
+        shading and medium detail now, which is two flat tones per material
+        rather than no tones at all.
+
+        If the output ever comes back washed out, the first measurement is the
+        reason and this is the line to revisit."""
         from hollowpixel import style
         self.assertNotIn("flat", style.BATTLE.shading)
         self.assertIn("shading", style.BATTLE.shading)
-        self.assertEqual(style.BATTLE.detail, "highly detailed")
+        self.assertIn(style.BATTLE.detail, ("medium detail", "highly detailed"))
+
+    def test_the_battle_tier_speaks_the_reference_palette(self):
+        from hollowpixel import style
+        tokens = " ".join(style.BATTLE.direction_tokens).lower()
+        # one black for every line, one white for every highlight, saturated fills
+        self.assertIn("pure black", tokens)
+        self.assertIn("pure white", tokens)
+        self.assertIn("saturated", tokens)
+        self.assertEqual(style.BATTLE.outline, "single color black outline")
+
+    def test_the_prompt_grammar_rejects_the_modern_look(self):
+        from hollowpixel import style
+        avoid = " ".join(style.AVOID_TOKENS).lower()
+        # the exact phrasing that produced 0.48 saturation and a five-step ramp
+        for word in ("desaturated", "rim light", "painterly"):
+            self.assertIn(word, avoid)
 
 
 class TestSharedPalette(unittest.TestCase):
@@ -1107,3 +1136,94 @@ class TestCutOutRig(unittest.TestCase):
                 size=(90, 90), offset=(20, 20), shadow=False)
         steel = sum(1 for p in r.frame(Pose()).getdata() if p[:3] == (200, 200, 210))
         self.assertEqual(steel, 0)
+
+
+class TestReferencePaletteReduction(unittest.TestCase):
+    """Reducing colour count on generated output is the operation this project
+    has now measured four separate times and lost four separate times. The
+    functions exist because the reference's structure is worth being able to
+    state; they are not for character sprites."""
+
+    def swatch(self, colours, size=(12, 12)):
+        from PIL import Image
+
+        image = Image.new("RGBA", size, (0, 0, 0, 0))
+        pixels = image.load()
+        n = len(colours)
+        for i, c in enumerate(colours):
+            for x in range(size[0]):
+                for y in range(i * size[1] // n, (i + 1) * size[1] // n):
+                    pixels[x, y] = c + (255,)
+        return image
+
+    def test_the_dark_ramp_collapses_to_one_black(self):
+        from hollowpixel.palette import collapse_blacks
+
+        # SF2 has exactly one near-black doing every outline and interior line,
+        # and it is 37% of the art. Generated sprites arrive with a soft ramp of
+        # them, which makes an outline read as a shadow rather than a line.
+        image = self.swatch([(8, 6, 10), (18, 14, 20), (28, 22, 30), (200, 40, 60)])
+        out, merged = collapse_blacks(image)
+        darks = {p[:3] for p in out.convert("RGBA").getdata()
+                 if p[3] > 127 and max(p[:3]) < 40}
+        self.assertEqual(merged, 2)
+        self.assertEqual(darks, {(0, 0, 0)})
+
+    def test_a_sprite_with_one_black_is_left_alone(self):
+        from hollowpixel.palette import collapse_blacks
+
+        out, merged = collapse_blacks(self.swatch([(0, 0, 0), (200, 40, 60)]))
+        self.assertEqual(merged, 0)
+
+    def test_reduction_hits_the_requested_count(self):
+        from hollowpixel.palette import reduce_to
+
+        image = self.swatch([(200, 40, 60), (190, 50, 70), (180, 60, 80),
+                             (40, 90, 200), (255, 255, 255), (0, 0, 0)])
+        out, _ = reduce_to(image, colours=3)
+        used = {p[:3] for p in out.convert("RGBA").getdata() if p[3] > 127}
+        self.assertEqual(len(used), 3)
+
+    def test_reduction_never_invents_a_colour(self):
+        from hollowpixel.palette import reduce_to
+
+        source = [(200, 40, 60), (190, 50, 70), (40, 90, 200), (0, 0, 0)]
+        out, _ = reduce_to(self.swatch(source), colours=2)
+        used = {p[:3] for p in out.convert("RGBA").getdata() if p[3] > 127}
+        self.assertTrue(used <= set(source), "a colour appeared that was not there")
+
+    def test_a_request_for_more_colours_than_exist_is_a_no_op(self):
+        from hollowpixel.palette import reduce_to
+
+        image = self.swatch([(200, 40, 60), (0, 0, 0)])
+        out, mapping = reduce_to(image, colours=13)
+        self.assertEqual(mapping, {})
+        self.assertEqual(list(out.getdata()), list(image.convert("RGBA").getdata()))
+
+    def test_the_merge_keeps_the_more_saturated_of_a_pair(self):
+        from hollowpixel.palette import reduce_to
+
+        # Keeping the more *common* colour was the first rule, and it cost 0.09
+        # of mean saturation and four of nine saturated colours, because the
+        # common colour is usually a large dull fill.
+        vivid, dull = (220, 0, 40), (120, 70, 80)
+        from PIL import Image
+        image = Image.new("RGBA", (10, 10), dull + (255,))
+        px = image.load()
+        for x in range(10):
+            px[x, 0] = vivid + (255,)          # vivid is rare
+        out, _ = reduce_to(image, colours=1)
+        used = {p[:3] for p in out.convert("RGBA").getdata() if p[3] > 127}
+        self.assertEqual(used, {vivid})
+
+    def test_this_is_documented_as_harmful_on_character_sprites(self):
+        from hollowpixel import palette
+
+        # Guards the finding, not the code: forced to 13 colours a hero's brown
+        # hair merged into his crimson cape and came out red, because those are
+        # neighbours in RGB. Anyone reaching for this on a character should read
+        # why first.
+        text = (palette.__doc__ or "") + (palette.reduce_to.__doc__ or "")
+        source = open(palette.__file__).read()
+        self.assertIn("quantiser", source.lower())
+        self.assertIn("PixelLab output", source)

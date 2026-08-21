@@ -1,11 +1,11 @@
 {
-  "group_id": "3be5a046-cb11-4479-bf28-cd5b7786d965",
+  "group_id": "ee3243ac-8f60-4cc7-bfc3-4b49de24ea9f",
   "states": [
     {
       "character": {
-        "id": "2a03b955-5d81-4fae-8173-048697381f6a",
+        "id": "5677abbd-4980-489c-a420-9d5f8447e645",
         "name": "Idle",
-        "prompt": "young hero knight, short brown hair, blue tunic with gold trim, red cape with a gold emblem, brown leather bracers boots and belt, gripping a plain steel sword with a gold crossguard, 16 bit Sega Genesis JRPG battle sprite, seen from behind at three quarters, four heads tall, large head, the figure fills nine tenths of the frame height, 16 colour palette, no gradients, weapon held in the hand nearest the viewer, the whole blade silhouetted against the background, never behind the body, feet flat on the ground, 16 bit era pixel art, limited palette, no gradients, no dithering, saturated storybook fantasy colours, clean hard pixel edges",
+        "prompt": "young hero knight, short brown hair, bright blue tunic with gold trim, crimson cape, brown leather boots and belt, plain steel sword with a gold crossguard, 16 bit Sega Genesis JRPG battle sprite, seen from behind at three quarters, four heads tall, large head, the figure fills nine tenths of the frame height, thick pure black outline around the whole silhouette, one single pure black for every outline and every interior line, fully saturated bright primary colours, high chroma, one pure white for every highlight, hard cel shading, two flat tones per material, no desaturated tones, no muddy browns, no soft dark ramp, 13 colour palette, weapon held in the hand nearest the viewer, the whole blade silhouetted against the background, never behind the body, feet flat on the ground, 16 bit era pixel art, limited palette, no gradients, vivid fully saturated colours, nothing washed out, clean hard pixel edges",
         "size": {
           "width": 96,
           "height": 96
@@ -13,7 +13,7 @@
         "template_id": "mannequin",
         "directions": 8,
         "view": "side",
-        "created_at": "2026-08-20T00:27:50.911504+00:00"
+        "created_at": "2026-08-20T23:52:30.370429+00:00"
       },
       "folder": "Idle",
       "frames": {
@@ -28,20 +28,20 @@
           "south-west": "Idle/rotations/south-west.png"
         },
         "animations": {
-          "sf2_cut": {
+          "sfs_wind": {
             "north-west": [
-              "Idle/animations/sf2_cut/north-west/frame_000.png",
-              "Idle/animations/sf2_cut/north-west/frame_001.png",
-              "Idle/animations/sf2_cut/north-west/frame_002.png",
-              "Idle/animations/sf2_cut/north-west/frame_003.png"
+              "Idle/animations/sfs_wind/north-west/frame_000.png",
+              "Idle/animations/sfs_wind/north-west/frame_001.png",
+              "Idle/animations/sfs_wind/north-west/frame_002.png",
+              "Idle/animations/sfs_wind/north-west/frame_003.png"
             ]
           },
-          "sf2_wind": {
+          "sfs_cut": {
             "north-west": [
-              "Idle/animations/sf2_wind/north-west/frame_000.png",
-              "Idle/animations/sf2_wind/north-west/frame_001.png",
-              "Idle/animations/sf2_wind/north-west/frame_002.png",
-              "Idle/animations/sf2_wind/north-west/frame_003.png"
+              "Idle/animations/sfs_cut/north-west/frame_000.png",
+              "Idle/animations/sfs_cut/north-west/frame_001.png",
+              "Idle/animations/sfs_cut/north-west/frame_002.png",
+              "Idle/animations/sfs_cut/north-west/frame_003.png"
             ]
           }
         }
@@ -49,5 +49,5 @@
     }
   ],
   "export_version": "3.1",
-  "export_date": "2026-08-20T00:34:16.730037"
+  "export_date": "2026-08-21T00:00:24.339896"
 }
